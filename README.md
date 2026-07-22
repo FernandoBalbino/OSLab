@@ -88,6 +88,14 @@ node tests/run-tests.js
 
 O projeto usa somente caminhos relativos e não exige etapa de compilação. A raiz da branch `main` é publicada diretamente pelo GitHub Pages. O arquivo `.nojekyll` evita processamento desnecessário pelo Jekyll.
 
+## Instalação e uso offline
+
+O OSLab é uma PWA instalável. Após o primeiro acesso completo, o Service Worker salva localmente a interface, scripts, estilos, papéis de parede, ícones, imagens de configurações, missões e demais recursos internos.
+
+No Chrome ou Chromebook, use o ícone **Instalar** na barra de endereço. O progresso das missões e as preferências continuam salvos no `localStorage` do dispositivo. A pesquisa simulada do Google avisa quando precisa de internet; todas as funções internas do laboratório permanecem disponíveis offline.
+
+O cache atual é `oslab-offline-v1`. Ao alterar recursos, incremente `CACHE_VERSION` em `service-worker.js`; versões antigas são excluídas automaticamente.
+
 ## Créditos
 
 Parte dos ícones e da referência de interação foi adaptada do projeto [blueedgetechno/win11React](https://github.com/blueedgetechno/win11React), disponibilizado sob licença CC0-1.0. A cópia da licença está em `LICENSE-win11React.txt`.

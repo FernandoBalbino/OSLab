@@ -1552,6 +1552,11 @@
         $("[name='q']", form).focus();
         return;
       }
+      if (!navigator.onLine) {
+        const hint = $(".google-hint", form.closest(".google-page"));
+        if (hint) hint.textContent = "A pesquisa precisa de internet. Os demais recursos do OSLab continuam disponíveis offline.";
+        return;
+      }
       window.open(`https://www.google.com/search?q=${encodeURIComponent(query)}`, "_blank", "noopener,noreferrer");
     });
 
