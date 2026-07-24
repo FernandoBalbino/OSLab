@@ -45,6 +45,7 @@
   let contextItemId = null;
   let fileClipboard = null;
   let missionsResumed = false;
+  let persistenceSuspended = false;
 
   const appDefinitions = OSLab.apps.definitions;
 
@@ -262,6 +263,7 @@
   const state = loadState();
 
   function saveState() {
+    if (persistenceSuspended) return;
     try {
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
       window.localStorage.removeItem(LEGACY_WALLPAPER_STORAGE_KEY);
@@ -271,6 +273,7 @@
   }
 
   OSLab.fileSystem.bind(state, saveState);
+  OSLab.network.bind(state.quickSettings, saveState);
 
   let currentWallpaperId = state.wallpaperId;
 
@@ -536,6 +539,8 @@
   }
 
   function renderComputer(record) {
+    const disk = OSLab.systemState.getStorage();
+    const diskPercent = Math.round(disk.usedBytes / disk.totalBytes * 100);
     record.previousExplorerView = "computer";
     record.address.textContent = "Este Computador";
     record.content.innerHTML = `
@@ -550,8 +555,8 @@
               <img src="assets/icons/win/disk.png" alt="" />
               <div class="drive-copy">
                 <strong>Disco Local (C:)</strong>
-                <div class="drive-bar" aria-label="38% do disco utilizado"><span></span></div>
-                <small>148 GB livres de 237 GB</small>
+                <div class="drive-bar" aria-label="${diskPercent}% do disco utilizado"><span style="width:${diskPercent}%"></span></div>
+                <small>${OSLab.systemTools.formatBytes(disk.freeBytes)} livres de ${OSLab.systemTools.formatBytes(disk.totalBytes)}</small>
               </div>
             </div>
           </div>
@@ -594,10 +599,10 @@
             <button type="button" data-file-action="delete" ${record.explorerSelection ? "" : "disabled"}><img src="assets/icons/context/delete.png" alt="" /><span>Excluir</span></button>
             <label><img src="assets/icons/search.png" alt="" /><input type="search" data-explorer-search placeholder="Pesquisar em ${escapeHtml(folder.name)}" aria-label="Pesquisar arquivos" /></label>
           </div>
-          <div class="file-list-head"><span>Nome</span><span>Tipo</span><span>Local</span></div>
+          <div class="file-list-head"><span>Nome</span><span>Tipo</span><span>Tamanho</span></div>
           <div class="file-list" role="list">${items.map((item) => `
             <button type="button" class="file-list-row ${record.explorerSelection === item.id ? "is-selected" : ""}" data-file-item="${item.id}" role="listitem">
-              <span><img src="${OSLab.icons.file(item)}" alt="" /><strong>${escapeHtml(item.name)}</strong></span><span>${item.kind === "folder" ? "Pasta de arquivos" : (item.mime || "Arquivo")}</span><span>${escapeHtml(OSLab.fileSystem.pathLabel(item.parentId))}</span>
+              <span><img src="${OSLab.icons.file(item)}" alt="" /><strong>${escapeHtml(item.name)}</strong></span><span>${item.kind === "folder" ? "Pasta de arquivos" : (item.mime || "Arquivo")}</span><span>${OSLab.systemTools.formatBytes(OSLab.fileSystem.bytesForItem(item.id))}</span>
             </button>`).join("") || `<div class="file-list-empty"><img src="${folder.icon || "assets/icons/win/folder.png"}" alt="" /><span>Esta pasta está vazia.</span></div>`}</div>
         </section>
       </div>`;
@@ -677,7 +682,7 @@
             <span class="recycle-name"><img src="${OSLab.icons.file(item)}" alt="" /><strong>${escapeHtml(item.name)}</strong></span>
             <span>${escapeHtml(OSLab.fileSystem.pathLabel(item.originalParentId))}</span>
             <span>${deletedAt}</span>
-            <span>${item.kind === "folder" ? "Pasta de arquivos" : "Documento de Texto"}</span>
+            <span>${OSLab.systemTools.formatBytes(OSLab.fileSystem.bytesForItem(item.id))}</span>
           </button>`;
       })
       .join("");
@@ -698,7 +703,7 @@
             </button>
           </div>
           <div class="recycle-table" role="table" aria-label="Itens da Lixeira">
-            <div class="recycle-head" role="row"><span>Nome</span><span>Local original</span><span>Data da exclusão</span><span>Tipo</span></div>
+            <div class="recycle-head" role="row"><span>Nome</span><span>Local original</span><span>Data da exclusão</span><span>Tamanho</span></div>
             <div class="recycle-rows">${rows}</div>
           </div>
         </section>
@@ -773,6 +778,7 @@
   }
 
   function renderGoogle(record) {
+    if (OSLab.browserApp) { OSLab.browserApp.render(record); return; }
     record.address.textContent = "https://www.google.com.br";
     record.content.innerHTML = `
       <section class="google-page">
@@ -783,11 +789,12 @@
           <input name="q" type="search" aria-label="Pesquisar no Google" placeholder="Pesquise no Google" autocomplete="off" />
           <button type="submit">Pesquisar</button>
         </form>
-        <p class="google-hint">A pesquisa será aberta em uma nova guia do navegador.</p>
+        <p class="google-hint">A pesquisa usa a rede virtual do OSLab e funciona sem internet real.</p>
       </section>`;
   }
 
   function renderTerminal(record) {
+    if (OSLab.terminalApp) { OSLab.terminalApp.render(record); return; }
     record.address.textContent = "Terminal";
     record.content.innerHTML = `
       <section class="terminal-page" aria-label="Terminal do OSLab">
@@ -856,6 +863,7 @@
   }
 
   function settingsHomeMarkup() {
+    const network = OSLab.network.getSnapshot();
     return `
       <header class="settings-page-heading">
         <h1>Início</h1>
@@ -867,7 +875,7 @@
         </div>
         <div class="settings-status-summary">
           <img src="assets/settings/Network-internet.webp" alt="" />
-          <span><strong>Wi-Fi do OSLab</strong><small>Conectado, seguro</small></span>
+          <span><strong>${network.connectionType === "ethernet" ? "Ethernet" : network.connectedSsid || "Wi-Fi"}</strong><small>${network.internetAvailable ? "Conectado, seguro" : "Sem conexão"}</small></span>
         </div>
         <div class="settings-status-summary">
           <img src="assets/settings/Windows-Update.webp" alt="" />
@@ -885,7 +893,7 @@
             <span>Tela</span>
             <img class="settings-chevron" src="assets/icons/ui/right.png" alt="" />
           </button>
-          <button type="button" class="settings-row" data-settings-page="network" data-state-toggle="wifi">
+          <button type="button" class="settings-row" data-settings-page="network">
             <img src="assets/settings/Network-internet.webp" alt="" />
             <span>Wi-Fi</span><small>${state.quickSettings.wifi ? "Ativado" : "Desativado"}</small>
             <span class="settings-switch ${state.quickSettings.wifi ? "is-active" : ""}" aria-hidden="true"></span>
@@ -939,7 +947,7 @@
       { name: "Notificações", description: "Alertas de aplicativos e do sistema, não incomodar", icon: "assets/settings/Windows-Update.webp" },
       { name: "Foco", description: "Reduza as distrações", icon: "assets/icons/settings-rows/focus.png" },
       { name: "Energia", description: "Tela e suspensão, modo de energia, economia de energia", icon: "assets/icons/ui/power.png" },
-      { name: "Armazenamento", description: "Espaço de armazenamento, unidades, regras de configuração", icon: "assets/icons/settings-rows/storage.png" },
+      { name: "Armazenamento", description: "Espaço de armazenamento, unidades, regras de configuração", icon: "assets/icons/settings-rows/storage.png", page: "storage" },
       { name: "Compartilhamento por proximidade", description: "Capacidade de descoberta, local de arquivos recebidos", icon: "assets/icons/settings-rows/nearshare.png" },
       { name: "Multitarefas", description: "Ajustar janelas, áreas de trabalho, mudança de tarefas", icon: "assets/icons/settings-rows/multitasking.png" },
       { name: "Avançado", description: "Desempenho, otimização e recursos de desenvolvedor", icon: "assets/icons/settings.png" },
@@ -978,24 +986,7 @@
   }
 
   function settingsNetworkMarkup() {
-    const rows = [
-      { name: "Wi-Fi", description: "Conectar, gerenciar redes conhecidas, rede limitada", icon: "assets/icons/ui/wifi.png", toggle: "wifi" },
-      { name: "Ethernet", description: "Autenticação, configurações de IP e DNS, rede limitada", icon: "assets/icons/settings-rows/ethernet.png" },
-      { name: "VPN", description: "Adicionar, conectar, gerenciar", icon: "assets/icons/settings-rows/vpn.png" },
-      { name: "Hotspot móvel", description: "Compartilhar sua conexão com a Internet", icon: "assets/icons/settings-rows/nearshare.png", toggle: "hotspot" },
-      { name: "Modo avião", description: "Parar a comunicação sem fio", icon: "assets/icons/ui/airplane.png", toggle: "airplane" },
-      { name: "Proxy", description: "Servidor proxy para conexões Wi-Fi e Ethernet", icon: "assets/icons/settings.png" },
-      { name: "Conexão discada", description: "Configurar uma conexão discada com a Internet", icon: "assets/icons/settings-rows/mobile.png" },
-      { name: "Configurações avançadas de rede", description: "Exibir todos os adaptadores de rede, redefinir a rede", icon: "assets/icons/settings-rows/ethernet.png" },
-    ];
-    return `
-      <header class="settings-page-heading"><h1>Rede e Internet</h1></header>
-      <section class="settings-network-hero">
-        <div class="network-identity"><img src="assets/settings/Network-internet.webp" alt="" /><span><strong>Wi-Fi (REDE_OSLAB)</strong><small>Conectado, seguro</small></span></div>
-        <div class="network-stat"><img src="assets/icons/context/display.png" alt="" /><span><strong>Propriedades</strong><small>Rede pública<br />5 GHz</small></span></div>
-        <div class="network-stat"><img src="assets/icons/settings-rows/storage.png" alt="" /><span><strong>Uso de dados</strong><small>0 MB, 30 dias anteriores</small></span></div>
-      </section>
-      <article class="settings-card detailed-settings-card">${settingsRowsMarkup(rows)}</article>`;
+    return OSLab.systemTools.networkMarkup();
   }
 
   function settingsPersonalizationOverviewMarkup() {
@@ -1111,16 +1102,19 @@
 
   function renderSettings(record, pageId = record.settingsView || state.lastSettingsPage || "home") {
     const isBackground = pageId === "background";
+    const isStorage = pageId === "storage";
     const section = isBackground
       ? settingsSections.find((item) => item.id === "personalization")
+      : isStorage ? settingsSections.find((item) => item.id === "system")
       : settingsSections.find((item) => item.id === pageId) || settingsSections[0];
-    record.settingsView = isBackground ? "background" : section.id;
-    record.address.textContent = isBackground ? "Plano de fundo" : section.name;
+    record.settingsView = isBackground ? "background" : isStorage ? "storage" : section.id;
+    record.address.textContent = isBackground ? "Plano de fundo" : isStorage ? "Armazenamento" : section.name;
     state.lastSettingsPage = record.settingsView;
     saveState();
 
     let mainContent = settingsHomeMarkup();
     if (isBackground) mainContent = settingsBackgroundMarkup();
+    else if (isStorage) mainContent = OSLab.systemTools.storageMarkup();
     else if (section.id === "system") mainContent = settingsSystemMarkup();
     else if (section.id === "bluetooth") mainContent = settingsBluetoothMarkup();
     else if (section.id === "network") mainContent = settingsNetworkMarkup();
@@ -1130,6 +1124,7 @@
     else if (section.id !== "home") mainContent = settingsGenericMarkup(section);
 
     record.content.innerHTML = settingsShellMarkup(section.id, mainContent);
+    OSLab.systemTools.wire(record, () => renderSettings(record, record.settingsView));
     applyWallpaper(currentWallpaperId, false);
     updateClock();
   }
@@ -1143,6 +1138,7 @@
     if (record.appId === "terminal") renderTerminal(record);
     if (record.appId === "taskmanager") OSLab.taskManagerApp ? OSLab.taskManagerApp.render(record) : renderTaskManager(record);
     if (record.appId === "missions") OSLab.missionsApp.render(record);
+    if (record.appId === "exercises") OSLab.exercisesApp.render(record);
     if (record.appId === "texteditor") renderTextEditor(record);
   }
 
@@ -1202,10 +1198,11 @@
     record.address.textContent = definition.address;
     record.toolbar.classList.toggle("browser-toolbar", appId === "google");
     element.classList.toggle("settings-window", appId === "settings");
-    record.toolbar.classList.toggle("is-hidden", ["settings", "taskmanager", "missions", "texteditor"].includes(appId));
+    record.toolbar.classList.toggle("is-hidden", ["settings", "taskmanager", "missions", "exercises", "texteditor"].includes(appId));
     record.settingsSearch.classList.toggle("is-hidden", appId !== "settings" && appId !== "taskmanager");
     element.classList.toggle("taskmanager-window", appId === "taskmanager");
     element.classList.toggle("missions-window", appId === "missions");
+    element.classList.toggle("exercises-window", appId === "exercises");
     element.classList.toggle("texteditor-window", appId === "texteditor");
     if (appId === "taskmanager") {
       const taskSearchInput = $("input", record.settingsSearch);
@@ -1218,7 +1215,7 @@
     positionWindow(record);
     wireWindow(record);
     renderApp(record);
-    if (appId === "settings" || appId === "taskmanager") {
+    if (["settings", "taskmanager", "exercises"].includes(appId)) {
       element.classList.add("is-maximized");
       record.maximizeIcon.src = "assets/icons/ui/restore.png";
       record.maximizeIcon.closest("button").setAttribute("aria-label", "Restaurar");
@@ -1231,7 +1228,7 @@
       icon: definition.icon,
       status: "Em execução",
       cpu: appId === "taskmanager" ? 0.3 : 0.1,
-      memory: appId === "google" ? 64.2 : appId === "missions" ? 42.6 : appId === "texteditor" ? 42 : 28.4,
+      memory: appId === "google" ? 64.2 : ["missions", "exercises"].includes(appId) ? 42.6 : appId === "texteditor" ? 42 : 28.4,
       missionId: options.missionId || null,
       efficient: appId === "google",
     });
@@ -1254,6 +1251,13 @@
       focusWindow(existing);
       closeFlyouts();
       return existing;
+    }
+
+    const launch = OSLab.systemState.isAppLaunchAllowed(appId);
+    if (!launch.ok) {
+      OSLab.ui.notify("Memória insuficiente", `Libere memória antes de abrir este aplicativo. Disponível: ${Math.round(launch.freeMb)} MB.`, "warning", 6000);
+      OSLab.events.emit("app:launch-blocked", { appId, reason: launch.reason, freeMb: launch.freeMb, requiredMb: launch.requiredMb }, "windowManager");
+      return null;
     }
 
     const record = createWindow(appId, options);
@@ -1342,10 +1346,68 @@
     getWallpaper() { return currentWallpaperId; },
     setVolume,
     getAudioState() { return { volume: state.volume, muted: Boolean(state.muted) }; },
+    tryDiagnosticDownload(sizeBytes, exerciseId = null) {
+      const required = Math.max(0, Number(sizeBytes) || 0);
+      if (OSLab.systemState.getStorage().freeBytes < required) {
+        OSLab.ui.notify("Armazenamento insuficiente", "O download ainda não cabe no disco. Itens na Lixeira continuam ocupando espaço.", "warning");
+        OSLab.events.emit("download:failed", { requiredBytes: required, freeBytes: OSLab.systemState.getStorage().freeBytes }, "browser");
+        return false;
+      }
+      const file = OSLab.fileSystem.create({ parentId: OSLab.fileSystem.roots.downloads, kind: "file", name: "suporte-offline.zip", sizeBytes: required, createdByExercise: Boolean(exerciseId), exerciseId });
+      OSLab.events.emit("download:completed", { fileId: file.id, sizeBytes: required }, "browser");
+      OSLab.ui.notify("Download concluído", "suporte-offline.zip foi salvo em Downloads.", "success");
+      this.refreshDesktop(); return true;
+    },
+    simulateRestart() {
+      const seconds = OSLab.processManager.estimateBootTime();
+      OSLab.systemState.configure({ lastBootSeconds: seconds });
+      OSLab.events.emit("system:restarted", { bootSeconds: seconds }, "powerMenu");
+      OSLab.ui.notify("Reinicialização simulada", `O computador iniciou em ${seconds} segundos.`, seconds <= 18 ? "success" : "warning");
+      return seconds;
+    },
+    snapshotSystem() {
+      return {
+        wallpaperId: currentWallpaperId, volume: state.volume, muted: Boolean(state.muted), lastSettingsPage: state.lastSettingsPage,
+        openWindows: Array.from(windows.values()).map((record) => ({
+          appId: record.appId, options: { ...(record.options || {}) }, settingsView: record.settingsView,
+          browserHost: record.browserHost || null, browserResult: record.browserResult || null,
+          terminalLines: record.terminalLines ? JSON.parse(JSON.stringify(record.terminalLines)) : null,
+          taskNav: record.taskNav || null, currentFolderId: record.currentFolderId || null,
+        })),
+      };
+    },
+    restoreSystemSnapshot(input) {
+      if (!input) return;
+      const windowSnapshots = input.openWindows || (input.openApps || []).map((appId) => ({ appId }));
+      const openApps = new Set(windowSnapshots.map((entry) => entry.appId));
+      Array.from(windows.values()).filter((record) => !openApps.has(record.appId)).forEach((record) => closeWindow(record, { force: true }));
+      windowSnapshots.forEach((entry) => {
+        if (!appDefinitions[entry.appId]) return;
+        const record = windows.get(entry.appId) || openApp(entry.appId, entry.options || {});
+        if (!record) return;
+        record.options = { ...(entry.options || {}) };
+        if (entry.settingsView) record.settingsView = entry.settingsView;
+        if (entry.browserHost) { record.browserHost = entry.browserHost; record.browserResult = entry.browserResult; }
+        if (entry.terminalLines) record.terminalLines = JSON.parse(JSON.stringify(entry.terminalLines));
+        if (entry.taskNav) record.taskNav = entry.taskNav;
+        if (entry.currentFolderId && entry.appId === "explorer") renderFolder(record, entry.currentFolderId); else renderApp(record);
+      });
+      applyWallpaper(input.wallpaperId || "1", false); setVolume(input.volume, input.muted, false); state.lastSettingsPage = input.lastSettingsPage || "home";
+    },
+    setPersistenceSuspended(value) { persistenceSuspended = Boolean(value); },
+    isPersistenceSuspended() { return persistenceSuspended; },
+    persist: saveState,
     notify(title, message, kind = "info") { return OSLab.ui.notify(title, message, kind); },
     closeFlyouts,
     getRunnableApps() { return Object.entries(appDefinitions).filter(([id]) => !["computer", "recycle", "texteditor"].includes(id)).map(([id, app]) => ({ id, title: app.title, icon: app.icon })); },
   };
+
+  OSLab.systemState.bindShell({
+    snapshot: () => OSLab.shell.snapshotSystem(),
+    restore: (input) => OSLab.shell.restoreSystemSnapshot(input),
+    setPersistenceSuspended: (value) => OSLab.shell.setPersistenceSuspended(value),
+    persist: saveState,
+  });
 
   function wireWindow(record) {
     const { element, titlebar, content, toolbar, resizeHandle } = record;
@@ -1408,12 +1470,9 @@
       }
       if (stateToggle && record.appId === "settings") {
         const key = stateToggle.dataset.stateToggle;
-        state.quickSettings[key] = !state.quickSettings[key];
-        if (key === "airplane" && state.quickSettings.airplane) {
-          state.quickSettings.wifi = false;
-          state.quickSettings.bluetooth = false;
-        }
-        saveState();
+        if (key === "wifi") OSLab.network.setWifi(!OSLab.network.getSnapshot().wifiEnabled);
+        else if (key === "airplane") OSLab.network.setAirplaneMode(!OSLab.network.getSnapshot().airplaneMode);
+        else { state.quickSettings[key] = !state.quickSettings[key]; saveState(); }
         renderSettings(record, record.settingsView);
         syncQuickSettings();
       }
@@ -1552,12 +1611,8 @@
         $("[name='q']", form).focus();
         return;
       }
-      if (!navigator.onLine) {
-        const hint = $(".google-hint", form.closest(".google-page"));
-        if (hint) hint.textContent = "A pesquisa precisa de internet. Os demais recursos do OSLab continuam disponíveis offline.";
-        return;
-      }
-      window.open(`https://www.google.com/search?q=${encodeURIComponent(query)}`, "_blank", "noopener,noreferrer");
+      if (OSLab.browserApp) OSLab.browserApp.navigate(record, query);
+      else OSLab.ui.notify("Navegador local", "A pesquisa simulada está disponível apenas dentro do OSLab.", "info");
     });
 
     titlebar.addEventListener("pointerdown", (event) => {
@@ -1718,7 +1773,10 @@
 
   powerMenu.addEventListener("click", (event) => {
     const action = event.target.closest("[data-power-action]")?.dataset.powerAction;
-    if (action === "restart") window.location.reload();
+    if (action === "restart") {
+      if (OSLab.exercises.getSession()?.id === "slow-startup") OSLab.exercises.runTest();
+      else window.location.reload();
+    }
     if (action === "lock") lockSession();
   });
 
@@ -1823,6 +1881,8 @@
       { id: "settings", name: "Configurações", icon: "assets/icons/settings.png" },
       { id: "taskmanager", name: "Gerenciador de Tarefas", icon: "assets/icons/taskmanager.png" },
       { id: "missions", name: "Missões", icon: "assets/icons/taskmanager/details.png" },
+      { id: "exercises", name: "Exercícios", icon: "assets/icons/settings-rows/troubleshoot.png" },
+      { id: "terminal", name: "Terminal", icon: "assets/icons/terminal.png" },
     ].filter((item) => item.name.toLocaleLowerCase("pt-BR").includes(query));
 
     $("#search-results").innerHTML = `
@@ -1853,30 +1913,40 @@
   $("#all-apps-button").addEventListener("click", () => $("#start-search-input").focus());
 
   function syncQuickSettings() {
+    const network = OSLab.network.getSnapshot();
+    state.quickSettings.wifi = network.wifiEnabled;
+    state.quickSettings.airplane = network.airplaneMode;
     $$("[data-quick-action]").forEach((button) => {
       button.classList.toggle("is-active", Boolean(state.quickSettings[button.dataset.quickAction]));
     });
     $("#brightness-slider").value = String(state.brightness);
     $("#volume-slider").value = String(state.volume);
     setVolume(state.volume, state.muted, false);
+    const trayNetworkIcon = $("#quick-settings-button img");
+    if (trayNetworkIcon) {
+      trayNetworkIcon.src = network.airplaneMode ? "assets/icons/ui/airplane.png" : "assets/icons/ui/wifi.png";
+      trayNetworkIcon.style.opacity = network.adapterConnected ? "1" : ".48";
+    }
   }
 
   $$("[data-quick-action]").forEach((button) => {
     button.addEventListener("click", () => {
       const key = button.dataset.quickAction;
-      state.quickSettings[key] = !state.quickSettings[key];
-      if (key === "airplane" && state.quickSettings.airplane) {
-        state.quickSettings.wifi = false;
-        state.quickSettings.bluetooth = false;
-      }
-      if ((key === "wifi" || key === "bluetooth") && state.quickSettings[key]) state.quickSettings.airplane = false;
-      saveState();
+      if (key === "wifi") OSLab.network.setWifi(!OSLab.network.getSnapshot().wifiEnabled);
+      else if (key === "airplane") OSLab.network.setAirplaneMode(!OSLab.network.getSnapshot().airplaneMode);
+      else { state.quickSettings[key] = !state.quickSettings[key]; saveState(); }
       syncQuickSettings();
       const settingsRecord = windows.get("settings");
       if (settingsRecord && ["home", "network"].includes(settingsRecord.settingsView)) {
         renderSettings(settingsRecord, settingsRecord.settingsView);
       }
     });
+  });
+
+  OSLab.network.subscribe(() => {
+    syncQuickSettings();
+    const settingsRecord = windows.get("settings");
+    if (settingsRecord && ["home", "network"].includes(settingsRecord.settingsView)) renderSettings(settingsRecord, settingsRecord.settingsView);
   });
 
   $("#brightness-slider").addEventListener("input", (event) => {
@@ -1997,6 +2067,11 @@
       element.textContent = fullDate;
     });
   }
+
+  ["file:created", "file:deleted", "recycle:restored", "recycle:deleted", "recycle:emptied"].forEach((type) => OSLab.events.subscribe(type, () => {
+    const computer = windows.get("computer"); if (computer) renderComputer(computer);
+    const settings = windows.get("settings"); if (settings?.settingsView === "storage") renderSettings(settings, "storage");
+  }));
 
   document.title = "Entrar — OSLab";
   OSLab.apps.synchronizeStaticEntries(document);

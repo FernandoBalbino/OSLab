@@ -17,6 +17,7 @@ Laboratório virtual estático para alunos praticarem conceitos de Sistemas Oper
 - várias janelas abertas ao mesmo tempo, com foco independente e controles para mover, redimensionar, minimizar, maximizar, restaurar e fechar;
 - aplicativo Configurações em português, com telas próprias para Sistema, Bluetooth e dispositivos, Rede e Internet, Personalização, Aplicativos e Hora e idioma;
 - aplicativo Missões com 12 atividades reais, progressão linear, dicas, pontuação, medalhas, checklist, retomada e limpeza de cenários;
+- aplicativo Exercícios com 10 diagnósticos de Sistema e Rede, ajudante robô, dica única, testes finais e restauração segura do ambiente;
 - Gerenciador de Tarefas inspirado no Windows 11, com processos dinâmicos, pesquisa por nome/PID, seleção, ordenação, grupos, modo de eficiência e encerramento de tarefas;
 - menu de contexto inspirado no Windows 11, com submenus de exibição, classificação e criação;
 - menu de contexto próprio para arquivos e pastas, com ações de abrir, renomear, copiar caminho e excluir;
@@ -31,6 +32,27 @@ Laboratório virtual estático para alunos praticarem conceitos de Sistemas Oper
 As 12 missões cobrem abertura de aplicativos, controle de janelas, criação/renomeação/movimentação/cópia/restauração/pesquisa de arquivos, personalização, volume, encerramento de aplicativo travado e organização integrada do computador.
 
 O ciclo real é: o motor prepara o cenário, o aluno age nos aplicativos do simulador, o barramento recebe o evento depois da alteração de estado e a missão valida o resultado final. Uma missão ativa aparece em um widget flutuante acima da barra de tarefas.
+
+## Exercícios de diagnóstico
+
+O aplicativo **Exercícios** fica na Área de Trabalho, no menu Iniciar e na pesquisa. Os dez cenários cobrem armazenamento cheio, programa travado, CPU alta, falta de RAM, inicialização lenta, Wi-Fi desativado, modo avião, cabo Ethernet, IP incorreto e falha de DNS.
+
+Cada exercício prepara um problema temporário e acompanha o estado real do simulador. Abrir uma ferramenta não conclui a atividade: o aluno precisa corrigir a causa e executar **Testar novamente**. Reiniciar, sair, trocar de atividade ou recarregar restaura o sistema ao estado anterior; somente conclusões, tentativas, dica e progresso ficam no `localStorage`.
+
+O Terminal aceita `ipconfig`, `ipconfig /all`, `ping` e `nslookup`. Configurações de Rede, o navegador e os comandos usam a mesma rede virtual, portanto seus resultados permanecem coerentes mesmo sem internet real.
+
+### Teste manual dos exercícios
+
+1. **Armazenamento cheio:** localize os arquivos grandes, mova-os para a Lixeira, esvazie-a e use **Testar novamente** para concluir o download.
+2. **Programa travado:** selecione o Editor de Texto marcado como não respondendo no Gerenciador de Tarefas e finalize somente esse processo.
+3. **Computador muito lento:** ordene ou compare a CPU, encerre o Sincronizador de Mídia e confirme que o uso e a velocidade normalizaram.
+4. **Memória RAM insuficiente:** libere memória encerrando um aplicativo não essencial e teste a abertura do navegador.
+5. **Inicialização lenta:** abra Aplicativos de inicialização, desabilite itens de alto impacto, mantenha a Segurança do Windows e reinicie de forma simulada.
+6. **Wi-Fi desativado:** ative o Wi-Fi, conecte-se à `REDE_OSLAB` e teste o navegador.
+7. **Modo avião:** desative o modo avião, reative e conecte o Wi-Fi, depois teste uma página.
+8. **Cabo Ethernet:** selecione Ethernet, conecte o cabo virtual, aguarde a configuração e teste a navegação.
+9. **IP incorreto:** ative DHCP ou informe um IP da rede `192.168.1.0/24` e confirme com `ping 192.168.1.1`.
+10. **DNS:** compare os pings por IP e nome, configure DNS automático ou `8.8.8.8` e teste `google.com` no Terminal e navegador.
 
 ## Acesso
 
@@ -60,8 +82,10 @@ Clique com o botão direito na barra de tarefas e escolha **Gerenciador de Taref
 ## Arquitetura
 
 - `js/core`: eventos, registro de aplicativos, sistema de arquivos e processos;
-- `js/apps`: Missões e Gerenciador de Tarefas;
+- `js/apps`: Missões, Exercícios, Gerenciador de Tarefas, Terminal, navegador offline e superfícies de diagnóstico;
 - `js/missions`: catálogo, motor e persistência;
+- `js/exercises`: catálogo, máquina de estados e persistência dos exercícios;
+- `js/core/network-manager.js` e `js/core/system-state.js`: estado canônico de rede, armazenamento, desempenho e snapshots;
 - `js/ui`: notificações, confirmações, widget e modal de conclusão;
 - `script.js`: integração com o shell, as janelas e os aplicativos existentes;
 - `css/missions.css` e `css/task-manager.css`: estilos das novas superfícies.
@@ -92,9 +116,9 @@ O projeto usa somente caminhos relativos e não exige etapa de compilação. A r
 
 O OSLab é uma PWA instalável. Após o primeiro acesso completo, o Service Worker salva localmente a interface, scripts, estilos, papéis de parede, ícones, imagens de configurações, missões e demais recursos internos.
 
-No Chrome ou Chromebook, use o ícone **Instalar** na barra de endereço. O progresso das missões e as preferências continuam salvos no `localStorage` do dispositivo. A pesquisa simulada do Google avisa quando precisa de internet; todas as funções internas do laboratório permanecem disponíveis offline.
+No Chrome ou Chromebook, use **Instalar para usar offline** na tela de login ou no menu Iniciar. O progresso das missões, dos exercícios e as preferências continuam salvos no `localStorage` do dispositivo. O navegador, o Terminal e todas as funções internas usam dados simulados locais e continuam disponíveis sem internet.
 
-O cache atual é `oslab-offline-v1`. Ao alterar recursos, incremente `CACHE_VERSION` em `service-worker.js`; versões antigas são excluídas automaticamente.
+O cache atual é `oslab-offline-v2`. Ao alterar recursos, incremente `CACHE_VERSION` em `service-worker.js`; versões antigas são excluídas automaticamente e o site oferece a atualização quando a nova versão está pronta.
 
 ## Créditos
 

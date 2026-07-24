@@ -30,6 +30,12 @@
     return state.fileSystem.items;
   }
 
+  function inferredSize(item) {
+    if (item?.kind === "folder") return 0;
+    if (Number.isFinite(Number(item?.sizeBytes)) && Number(item.sizeBytes) >= 0) return Number(item.sizeBytes);
+    return Math.max(1024, String(item?.content || "").length * 2);
+  }
+
   function get(id) {
     return store().find((item) => item.id === id) || null;
   }
@@ -86,7 +92,7 @@
     const existing = Array.isArray(oldState.fileSystem?.items) ? oldState.fileSystem.items : [];
     if (existing.length) {
       oldState.fileSystem.version = 1;
-      oldState.fileSystem.items = existing;
+      oldState.fileSystem.items = existing.map((item) => ({ ...item, sizeBytes: inferredSize(item) }));
       return;
     }
     const items = [];
@@ -122,6 +128,7 @@
       name: uniqueName(parentId, input.name || (kind === "folder" ? "Nova pasta" : "Novo arquivo.txt")),
       mime: input.mime || (kind === "folder" ? "inode/directory" : "application/octet-stream"),
       content: typeof input.content === "string" ? input.content : "",
+      sizeBytes: kind === "folder" ? 0 : Math.max(0, Number(input.sizeBytes) || String(input.content || "").length * 2 || 1024),
       sourceId: input.sourceId || null,
       createdAt: input.createdAt || Date.now(),
       createdByMission: Boolean(input.createdByMission),
@@ -249,6 +256,20 @@
     commit();
   }
 
+  function bytesForItem(id) {
+    const target = get(id);
+    if (!target) return 0;
+    return inferredSize(target) + descendants(id).reduce((sum, item) => sum + inferredSize(item), 0);
+  }
+
+  function usedBytes() {
+    return store().reduce((sum, item) => sum + inferredSize(item), 0);
+  }
+
+  function folderBytes(parentId) {
+    return list(parentId).reduce((sum, item) => sum + bytesForItem(item.id), 0);
+  }
+
   OSLab.fileSystem = {
     roots: ROOTS,
     labels: ROOT_LABELS,
@@ -277,6 +298,9 @@
     pathLabel,
     uniqueName,
     removeMissionItems,
+    bytesForItem,
+    usedBytes,
+    folderBytes,
     find(parentId, name, kind = null) {
       return list(parentId).find((item) => normal(item.name) === normal(name) && (!kind || item.kind === kind)) || null;
     },

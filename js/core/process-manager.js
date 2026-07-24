@@ -4,6 +4,7 @@
   const OSLab = global.OSLab = global.OSLab || {};
   const listeners = new Set();
   let sequence = 6500;
+  const TOTAL_MEMORY_MB = 4096;
 
   const baseline = [
     { pid: 1268, appId: "antimalware", name: "Antimalware Service Executable", icon: "assets/icons/taskmanager/services.png", cpu: 0.2, memory: 78.2, disk: 0, network: 0, protected: true },
@@ -18,6 +19,13 @@
   ].map((item) => ({ ...item, id: `process-${item.pid}`, windowId: null, status: "Em execução", efficient: false, startedAt: Date.now(), missionId: null }));
 
   let processes = baseline.map((item) => ({ ...item }));
+  let startupApps = [
+    { id: "windows-security", name: "Segurança do Windows", icon: "assets/icons/settings-rows/lock.png", impact: "Médio", enabled: true, protected: true, seconds: 2 },
+    { id: "cloud-sync", name: "Sincronizador em Nuvem", icon: "assets/icons/settings-rows/nearshare.png", impact: "Alto", enabled: false, protected: false, seconds: 8 },
+    { id: "game-launcher", name: "Inicializador de Jogos", icon: "assets/settings/Gaming.webp", impact: "Alto", enabled: false, protected: false, seconds: 9 },
+    { id: "media-helper", name: "Assistente de Mídia", icon: "assets/icons/settings-rows/video.png", impact: "Médio", enabled: false, protected: false, seconds: 5 },
+    { id: "meeting-app", name: "Aplicativo de Reuniões", icon: "assets/settings/Apps.webp", impact: "Alto", enabled: false, protected: false, seconds: 7 },
+  ];
 
   function notify(change) {
     const snapshot = getProcesses();
@@ -70,6 +78,12 @@
     return processes.find((process) => process.pid === Number(pid)) || null;
   }
 
+  function getUsage() {
+    const cpuPercent = Math.min(100, processes.reduce((sum, process) => sum + Number(process.cpu || 0), 0));
+    const memoryUsedMb = Math.min(TOTAL_MEMORY_MB, processes.reduce((sum, process) => sum + Number(process.memory || 0), 0));
+    return { cpuPercent, memoryUsedMb, memoryFreeMb: Math.max(0, TOTAL_MEMORY_MB - memoryUsedMb), memoryPercent: memoryUsedMb / TOTAL_MEMORY_MB * 100, totalMemoryMb: TOTAL_MEMORY_MB };
+  }
+
   function updateProcess(pid, patch) {
     const process = getProcessByPid(pid);
     if (!process) return null;
@@ -99,6 +113,7 @@
     createProcess,
     getProcesses,
     getProcessByPid,
+    getUsage,
     updateProcess,
     endProcess,
     subscribe(listener) { listeners.add(listener); return () => listeners.delete(listener); },
@@ -122,6 +137,25 @@
       });
       notify({ type: "mission-reset", missionId });
       return removed;
+    },
+    getStartupApps() { return startupApps.map((app) => ({ ...app })); },
+    setStartupEnabled(id, enabled) {
+      const app = startupApps.find((entry) => entry.id === id);
+      if (!app) return { ok: false, reason: "missing" };
+      if (app.protected && !enabled) return { ok: false, reason: "protected", app: { ...app } };
+      app.enabled = Boolean(enabled);
+      notify({ type: "startup", app: { ...app } });
+      OSLab.events.emit("startup:changed", { app: { ...app }, id, enabled: app.enabled }, "processManager");
+      return { ok: true, app: { ...app } };
+    },
+    estimateBootTime() { return 7 + startupApps.filter((app) => app.enabled).reduce((sum, app) => sum + app.seconds, 0); },
+    snapshot() { return { processes: getProcesses(), startupApps: startupApps.map((app) => ({ ...app })), sequence }; },
+    restoreSnapshot(input) {
+      if (!input) return;
+      processes = Array.isArray(input.processes) ? input.processes.map((process) => ({ ...process })) : baseline.map((item) => ({ ...item }));
+      startupApps = Array.isArray(input.startupApps) ? input.startupApps.map((app) => ({ ...app })) : startupApps;
+      sequence = Number(input.sequence) || sequence;
+      notify({ type: "snapshot-restored" });
     },
     reset() { processes = baseline.map((item) => ({ ...item, startedAt: Date.now() })); notify({ type: "reset" }); },
   };

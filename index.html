@@ -15,6 +15,7 @@
     <link rel="stylesheet" href="styles.css" />
     <link rel="stylesheet" href="css/task-manager.css" />
     <link rel="stylesheet" href="css/missions.css" />
+    <link rel="stylesheet" href="css/exercises.css" />
   </head>
   <body>
     <main id="oslab" class="oslab" data-state="login">
@@ -43,6 +44,10 @@
           <button id="fullscreen-login-button" class="fullscreen-login-button" type="button">
             <img src="assets/icons/ui/maximize.png" alt="" />
             <span>Abrir em tela cheia</span>
+          </button>
+          <button class="fullscreen-login-button pwa-install-button" type="button" data-pwa-install>
+            <img src="assets/icons/context/restore-item.png" alt="" />
+            <span>Instalar para usar offline</span>
           </button>
           <div id="welcome-state" class="welcome-state is-hidden" aria-live="polite">
             <img src="assets/loader.gif" alt="" />
@@ -82,6 +87,10 @@
           <button class="desktop-shortcut" type="button" data-app="missions">
             <img src="assets/icons/taskmanager/details.png" alt="" />
             <span>Missões</span>
+          </button>
+          <button class="desktop-shortcut" type="button" data-app="exercises">
+            <img src="assets/icons/settings-rows/troubleshoot.png" alt="" />
+            <span>Exercícios</span>
           </button>
         </div>
 
@@ -157,11 +166,19 @@
               <img src="assets/icons/taskmanager/details.png" alt="" />
               <span>Missões</span>
             </button>
+            <button type="button" data-app="exercises">
+              <img src="assets/icons/settings-rows/troubleshoot.png" alt="" />
+              <span>Exercícios</span>
+            </button>
           </div>
           <footer class="start-footer">
             <button type="button" class="profile-button">
               <img src="assets/icons/avatar.webp" alt="" />
               <span>Aluno</span>
+            </button>
+            <button type="button" class="profile-button pwa-start-install" data-pwa-install>
+              <img src="assets/icons/context/restore-item.png" alt="" />
+              <span>Instalar offline</span>
             </button>
             <button id="power-button" type="button" class="power-button" aria-label="Energia">
               <img src="assets/icons/ui/power.png" alt="" />
@@ -390,12 +407,23 @@
     <script defer src="js/core/app-registry.js"></script>
     <script defer src="js/core/file-system.js"></script>
     <script defer src="js/core/process-manager.js"></script>
+    <script defer src="js/core/network-manager.js"></script>
+    <script defer src="js/core/system-state.js"></script>
+    <script defer src="js/core/activity-coordinator.js"></script>
     <script defer src="js/missions/mission-catalog.js"></script>
     <script defer src="js/missions/mission-storage.js"></script>
     <script defer src="js/missions/mission-engine.js"></script>
+    <script defer src="js/exercises/exercise-storage.js"></script>
+    <script defer src="js/exercises/exercise-catalog.js"></script>
+    <script defer src="js/exercises/exercise-engine.js"></script>
     <script defer src="js/ui/system-ui.js"></script>
+    <script defer src="js/ui/assistant-robot.js"></script>
     <script defer src="js/apps/missions-app.js"></script>
+    <script defer src="js/apps/exercises-app.js"></script>
     <script defer src="js/apps/task-manager.js"></script>
+    <script defer src="js/apps/terminal-app.js"></script>
+    <script defer src="js/apps/browser-app.js"></script>
+    <script defer src="js/apps/system-tools.js"></script>
     <script defer src="script.js"></script>
     <script defer src="js/pwa.js"></script>
   </body>

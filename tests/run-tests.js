@@ -66,6 +66,13 @@ test("sistema de arquivos preserva ID ao mover e sourceId ao copiar", () => {
   api.bind(state, () => {});
   const folder = api.create({ parentId: api.roots.documents, kind: "folder", name: "Informática" });
   const file = api.create({ parentId: api.roots.desktop, kind: "file", name: "atividade.docx" });
+  const large = api.create({ parentId: api.roots.documents, kind: "file", name: "video.mp4", sizeBytes: 5000 });
+  assert.equal(api.bytesForItem(large.id), 5000);
+  const usedBeforeTrash = api.usedBytes();
+  api.delete(large.id);
+  assert.equal(api.usedBytes(), usedBeforeTrash, "mover para a Lixeira não libera espaço");
+  api.emptyRecycleBin();
+  assert.equal(api.usedBytes(), usedBeforeTrash - 5000, "esvaziar a Lixeira libera o tamanho do arquivo");
   assert.equal(api.move(file.id, folder.id).id, file.id);
   const copy = api.copy(file.id, api.roots.documents);
   assert.notEqual(copy.id, file.id);
@@ -92,6 +99,89 @@ test("processos essenciais são protegidos e aplicativos podem encerrar", () => 
   assert.equal(api.endProcess(app.pid, { reason: "task-manager" }).ok, true);
   assert.deepEqual(closed, ["texteditor"]);
   assert.ok(emitted.some(([type, detail]) => type === "process:ended" && detail.pid === app.pid));
+  const security = api.getStartupApps().find((entry) => entry.id === "windows-security");
+  assert.equal(api.setStartupEnabled(security.id, false).reason, "protected");
+  const cloud = api.getStartupApps().find((entry) => entry.id === "cloud-sync");
+  const before = api.estimateBootTime();
+  api.setStartupEnabled(cloud.id, true);
+  assert.ok(api.estimateBootTime() > before);
+});
+
+test("catálogo possui os 10 exercícios de diagnóstico completos", () => {
+  const context = { window: { OSLab: {} } };
+  vm.runInNewContext(fs.readFileSync(path.join(root, "js/exercises/exercise-catalog.js"), "utf8"), context);
+  const catalog = context.window.OSLab.exerciseCatalog;
+  assert.equal(catalog.length, 10);
+  assert.deepEqual(Array.from(catalog, (exercise) => exercise.order), Array.from({ length: 10 }, (_, index) => index + 1));
+  assert.equal(new Set(catalog.map((exercise) => exercise.id)).size, 10);
+  catalog.forEach((exercise) => {
+    assert.ok(exercise.title && exercise.description && exercise.goal && exercise.initialSpeech);
+    assert.ok(["Sistema", "Rede"].includes(exercise.category));
+    assert.equal(typeof exercise.hint, "string");
+    assert.equal(typeof exercise.setup, "function");
+    assert.equal(typeof exercise.isReady, "function");
+    assert.equal(typeof exercise.test, "function");
+  });
+});
+
+test("rede virtual respeita Wi-Fi, sub-rede, DHCP e DNS", () => {
+  const emitted = [];
+  const context = { window: { OSLab: { events: { emit: (...args) => emitted.push(args) } } } };
+  vm.runInNewContext(fs.readFileSync(path.join(root, "js/core/network-manager.js"), "utf8"), context);
+  const network = context.window.OSLab.network;
+  network.setWifi(false);
+  assert.equal(network.getSnapshot().adapterConnected, false);
+  network.setWifi(true); network.connectWifi("REDE_OSLAB");
+  assert.equal(network.getSnapshot().internetAvailable, true);
+  network.setIpConfig({ ip: "192.168.2.100", mask: "255.255.255.0", gateway: "192.168.1.1" });
+  assert.equal(network.ping("192.168.1.1").ok, false);
+  network.setDhcp(true);
+  assert.equal(network.ping("192.168.1.1").ok, true);
+  network.setDns("203.0.113.99", false);
+  assert.equal(network.ping("8.8.8.8").ok, true);
+  assert.equal(network.ping("google.com").ok, false);
+  network.setDns("8.8.8.8", false);
+  assert.equal(network.browse("google.com").ok, true);
+  assert.ok(emitted.some(([type]) => type === "network:changed"));
+});
+
+test("motor de exercícios limita dica, troca sessão e restaura snapshot", () => {
+  let saved; let restored = 0; let solved = false;
+  const OSLab = {
+    exerciseStorage: { load: () => ({ version: 1, completed: {}, attempts: {}, hints: {}, overallProgress: 0, lastExerciseId: null }), save: (value) => { saved = JSON.parse(JSON.stringify(value)); }, reset: () => ({ version: 1, completed: {}, attempts: {}, hints: {}, overallProgress: 0, lastExerciseId: null }) },
+    exerciseCatalog: [1, 2].map((order) => ({ id: `ex-${order}`, order, title: `Ex ${order}`, hint: "Uma dica", initialSpeech: "Problema", cause: "Causa", tool: "Ferramenta", setup: () => ({}), isReady: () => solved, test: () => solved })),
+    systemState: { beginEphemeral: () => ({ base: true }), endEphemeral: () => { restored += 1; } },
+    activityCoordinator: { claim: () => {}, release: () => {}, register: () => {} },
+    shell: { openApp: () => {} }, diagnostics: [],
+    events: { subscribe: () => {}, emit: () => {} },
+  };
+  const context = { window: { OSLab } };
+  vm.runInNewContext(fs.readFileSync(path.join(root, "js/exercises/exercise-engine.js"), "utf8"), context);
+  const engine = OSLab.exercises;
+  engine.start("ex-1");
+  assert.equal(engine.useHint(), "Uma dica");
+  assert.equal(engine.useHint(), null);
+  engine.start("ex-2");
+  assert.equal(restored, 1);
+  solved = true;
+  assert.equal(engine.runTest().ok, true);
+  assert.ok(saved.completed["ex-2"]);
+  engine.finish("return");
+  assert.equal(restored, 2);
+});
+
+test("precache inclui todos os recursos carregados pelo documento", () => {
+  const manifest = JSON.parse(fs.readFileSync(path.join(root, "precache-manifest.json"), "utf8"));
+  const entries = new Set(manifest.map((entry) => entry.replace(/^\.\//, "")));
+  manifest.forEach((entry) => assert.ok(fs.existsSync(path.join(root, entry.replace(/^\.\//, ""))), `ausente: ${entry}`));
+  const html = fs.readFileSync(path.join(root, "index.html"), "utf8");
+  const runtime = [...html.matchAll(/(?:src|href)="([^"#]+)"/g)].map((match) => match[1].replace(/^\.\//, "")).filter((entry) => /\.(?:js|css|png|jpe?g|webp|webmanifest)$/i.test(entry));
+  runtime.forEach((entry) => assert.ok(entries.has(entry) || ["manifest.webmanifest", "assets/icons/pwa-192.png"].includes(entry), `fora do precache: ${entry}`));
+});
+
+test("retomada das missões não referencia persist inexistente", () => {
+  const source = fs.readFileSync(path.join(root, "js/missions/mission-engine.js"), "utf8");
+  assert.equal(/\bpersist\s*\(\s*\)/.test(source), false);
 });
 
 test("missão final não conclui durante a preparação do cenário", () => {

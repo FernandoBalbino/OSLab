@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'oslab-offline-v1';
+const CACHE_VERSION = 'oslab-offline-v2';
 const CACHE_PREFIX = 'oslab-offline-';
 
 const CORE_FILES = [
@@ -25,7 +25,6 @@ self.addEventListener('install', (event) => {
   event.waitUntil(
     getPrecacheUrls()
       .then((urls) => caches.open(CACHE_VERSION).then((cache) => cache.addAll(urls)))
-      .then(() => self.skipWaiting())
   );
 });
 

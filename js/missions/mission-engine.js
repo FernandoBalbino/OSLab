@@ -67,6 +67,7 @@
     const mission = missionById(id);
     const available = statuses().find((entry) => entry.id === id);
     if (!mission || !available || available.status === "locked") return { ok: false, reason: "locked" };
+    OSLab.activityCoordinator?.claim?.("mission");
     if (progress.active && progress.active.id !== id) abandon();
     if (progress.active?.id === id) return { ok: true, active: snapshot().active };
     // Repetir uma missão deve sempre começar em um cenário limpo, sem tocar
@@ -158,9 +159,14 @@
       } else if (mission.id === "organize-school" && !OSLab.shell?.isWindowOpen?.(progress.active.scenario.unnecessaryWindowId)) {
         const app = OSLab.shell?.openApp?.("google", { missionId: mission.id });
         if (app?.windowId) progress.active.scenario.unnecessaryWindowId = app.windowId;
-        persist(); notify("resumed", { missionId: mission.id });
+        notify("resumed", { missionId: mission.id });
         OSLab.shell?.notify?.("Missão restaurada", "O aplicativo do cenário final foi reaberto com segurança.", "info");
       } else notify("resumed", { missionId: mission.id });
     },
   };
+
+  OSLab.activityCoordinator?.register?.("mission", {
+    isActive: () => Boolean(progress.active),
+    stop: () => OSLab.missions.abandon(),
+  });
 })(window);

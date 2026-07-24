@@ -2,7 +2,7 @@
   "id": "./index.html",
   "name": "OSLab — Laboratório de Sistemas Operacionais",
   "short_name": "OSLab",
-  "description": "Laboratório virtual offline para praticar conceitos de sistemas operacionais.",
+  "description": "Laboratório virtual offline com missões e exercícios práticos de diagnóstico de sistemas e redes.",
   "lang": "pt-BR",
   "start_url": "./index.html",
   "scope": "./",
