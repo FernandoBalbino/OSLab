@@ -170,6 +170,35 @@ test("motor de exercícios limita dica, troca sessão e restaura snapshot", () =
   assert.equal(restored, 2);
 });
 
+test("próximo exercício preserva a fala explicativa durante a preparação", () => {
+  const subscribers = [];
+  let firstSolved = false;
+  const OSLab = {
+    exerciseStorage: { load: () => ({ version: 1, completed: {}, attempts: {}, hints: {}, overallProgress: 0, lastExerciseId: null }), save: () => {}, reset: () => ({}) },
+    exerciseCatalog: [
+      { id: "ex-1", order: 1, title: "Primeiro", initialSpeech: "Situação inicial um", success: "Resolvido", hint: "Dica", cause: "Causa", tool: "Ferramenta", setup: () => ({}), isReady: () => firstSolved, test: () => firstSolved },
+      { id: "ex-2", order: 2, title: "Segundo", initialSpeech: "O programa congelou e precisa ser diagnosticado.", success: "Resolvido", hint: "Dica", cause: "Causa", tool: "Ferramenta", setup: () => ({ pid: 9001 }), isReady: (ctx) => !ctx.scenario.pid, test: () => false },
+    ],
+    systemState: { beginEphemeral: () => ({}), endEphemeral: () => {} },
+    activityCoordinator: { claim: () => {}, release: () => {}, register: () => {} },
+    shell: { openApp: () => {}, closeMissionWindows: () => {} }, diagnostics: [],
+    events: {
+      subscribe(type, listener) { if (type === "oslab:event") subscribers.push(listener); },
+      emit(type, detail = {}, source = "test") { subscribers.forEach((listener) => listener({ type, detail, source })); },
+    },
+  };
+  const context = { window: { OSLab } };
+  vm.runInNewContext(fs.readFileSync(path.join(root, "js/exercises/exercise-engine.js"), "utf8"), context);
+  OSLab.exercises.start("ex-1");
+  firstSolved = true;
+  assert.equal(OSLab.exercises.runTest().ok, true);
+  OSLab.exercises.finish("next");
+  const next = OSLab.exercises.getSession();
+  assert.equal(next.id, "ex-2");
+  assert.equal(next.phase, "investigating");
+  assert.equal(next.speech, "O programa congelou e precisa ser diagnosticado.");
+});
+
 test("precache inclui todos os recursos carregados pelo documento", () => {
   const manifest = JSON.parse(fs.readFileSync(path.join(root, "precache-manifest.json"), "utf8"));
   const entries = new Set(manifest.map((entry) => entry.replace(/^\.\//, "")));

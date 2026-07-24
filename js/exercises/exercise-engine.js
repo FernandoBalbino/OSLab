@@ -60,8 +60,11 @@
       id, phase: "preparing", attempt: progress.attempts[id], hintUsed: false, scenario: {}, facts: {},
       speech: exercise.initialSpeech, lastSpeech: exercise.initialSpeech, mood: "concerned", startedAt: new Date().toISOString(), baseline: OSLab.systemState.beginEphemeral(),
     };
-    persist("preparing", { exerciseId: id });
+    // A publicação do estado de preparação também gera um evento global.
+    // Ignore validações até o setup preencher o cenário para que a fala inicial
+    // da nova atividade não seja substituída usando dados ainda incompletos.
     handlingEvent = true;
+    persist("preparing", { exerciseId: id });
     try {
       session.scenario = { ...(exercise.setup?.(context(exercise)) || {}) };
       session.phase = "investigating";
