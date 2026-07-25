@@ -9,6 +9,8 @@
 
   function clone(value) { return JSON.parse(JSON.stringify(value)); }
   function definition(id) { return OSLab.exerciseCatalog.find((exercise) => exercise.id === id) || null; }
+  function requiredExercises(exercise) { return OSLab.exerciseCatalog.filter((item) => item.order < exercise.order); }
+  function isUnlocked(exercise) { return requiredExercises(exercise).every((item) => Boolean(progress.completed[item.id])); }
   function publicSession() {
     if (!session) return null;
     const { baseline, ...visible } = session;
@@ -51,6 +53,7 @@
   function start(id) {
     const exercise = definition(id);
     if (!exercise) return { ok: false, reason: "missing" };
+    if (!isUnlocked(exercise)) return { ok: false, reason: "locked" };
     if (session) stop({ reason: "switched", silent: true });
     OSLab.activityCoordinator?.claim?.("exercise");
     progress.attempts[id] = (Number(progress.attempts[id]) || 0) + 1;
@@ -119,13 +122,16 @@
   function useHint() {
     if (!session || session.hintUsed) return null;
     const exercise = definition(session.id); session.hintUsed = true;
+    session.hint = clone(exercise.hint);
     progress.hints[session.id] = { attempt: session.attempt, used: true };
-    speech(exercise.hint, "helpful"); persist("hint", { exerciseId: session.id }); return exercise.hint;
+    speech("Dica aberta. Siga as etapas abaixo com calma e confira o resultado ao final.", "helpful");
+    persist("hint", { exerciseId: session.id }); return clone(exercise.hint);
   }
   function repeatSpeech() { if (!session) return null; persist("speech-repeated", { exerciseId: session.id }); return session.speech; }
   function restart() { if (!session) return { ok: false }; const id = session.id; stop({ reason: "restarting", silent: true }); return start(id); }
   function finish(action = "return") {
     if (!session) return { ok: false };
+    if (action === "next" && session.phase !== "completed") return { ok: false, reason: "not-completed" };
     const completedId = session.id; const order = definition(completedId)?.order || 0;
     stop({ reason: "finished", silent: true });
     if (action === "repeat") return start(completedId);
@@ -135,7 +141,7 @@
   function statuses() {
     return OSLab.exerciseCatalog.map((exercise) => ({
       ...exercise,
-      status: session?.id === exercise.id ? "active" : progress.completed[exercise.id] ? "completed" : "available",
+      status: session?.id === exercise.id ? "active" : !isUnlocked(exercise) ? "locked" : progress.completed[exercise.id] ? "completed" : "available",
       attempts: Number(progress.attempts[exercise.id]) || 0,
     }));
   }

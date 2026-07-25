@@ -117,7 +117,8 @@ test("catálogo possui os 10 exercícios de diagnóstico completos", () => {
   catalog.forEach((exercise) => {
     assert.ok(exercise.title && exercise.description && exercise.goal && exercise.initialSpeech);
     assert.ok(["Sistema", "Rede"].includes(exercise.category));
-    assert.equal(typeof exercise.hint, "string");
+    assert.ok(exercise.hint.title && exercise.hint.intro && exercise.hint.check);
+    assert.ok(Array.isArray(exercise.hint.steps) && exercise.hint.steps.length >= 4);
     assert.equal(typeof exercise.setup, "function");
     assert.equal(typeof exercise.isReady, "function");
     assert.equal(typeof exercise.test, "function");
@@ -145,11 +146,11 @@ test("rede virtual respeita Wi-Fi, sub-rede, DHCP e DNS", () => {
   assert.ok(emitted.some(([type]) => type === "network:changed"));
 });
 
-test("motor de exercícios limita dica, troca sessão e restaura snapshot", () => {
+test("motor de exercícios revela dica sob demanda e exige progressão sequencial", () => {
   let saved; let restored = 0; let solved = false;
   const OSLab = {
-    exerciseStorage: { load: () => ({ version: 1, completed: {}, attempts: {}, hints: {}, overallProgress: 0, lastExerciseId: null }), save: (value) => { saved = JSON.parse(JSON.stringify(value)); }, reset: () => ({ version: 1, completed: {}, attempts: {}, hints: {}, overallProgress: 0, lastExerciseId: null }) },
-    exerciseCatalog: [1, 2].map((order) => ({ id: `ex-${order}`, order, title: `Ex ${order}`, hint: "Uma dica", initialSpeech: "Problema", cause: "Causa", tool: "Ferramenta", setup: () => ({}), isReady: () => solved, test: () => solved })),
+    exerciseStorage: { load: () => ({ version: 1, completed: { "ex-3": { legacy: true } }, attempts: {}, hints: {}, overallProgress: 0, lastExerciseId: null }), save: (value) => { saved = JSON.parse(JSON.stringify(value)); }, reset: () => ({ version: 1, completed: {}, attempts: {}, hints: {}, overallProgress: 0, lastExerciseId: null }) },
+    exerciseCatalog: [1, 2, 3].map((order) => ({ id: `ex-${order}`, order, title: `Ex ${order}`, hint: { title: "Ajuda", intro: "Introdução", steps: ["Abra a ferramenta", "Faça a correção", "Confira o estado", "Teste o resultado"], check: "Confirme" }, initialSpeech: "Problema", cause: "Causa", tool: "Ferramenta", setup: () => ({}), isReady: () => solved, test: () => solved })),
     systemState: { beginEphemeral: () => ({ base: true }), endEphemeral: () => { restored += 1; } },
     activityCoordinator: { claim: () => {}, release: () => {}, register: () => {} },
     shell: { openApp: () => {} }, diagnostics: [],
@@ -158,12 +159,24 @@ test("motor de exercícios limita dica, troca sessão e restaura snapshot", () =
   const context = { window: { OSLab } };
   vm.runInNewContext(fs.readFileSync(path.join(root, "js/exercises/exercise-engine.js"), "utf8"), context);
   const engine = OSLab.exercises;
+  assert.deepEqual(Array.from(engine.getExercises(), (exercise) => exercise.status), ["available", "locked", "locked"]);
+  assert.equal(engine.start("ex-2").reason, "locked");
+  assert.equal(engine.getSession(), null);
   engine.start("ex-1");
-  assert.equal(engine.useHint(), "Uma dica");
+  assert.equal(engine.getSession().hint, undefined, "a dica não aparece antes do clique");
+  assert.equal(engine.useHint().title, "Ajuda");
+  assert.equal(engine.getSession().hint.steps.length, 4);
   assert.equal(engine.useHint(), null);
-  engine.start("ex-2");
-  assert.equal(restored, 1);
+  assert.equal(engine.finish("next").reason, "not-completed");
+  assert.equal(engine.getSession().id, "ex-1");
+  assert.equal(engine.start("ex-3").reason, "locked");
+  assert.equal(engine.getSession().id, "ex-1");
   solved = true;
+  assert.equal(engine.runTest().ok, true);
+  assert.deepEqual(Array.from(engine.getExercises(), (exercise) => exercise.status), ["active", "available", "locked"]);
+  assert.equal(engine.finish("next").ok, true);
+  assert.equal(restored, 1);
+  assert.equal(engine.getSession().id, "ex-2");
   assert.equal(engine.runTest().ok, true);
   assert.ok(saved.completed["ex-2"]);
   engine.finish("return");

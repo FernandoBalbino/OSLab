@@ -17,7 +17,7 @@ Laboratório virtual estático para alunos praticarem conceitos de Sistemas Oper
 - várias janelas abertas ao mesmo tempo, com foco independente e controles para mover, redimensionar, minimizar, maximizar, restaurar e fechar;
 - aplicativo Configurações em português, com telas próprias para Sistema, Bluetooth e dispositivos, Rede e Internet, Personalização, Aplicativos e Hora e idioma;
 - aplicativo Missões com 12 atividades reais, progressão linear, dicas, pontuação, medalhas, checklist, retomada e limpeza de cenários;
-- aplicativo Exercícios com 10 diagnósticos de Sistema e Rede, ajudante robô, dica única, testes finais e restauração segura do ambiente;
+- aplicativo Exercícios com 10 diagnósticos de Sistema e Rede, progressão sequencial, ajudante robô, dicas passo a passo sob demanda, testes finais e restauração segura do ambiente;
 - Gerenciador de Tarefas inspirado no Windows 11, com processos dinâmicos, pesquisa por nome/PID, seleção, ordenação, grupos, modo de eficiência e encerramento de tarefas;
 - menu de contexto inspirado no Windows 11, com submenus de exibição, classificação e criação;
 - menu de contexto próprio para arquivos e pastas, com ações de abrir, renomear, copiar caminho e excluir;
@@ -37,7 +37,7 @@ O ciclo real é: o motor prepara o cenário, o aluno age nos aplicativos do simu
 
 O aplicativo **Exercícios** fica na Área de Trabalho, no menu Iniciar e na pesquisa. Os dez cenários cobrem armazenamento cheio, programa travado, CPU alta, falta de RAM, inicialização lenta, Wi-Fi desativado, modo avião, cabo Ethernet, IP incorreto e falha de DNS.
 
-Cada exercício prepara um problema temporário e acompanha o estado real do simulador. Abrir uma ferramenta não conclui a atividade: o aluno precisa corrigir a causa e executar **Testar novamente**. Reiniciar, sair, trocar de atividade ou recarregar restaura o sistema ao estado anterior; somente conclusões, tentativas, dica e progresso ficam no `localStorage`.
+Cada exercício prepara um problema temporário e acompanha o estado real do simulador. O percurso começa no exercício 1 e cada etapa seguinte só é liberada depois da conclusão de todas as anteriores. Abrir uma ferramenta não conclui a atividade: o aluno precisa corrigir a causa e executar **Testar novamente**. A orientação completa informa o que abrir, onde clicar, como fazer e como conferir, mas só é revelada quando o aluno aperta **Dica**. Reiniciar, sair, trocar de atividade ou recarregar restaura o sistema ao estado anterior; somente conclusões, tentativas, dica e progresso ficam no `localStorage`.
 
 O Terminal aceita `ipconfig`, `ipconfig /all`, `ping` e `nslookup`. Configurações de Rede, o navegador e os comandos usam a mesma rede virtual, portanto seus resultados permanecem coerentes mesmo sem internet real.
 
@@ -118,7 +118,7 @@ O OSLab é uma PWA instalável. Após o primeiro acesso completo, o Service Work
 
 No Chrome ou Chromebook, use **Instalar para usar offline** na tela de login ou no menu Iniciar. O progresso das missões, dos exercícios e as preferências continuam salvos no `localStorage` do dispositivo. O navegador, o Terminal e todas as funções internas usam dados simulados locais e continuam disponíveis sem internet.
 
-O cache atual é `oslab-offline-v3`. Ao alterar recursos, incremente `CACHE_VERSION` em `service-worker.js`; versões antigas são excluídas automaticamente e o site oferece a atualização quando a nova versão está pronta.
+O cache atual é `oslab-offline-v4`. Ao alterar recursos, incremente `CACHE_VERSION` em `service-worker.js`; versões antigas são excluídas automaticamente e o site oferece a atualização quando a nova versão está pronta.
 
 ## Créditos
 
