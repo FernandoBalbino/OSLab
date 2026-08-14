@@ -7,6 +7,7 @@
 - Trilha de Missões: `qa/learning-missions-final-default.png` (`1936 × 1048`).
 - Comparação lado a lado: `qa/learning-path-comparison.png` (`1960 × 620`).
 - Viewports complementares: `qa/learning-exercises-1366x768-final.png`, `qa/learning-exercises-1024x640-final.png` e `qa/learning-exercises-restored-final.png`.
+- Laboratório VPN: `qa/vpn-lab-final.png`, `qa/vpn-app-final.png`, `qa/vpn-app-1024x640.png` e `qa/vpn-app-restored.png`.
 
 ## Referência e intenção
 
@@ -56,7 +57,17 @@
 - Bloqueios reais, ausência de overflow horizontal e ausência de títulos truncados nos três tamanhos.
 - Console do navegador: nenhum erro ou aviso.
 - `prefers-reduced-motion` presente no CSS.
-- Suíte automatizada: `13/13` verificações aprovadas, incluindo engines, legado, assets e precache `oslab-offline-v5`.
+- Suíte automatizada: `17/17` verificações aprovadas, incluindo engines, legado, VPN, assets e precache `oslab-offline-v6`.
+
+## QA complementar — Laboratório VPN
+
+- Os sete fluxos foram executados no navegador do OSLab: Netflix Brasil/EUA, portal da Empresa OS e chamado #1542, comparação de IP Brasil/Alemanha, Wi-Fi público do aeroporto, bloqueio bancário Japão/Brasil, latência Japão/Brasil com OS Meet e allowlist da Administração da Escola.
+- A troca de VPN somente afeta sites depois de atualizar ou navegar novamente, tornando a relação causa e efeito explícita para o aluno.
+- O indicador global exibiu servidor, IP e latência; o aviso de rede pública apareceu ao conectar em `Aeroporto_Free_WiFi`.
+- O painel do professor abriu pelo aplicativo, iniciou diretamente uma missão bloqueada e permitiu marcar conclusões para testar a revisão final.
+- A revisão de três perguntas foi concluída e apresentou a síntese pedagógica com o mascote celebrando.
+- Em `1366 × 768` e `1024 × 640`, aplicativo, trilha, navegador e taskbar permaneceram utilizáveis. Na janela restaurada, as colunas do aplicativo VPN passam a uma única coluna por container query.
+- Durante o QA foram corrigidos dois problemas P2: a busca regional da Netflix agora é reavaliada após atualizar, e um novo teste de velocidade é liberado após a troca de servidor. Não restaram problemas P0–P2.
 
 ## Histórico de comparação
 

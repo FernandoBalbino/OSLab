@@ -21,7 +21,8 @@
 }
 
 .missions-window .window-content,
-.exercises-window .window-content {
+.exercises-window .window-content,
+.vpn-lab-window .window-content {
   overflow: hidden;
   background: var(--learning-bg);
   container-type: inline-size;

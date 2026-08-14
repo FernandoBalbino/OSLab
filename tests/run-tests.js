@@ -138,6 +138,11 @@ test("rede virtual respeita Wi-Fi, sub-rede, DHCP e DNS", () => {
   assert.equal(network.getSnapshot().adapterConnected, false);
   network.setWifi(true); network.connectWifi("REDE_OSLAB");
   assert.equal(network.getSnapshot().internetAvailable, true);
+  assert.ok(network.getSnapshot().availableNetworks.some((entry) => entry.ssid === "Aeroporto_Free_WiFi" && entry.secure === false));
+  const quickSettings = {};
+  network.bind(quickSettings, () => {});
+  network.connectWifi("Casa_OS");
+  assert.equal(quickSettings.connectedSsid, "Casa_OS", "o SSID atual é compartilhado com o estado do sistema");
   network.setIpConfig({ ip: "192.168.2.100", mask: "255.255.255.0", gateway: "192.168.1.1" });
   assert.equal(network.ping("192.168.1.1").ok, false);
   network.setDhcp(true);
@@ -185,6 +190,116 @@ test("motor de exercícios revela dica sob demanda e exige progressão sequencia
   assert.ok(saved.completed["ex-2"]);
   engine.finish("return");
   assert.equal(restored, 2);
+});
+
+test("catálogo VPN contém sete missões sequenciais com dicas progressivas", () => {
+  const context = { window: { OSLab: {} } };
+  vm.runInNewContext(fs.readFileSync(path.join(root, "js/vpn/vpn-mission-catalog.js"), "utf8"), context);
+  const catalog = context.window.OSLab.vpnMissionCatalog;
+  assert.equal(catalog.length, 7);
+  assert.deepEqual(Array.from(catalog, (mission) => mission.order), [1, 2, 3, 4, 5, 6, 7]);
+  assert.equal(new Set(catalog.map((mission) => mission.id)).size, 7);
+  catalog.forEach((mission) => {
+    assert.ok(mission.title && mission.description && mission.goal && mission.success);
+    assert.equal(mission.objectives.length, 3);
+    assert.equal(mission.hints.length, 3);
+    mission.hints.forEach((hint) => {
+      assert.ok(hint.title && hint.intro && hint.check);
+      assert.ok(Array.isArray(hint.steps) && hint.steps.length >= 2);
+    });
+    assert.ok(fs.existsSync(path.join(root, mission.icon)));
+  });
+});
+
+test("estado VPN troca IP, país e rede corporativa com persistência local", () => {
+  const values = new Map();
+  const emitted = [];
+  const OSLab = {
+    events: { emit: (...args) => emitted.push(args) },
+    network: { subscribe: () => {}, getSnapshot: () => ({ connectedSsid: "Casa_OS" }) },
+    ui: { notify: () => {} },
+  };
+  const window = {
+    OSLab,
+    localStorage: {
+      getItem: (key) => values.get(key) || null,
+      setItem: (key, value) => values.set(key, value),
+      removeItem: (key) => values.delete(key),
+    },
+  };
+  vm.runInNewContext(fs.readFileSync(path.join(root, "js/vpn/vpn-state.js"), "utf8"), { window });
+  assert.equal(OSLab.vpn.getSnapshot().currentIp, "192.0.2.25");
+  assert.equal(OSLab.vpn.connect("us").ok, true);
+  assert.equal(OSLab.vpn.getSnapshot().country, "US");
+  assert.equal(OSLab.vpn.getSnapshot().currentIp, "198.51.100.84");
+  OSLab.vpn.connect("empresa-os");
+  assert.equal(OSLab.vpn.getSnapshot().corporateNetwork, "empresa-os");
+  assert.ok(values.has("oslab.vpn.state.v1"));
+  OSLab.vpn.disconnect();
+  assert.equal(OSLab.vpn.getSnapshot().country, "BR");
+  assert.equal(OSLab.vpn.getSnapshot().connected, false);
+  assert.ok(emitted.some(([type]) => type === "vpn:changed"));
+});
+
+test("sites VPN aplicam região, allowlist, acesso corporativo e latência", () => {
+  const OSLab = {};
+  vm.runInNewContext(fs.readFileSync(path.join(root, "js/apps/browser-app.js"), "utf8"), { window: { OSLab } });
+  const sites = OSLab.vpnSites;
+  const base = { vpn: { connected: false, country: "BR", currentIp: "192.0.2.25", latency: 22, serverId: null, corporateNetwork: null } };
+  assert.equal(sites.movies.length, 20);
+  assert.equal(sites.netflixAvailable(base), false);
+  assert.equal(sites.netflixAvailable({ vpn: { ...base.vpn, connected: true, country: "US", serverId: "us" } }), true);
+  assert.equal(sites.portalAllowed({ vpn: { ...base.vpn, connected: true, corporateNetwork: "empresa-os" } }), true);
+  assert.equal(sites.schoolAllowed({ vpn: { ...base.vpn, connected: true, currentIp: "203.0.113.50", corporateNetwork: "escola-admin" } }), true);
+  assert.equal(sites.bankAllowed({ vpn: { ...base.vpn, country: "JP" } }), false);
+  assert.ok(sites.speedMetrics({ vpn: { ...base.vpn, connected: true, latency: 310, serverId: "jp" } }).ping > 200);
+  assert.ok(sites.speedMetrics({ vpn: { ...base.vpn, connected: true, latency: 35, serverId: "br" } }).ping < 60);
+});
+
+test("motor VPN bloqueia atalhos e conclui o primeiro fluxo pelos eventos observados", () => {
+  const subscribers = [];
+  const saved = [];
+  const vpnState = { connected: false, country: "BR", serverId: null, corporateNetwork: null };
+  const networkState = { connectedSsid: "Casa_OS" };
+  const OSLab = {
+    events: {
+      subscribe(type, listener) { if (type === "oslab:event") subscribers.push(listener); },
+      emit(type, detail = {}, source = "test") { const event = { type, detail, source }; subscribers.forEach((listener) => listener(event)); return event; },
+    },
+    vpnLabStorage: {
+      load: () => ({ version: 1, completed: { "vpn-my-ip": { legacy: true } }, active: null, lastMissionId: null }),
+      save: (value) => saved.push(JSON.parse(JSON.stringify(value))),
+      reset: () => ({ version: 1, completed: {}, active: null, lastMissionId: null }),
+    },
+    vpn: { getSnapshot: () => ({ ...vpnState }) },
+    network: { getSnapshot: () => ({ ...networkState }) },
+    activityCoordinator: { claim: () => {}, release: () => {}, register: () => {} },
+    ui: { notify: () => {} },
+    shell: { openApp: () => {} },
+  };
+  const context = { window: { OSLab } };
+  vm.runInNewContext(fs.readFileSync(path.join(root, "js/vpn/vpn-mission-catalog.js"), "utf8"), context);
+  vm.runInNewContext(fs.readFileSync(path.join(root, "js/vpn/vpn-lab-engine.js"), "utf8"), context);
+  assert.deepEqual(Array.from(OSLab.vpnLab.getMissions(), (mission) => mission.status), ["available", "locked", "locked", "locked", "locked", "locked", "locked"]);
+  assert.equal(OSLab.vpnLab.start("vpn-company").reason, "locked");
+  assert.equal(OSLab.vpnLab.start("vpn-netflix").ok, true);
+  assert.equal(OSLab.vpnLab.getHint(), null);
+  assert.equal(OSLab.vpnLab.useHint().title, "Observe a região");
+  assert.equal(OSLab.vpnLab.useHint().title, "Pense no endereço público");
+  assert.equal(OSLab.vpnLab.useHint().title, "Teste outra localização");
+  const savesAtThirdHint = saved.length;
+  assert.equal(OSLab.vpnLab.useHint().title, "Teste outra localização");
+  assert.equal(saved.length, savesAtThirdHint, "a terceira dica é apenas reaberta após atingir o limite");
+  OSLab.events.emit("vpn-browser:action", { action: "netflix-unavailable-br", wifi: "Casa_OS" });
+  vpnState.connected = true; vpnState.country = "US"; vpnState.serverId = "us";
+  OSLab.events.emit("vpn:changed", { vpn: { ...vpnState } });
+  OSLab.events.emit("vpn-browser:action", { action: "netflix-supernatural-us", wifi: "Casa_OS" });
+  assert.ok(OSLab.vpnLab.getProgress().completed["vpn-netflix"]);
+  OSLab.vpnLab.finish("next");
+  assert.equal(OSLab.vpnLab.getProgress().active.id, "vpn-company");
+  assert.equal(OSLab.vpnLab.debugStart("vpn-school").ok, true, "o professor pode abrir qualquer missão pelo painel de debug");
+  assert.equal(OSLab.vpnLab.getProgress().active.id, "vpn-school");
+  assert.ok(saved.length > 0);
 });
 
 test("motor de missões aplica dica uma vez e corrige progresso legado furado", () => {
@@ -274,8 +389,15 @@ test("precache inclui todos os recursos carregados pelo documento", () => {
     "assets/learning/mascot/oslab-mascot-help.png",
     "assets/learning/mascot/oslab-mascot-celebrate.png",
     "assets/learning/icons/target_arrow.svg",
+    "css/vpn.css",
+    "js/vpn/vpn-state.js",
+    "js/vpn/vpn-lab-engine.js",
+    "js/apps/vpn-app.js",
+    "js/apps/vpn-lab-app.js",
+    "assets/vpn/flags/us.svg",
+    "assets/vpn/posters/poster-20.jpg",
   ].forEach((entry) => assert.ok(entries.has(entry), `recurso educacional fora do precache: ${entry}`));
-  assert.match(fs.readFileSync(path.join(root, "service-worker.js"), "utf8"), /oslab-offline-v5/);
+  assert.match(fs.readFileSync(path.join(root, "service-worker.js"), "utf8"), /oslab-offline-v6/);
 });
 
 test("retomada das missões não referencia persist inexistente", () => {

@@ -12,6 +12,8 @@
     taskmanager: { title: "Gerenciador de Tarefas", icon: "assets/icons/taskmanager.png", address: "Processos", task: "taskmanager" },
     missions: { title: "Missões", icon: "assets/learning/icons/target_arrow.svg", address: "Trilha de Missões", task: "missions", pinned: true },
     exercises: { title: "Exercícios", icon: "assets/learning/icons/wrench.svg", address: "Trilha de Exercícios", task: "exercises", pinned: true },
+    vpn: { title: "VPN", icon: "assets/learning/icons/shield_checkmark.svg", address: "VPN do OSLab", task: "vpn", pinned: true },
+    vpnlab: { title: "Laboratório VPN", icon: "assets/learning/icons/globe_search.svg", address: "Trilha de VPN", task: "vpnlab", pinned: true },
     texteditor: { title: "Editor de Texto", icon: "assets/icons/notepad.png", address: "Documento sem título", task: "texteditor" },
   };
 

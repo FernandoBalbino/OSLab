@@ -30,3 +30,18 @@ O OSLab não é afiliado à Microsoft. A interface é uma simulação educaciona
 - Origem: ilustrações originais criadas para este projeto.
 - Uso no OSLab: estados neutro, oferecendo ajuda e celebrando no assistente educacional.
 - Observação: o mascote não reutiliza personagens, marcas ou assets do Duolingo.
+
+## Flag Icons
+
+- Projeto original: https://github.com/lipis/flag-icons
+- Autor/equipe: Panayiotis Lipiridis e colaboradores
+- Licença: MIT
+- Arquivo de licença incluído: `assets/vpn/flags/LICENSE.txt`
+- Uso no OSLab: bandeiras dos servidores comerciais no aplicativo VPN.
+
+## Lorem Picsum / Unsplash
+
+- Catálogo: https://picsum.photos/
+- Créditos individuais: `assets/vpn/posters/CREDITS.md`
+- Uso no OSLab: imagens locais recortadas como capas fictícias dos 20 títulos da Netflix simulada.
+- Observação: não são pôsteres oficiais da Netflix nem de séries reais; os títulos e metadados do catálogo são fictícios, salvo o nome usado na atividade pedagógica de disponibilidade regional.

@@ -23,6 +23,10 @@
   let state = { ...defaults };
   const availableNetworks = Object.freeze([
     { ssid: "REDE_OSLAB", secure: true, signal: 94 },
+    { ssid: "Casa_OS", secure: true, signal: 96 },
+    { ssid: "Escola_WiFi", secure: true, signal: 82 },
+    { ssid: "Aeroporto_Free_WiFi", secure: false, signal: 76 },
+    { ssid: "Cafe_Free", secure: false, signal: 58 },
     { ssid: "BIBLIOTECA", secure: true, signal: 67 },
     { ssid: "VISITANTES", secure: false, signal: 42 },
   ]);
@@ -61,6 +65,7 @@
     if (!backing) return;
     backing.wifi = state.wifiEnabled;
     backing.airplane = state.airplaneMode;
+    backing.connectedSsid = state.connectedSsid;
   }
   function notify(reason) {
     syncBacking(); persist();
@@ -192,7 +197,17 @@
   OSLab.network = {
     defaults: { ...defaults }, bind(sharedQuickSettings, save) {
       backing = sharedQuickSettings || backing; persist = typeof save === "function" ? save : persist;
-      if (backing) state = { ...state, wifiEnabled: backing.wifi !== false, airplaneMode: Boolean(backing.airplane) };
+      if (backing) {
+        const storedSsid = availableNetworks.some((network) => network.ssid === backing.connectedSsid)
+          ? backing.connectedSsid
+          : state.connectedSsid;
+        state = {
+          ...state,
+          wifiEnabled: backing.wifi !== false,
+          airplaneMode: Boolean(backing.airplane),
+          connectedSsid: storedSsid,
+        };
+      }
       if (state.airplaneMode) { state.wifiEnabled = false; state.connectedSsid = null; }
       syncBacking(); return this;
     },

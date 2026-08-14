@@ -179,6 +179,7 @@
     recycleBin: [],
     quickSettings: {
       wifi: true,
+      connectedSsid: "REDE_OSLAB",
       bluetooth: false,
       airplane: false,
       hotspot: false,
@@ -1139,6 +1140,8 @@
     if (record.appId === "taskmanager") OSLab.taskManagerApp ? OSLab.taskManagerApp.render(record) : renderTaskManager(record);
     if (record.appId === "missions") OSLab.missionsApp.render(record);
     if (record.appId === "exercises") OSLab.exercisesApp.render(record);
+    if (record.appId === "vpn") OSLab.vpnApp.render(record);
+    if (record.appId === "vpnlab") OSLab.vpnLabApp.render(record);
     if (record.appId === "texteditor") renderTextEditor(record);
   }
 
@@ -1199,11 +1202,13 @@
     record.address.textContent = definition.address;
     record.toolbar.classList.toggle("browser-toolbar", appId === "google");
     element.classList.toggle("settings-window", appId === "settings");
-    record.toolbar.classList.toggle("is-hidden", ["settings", "taskmanager", "missions", "exercises", "texteditor"].includes(appId));
+    record.toolbar.classList.toggle("is-hidden", ["settings", "taskmanager", "missions", "exercises", "vpn", "vpnlab", "texteditor"].includes(appId));
     record.settingsSearch.classList.toggle("is-hidden", appId !== "settings" && appId !== "taskmanager");
     element.classList.toggle("taskmanager-window", appId === "taskmanager");
     element.classList.toggle("missions-window", appId === "missions");
     element.classList.toggle("exercises-window", appId === "exercises");
+    element.classList.toggle("vpn-window", appId === "vpn");
+    element.classList.toggle("vpn-lab-window", appId === "vpnlab");
     element.classList.toggle("texteditor-window", appId === "texteditor");
     if (appId === "taskmanager") {
       const taskSearchInput = $("input", record.settingsSearch);
@@ -1216,7 +1221,7 @@
     positionWindow(record);
     wireWindow(record);
     renderApp(record);
-    if (["settings", "taskmanager", "missions", "exercises"].includes(appId)) {
+    if (["settings", "taskmanager", "missions", "exercises", "vpnlab"].includes(appId)) {
       element.classList.add("is-maximized");
       record.maximizeIcon.src = "assets/icons/ui/restore.png";
       record.maximizeIcon.closest("button").setAttribute("aria-label", "Restaurar");
@@ -1229,7 +1234,7 @@
       icon: definition.icon,
       status: "Em execução",
       cpu: appId === "taskmanager" ? 0.3 : 0.1,
-      memory: appId === "google" ? 64.2 : ["missions", "exercises"].includes(appId) ? 42.6 : appId === "texteditor" ? 42 : 28.4,
+      memory: appId === "google" ? 64.2 : ["missions", "exercises", "vpnlab"].includes(appId) ? 42.6 : appId === "vpn" ? 34.8 : appId === "texteditor" ? 42 : 28.4,
       missionId: options.missionId || null,
       efficient: appId === "google",
     });
@@ -1883,6 +1888,8 @@
       { id: "taskmanager", name: "Gerenciador de Tarefas", icon: "assets/icons/taskmanager.png" },
       { id: "missions", name: "Missões", icon: "assets/icons/taskmanager/details.png" },
       { id: "exercises", name: "Exercícios", icon: "assets/icons/settings-rows/troubleshoot.png" },
+      { id: "vpn", name: "VPN", icon: "assets/learning/icons/shield_checkmark.svg" },
+      { id: "vpnlab", name: "Laboratório VPN", icon: "assets/learning/icons/globe_search.svg" },
       { id: "terminal", name: "Terminal", icon: "assets/icons/terminal.png" },
     ].filter((item) => item.name.toLocaleLowerCase("pt-BR").includes(query));
 
@@ -1917,6 +1924,7 @@
     const network = OSLab.network.getSnapshot();
     state.quickSettings.wifi = network.wifiEnabled;
     state.quickSettings.airplane = network.airplaneMode;
+    state.quickSettings.connectedSsid = network.connectedSsid;
     $$("[data-quick-action]").forEach((button) => {
       button.classList.toggle("is-active", Boolean(state.quickSettings[button.dataset.quickAction]));
     });

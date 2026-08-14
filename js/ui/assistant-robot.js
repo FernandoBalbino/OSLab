@@ -18,7 +18,7 @@
     return root;
   }
   function place() {
-    const focusedLayout = document.querySelector(".missions-window.is-focused .learning-layout, .exercises-window.is-focused .learning-layout");
+    const focusedLayout = document.querySelector(".missions-window.is-focused .learning-layout, .exercises-window.is-focused .learning-layout, .vpn-lab-window.is-focused .learning-layout");
     const host = focusedLayout || document.querySelector("#desktop");
     if (host && root.parentElement !== host) host.appendChild(root);
     root.classList.toggle("is-docked", Boolean(focusedLayout));
@@ -63,11 +63,32 @@
         : `<button type="button" data-assistant-action="exercise-hint"><img src="${icon("lightbulb")}" alt="" />${hint ? "Reabrir dica" : "Dica"}</button><button type="button" data-assistant-action="exercise-repeat-speech"><img src="${icon("more_horizontal")}" alt="" />Repetir fala</button><button class="is-primary" type="button" data-assistant-action="exercise-test"><img src="${icon("play")}" alt="" />Testar</button><button type="button" data-assistant-action="exercise-restart"><img src="${icon("arrow_reset")}" alt="" />Reiniciar</button><button type="button" data-assistant-action="exercise-exit"><img src="${icon("dismiss")}" alt="" />Sair</button>`,
     };
   }
+  function renderVpnLab(progress) {
+    const active = progress.active;
+    const mission = OSLab.vpnMissionCatalog.find((entry) => entry.id === active.id);
+    const hint = OSLab.vpnLab.getHint();
+    const completed = active.phase === "completed";
+    const hasNext = mission.order < OSLab.vpnMissionCatalog.length;
+    const nextObjective = mission.objectives.find((objective) => !active.checklist?.[objective.id]);
+    const checklist = `<ul class="assistant-checklist">${mission.objectives.map((objective) => `<li class="${active.checklist?.[objective.id] ? "is-done" : ""}"><img src="${icon(active.checklist?.[objective.id] ? "checkmark_circle" : "target_arrow")}" alt="" /><span>${safe(objective.label)}</span></li>`).join("")}</ul>`;
+    return {
+      kind: "vpn-lab",
+      mascot: completed ? "celebrate" : hint ? "help" : "neutral",
+      eyebrow: completed ? "Missão VPN concluída" : "Laboratório VPN",
+      title: mission.title,
+      message: completed ? mission.success : nextObjective ? `Próximo objetivo: ${nextObjective.label}` : "Observe o resultado no sistema e atualize a página quando necessário.",
+      body: `${completed ? `<div class="assistant-result"><span><strong>Conceito</strong>${safe(mission.success)}</span></div>` : checklist}${hint && !completed ? hintMarkup(hint, `Dica ${active.hintsUsed} de ${mission.hints.length}`) : ""}`,
+      actions: completed
+        ? `<button type="button" data-assistant-action="vpn-lab-return"><img src="${icon("arrow_left")}" alt="" />Voltar</button><button type="button" data-assistant-action="vpn-lab-repeat"><img src="${icon("arrow_reset")}" alt="" />Refazer</button><button class="is-primary" type="button" data-assistant-action="vpn-lab-next"><img src="${icon(hasNext ? "arrow_right" : "target_arrow")}" alt="" />${hasNext ? "Próxima" : "Ver trilha"}</button>`
+        : `<button type="button" data-assistant-action="vpn-lab-hint"><img src="${icon("lightbulb")}" alt="" />${active.hintsUsed >= mission.hints.length ? `Rever dica ${mission.hints.length}/${mission.hints.length}` : active.hintsUsed ? `Próxima dica ${active.hintsUsed + 1}/${mission.hints.length}` : "Dica 1/3"}</button><button type="button" data-assistant-action="vpn-lab-browser"><img src="${icon("globe_search")}" alt="" />Navegador</button><button type="button" data-assistant-action="vpn-lab-vpn"><img src="${icon("shield_checkmark")}" alt="" />VPN</button><button type="button" data-assistant-action="vpn-lab-open"><img src="${icon("target_arrow")}" alt="" />Trilha</button><button type="button" data-assistant-action="vpn-lab-exit"><img src="${icon("dismiss")}" alt="" />Sair</button>`,
+    };
+  }
   function render() {
     ensure();
     const missionProgress = OSLab.missions?.getProgress?.();
     const exerciseSession = OSLab.exercises?.getSession?.();
-    const view = exerciseSession ? renderExercise(exerciseSession) : missionProgress?.active ? renderMission(missionProgress) : null;
+    const vpnLabProgress = OSLab.vpnLab?.getProgress?.();
+    const view = vpnLabProgress?.active ? renderVpnLab(vpnLabProgress) : exerciseSession ? renderExercise(exerciseSession) : missionProgress?.active ? renderMission(missionProgress) : null;
     document.body.classList.toggle("has-learning-assistant", Boolean(view));
     if (!view) { root.className = "learning-assistant is-hidden"; root.innerHTML = ""; place(); return; }
     root.className = `learning-assistant is-${view.kind} ${collapsed ? "is-collapsed" : ""}`;
@@ -91,12 +112,21 @@
     if (action === "exercise-return") OSLab.exercises.finish("return");
     if (action === "exercise-repeat") OSLab.exercises.finish("repeat");
     if (action === "exercise-next") OSLab.exercises.finish("next");
+    if (action === "vpn-lab-hint") { OSLab.vpnLab.useHint(); collapsed = false; render(); }
+    if (action === "vpn-lab-browser") OSLab.shell.openApp("google");
+    if (action === "vpn-lab-vpn") OSLab.shell.openApp("vpn");
+    if (action === "vpn-lab-open") OSLab.shell.openApp("vpnlab");
+    if (action === "vpn-lab-exit" && await OSLab.ui.confirm({ title: "Sair da missão VPN?", message: "A conexão VPN atual será mantida, mas esta tentativa será encerrada.", confirmLabel: "Sair" })) OSLab.vpnLab.exit();
+    if (action === "vpn-lab-return") OSLab.vpnLab.finish("return");
+    if (action === "vpn-lab-repeat") OSLab.vpnLab.finish("repeat");
+    if (action === "vpn-lab-next") OSLab.vpnLab.finish("next");
   }
 
   document.addEventListener("DOMContentLoaded", render);
   document.addEventListener("oslab:window-focused", () => window.requestAnimationFrame(render));
   OSLab.missions?.subscribe?.(render);
   OSLab.exercises?.subscribe?.(render);
+  OSLab.vpnLab?.subscribe?.(render);
   ["app:opened", "app:closed", "window:minimized", "window:maximized", "window:restored"].forEach((type) => OSLab.events?.subscribe?.(type, () => window.requestAnimationFrame(render)));
   OSLab.assistantRobot = { render, expand() { collapsed = false; render(); }, collapse() { collapsed = true; render(); } };
 })(window);

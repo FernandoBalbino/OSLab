@@ -17,6 +17,7 @@
     <link rel="stylesheet" href="css/missions.css" />
     <link rel="stylesheet" href="css/exercises.css" />
     <link rel="stylesheet" href="css/learning.css" />
+    <link rel="stylesheet" href="css/vpn.css" />
   </head>
   <body>
     <main id="oslab" class="oslab" data-state="login">
@@ -92,6 +93,14 @@
           <button class="desktop-shortcut" type="button" data-app="exercises">
             <img src="assets/learning/icons/wrench.svg" alt="" />
             <span>Exercícios</span>
+          </button>
+          <button class="desktop-shortcut" type="button" data-app="vpn">
+            <img src="assets/learning/icons/shield_checkmark.svg" alt="" />
+            <span>VPN</span>
+          </button>
+          <button class="desktop-shortcut" type="button" data-app="vpnlab">
+            <img src="assets/learning/icons/globe_search.svg" alt="" />
+            <span>Laboratório VPN</span>
           </button>
         </div>
 
@@ -170,6 +179,14 @@
             <button type="button" data-app="exercises">
               <img src="assets/learning/icons/wrench.svg" alt="" />
               <span>Exercícios</span>
+            </button>
+            <button type="button" data-app="vpn">
+              <img src="assets/learning/icons/shield_checkmark.svg" alt="" />
+              <span>VPN</span>
+            </button>
+            <button type="button" data-app="vpnlab">
+              <img src="assets/learning/icons/globe_search.svg" alt="" />
+              <span>Laboratório VPN</span>
             </button>
           </div>
           <footer class="start-footer">
@@ -388,6 +405,10 @@
             <span id="runtime-taskbar-apps" class="runtime-taskbar-apps" aria-label="Aplicativos abertos"></span>
           </div>
           <div class="taskbar-right">
+            <button id="vpn-indicator" class="vpn-indicator is-hidden" type="button" data-app="vpn" aria-label="VPN desconectada">
+              <img src="assets/learning/icons/shield_checkmark.svg" alt="" />
+              <span>VPN</span>
+            </button>
             <button id="quick-settings-button" class="system-tray" type="button" aria-label="Rede, volume e bateria" aria-expanded="false">
               <img src="assets/icons/ui/wifi.png" alt="" />
               <img id="taskbar-audio-icon" src="assets/icons/ui/audio.png" alt="" />
@@ -417,6 +438,10 @@
     <script defer src="js/exercises/exercise-storage.js"></script>
     <script defer src="js/exercises/exercise-catalog.js"></script>
     <script defer src="js/exercises/exercise-engine.js"></script>
+    <script defer src="js/vpn/vpn-state.js"></script>
+    <script defer src="js/vpn/vpn-mission-catalog.js"></script>
+    <script defer src="js/vpn/vpn-lab-storage.js"></script>
+    <script defer src="js/vpn/vpn-lab-engine.js"></script>
     <script defer src="js/ui/system-ui.js"></script>
     <script defer src="js/ui/learning-path.js"></script>
     <script defer src="js/ui/assistant-robot.js"></script>
@@ -425,6 +450,8 @@
     <script defer src="js/apps/task-manager.js"></script>
     <script defer src="js/apps/terminal-app.js"></script>
     <script defer src="js/apps/browser-app.js"></script>
+    <script defer src="js/apps/vpn-app.js"></script>
+    <script defer src="js/apps/vpn-lab-app.js"></script>
     <script defer src="js/apps/system-tools.js"></script>
     <script defer src="script.js"></script>
     <script defer src="js/pwa.js"></script>

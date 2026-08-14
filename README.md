@@ -18,6 +18,7 @@ Laboratório virtual estático para alunos praticarem conceitos de Sistemas Oper
 - aplicativo Configurações em português, com telas próprias para Sistema, Bluetooth e dispositivos, Rede e Internet, Personalização, Aplicativos e Hora e idioma;
 - aplicativo Missões com 12 atividades reais, progressão linear, dicas, pontuação, medalhas, checklist, retomada e limpeza de cenários;
 - aplicativo Exercícios com 10 diagnósticos de Sistema e Rede, progressão sequencial, ajudante robô, dicas passo a passo sob demanda, testes finais e restauração segura do ambiente;
+- laboratório VPN com sete missões práticas, servidores comerciais e corporativos, indicador global, sites simulados, dicas progressivas, revisão final e modo professor;
 - Gerenciador de Tarefas inspirado no Windows 11, com processos dinâmicos, pesquisa por nome/PID, seleção, ordenação, grupos, modo de eficiência e encerramento de tarefas;
 - menu de contexto inspirado no Windows 11, com submenus de exibição, classificação e criação;
 - menu de contexto próprio para arquivos e pastas, com ações de abrir, renomear, copiar caminho e excluir;
@@ -40,6 +41,16 @@ O aplicativo **Exercícios** fica na Área de Trabalho, no menu Iniciar e na pes
 Cada exercício prepara um problema temporário e acompanha o estado real do simulador. O percurso começa no exercício 1 e cada etapa seguinte só é liberada depois da conclusão de todas as anteriores. Abrir uma ferramenta não conclui a atividade: o aluno precisa corrigir a causa e executar **Testar novamente**. A orientação completa informa o que abrir, onde clicar, como fazer e como conferir, mas só é revelada quando o aluno aperta **Dica**. Reiniciar, sair, trocar de atividade ou recarregar restaura o sistema ao estado anterior; somente conclusões, tentativas, dica e progresso ficam no `localStorage`.
 
 O Terminal aceita `ipconfig`, `ipconfig /all`, `ping` e `nslookup`. Configurações de Rede, o navegador e os comandos usam a mesma rede virtual, portanto seus resultados permanecem coerentes mesmo sem internet real.
+
+## Laboratório VPN
+
+Os aplicativos **VPN** e **Laboratório VPN** ficam na Área de Trabalho, no menu Iniciar e na pesquisa. As sete missões cobrem catálogo regional, acesso remoto à empresa, IP público aparente, Wi-Fi público, análise de risco bancária, latência em videoconferência e allowlist de IP da escola. Elas são liberadas em ordem e cada uma usa ações reais dentro do desktop simulado.
+
+O navegador oferece páginas locais para `netflix.com`, `meuip.com`, `portal.empresa.local`, `bancoos.com`, `speedtest.os`, `meet.os` e `admin.escola.local`. A página captura a conexão no momento em que é aberta ou atualizada; assim, trocar o servidor VPN não muda silenciosamente uma página já carregada. O catálogo fictício possui 20 capas locais e a atividade regional de Supernatural diferencia Brasil e Estados Unidos.
+
+O estado canônico da conexão é mantido por `js/vpn/vpn-state.js` na chave `oslab.vpn.state.v1`. O motor das atividades usa `js/vpn/vpn-lab-engine.js`, e as conclusões, dicas, checklist e revisão ficam em `oslab.vpn.progress.v1`. Para adicionar um servidor, inclua a definição em `servers` dentro de `vpn-state.js`; para adicionar uma missão, crie a entrada estruturada em `vpn-mission-catalog.js` e a respectiva regra de checklist no motor.
+
+As capas estão em `assets/vpn/posters` e seus créditos em `assets/vpn/posters/CREDITS.md`; as bandeiras e licença ficam em `assets/vpn/flags`. **Redefinir laboratório** apaga conexão e progresso VPN. O modo professor abre pelo botão **Painel do professor** no aplicativo VPN ou pelo atalho `Ctrl + Shift + Alt + V`, permitindo selecionar Wi-Fi, servidor, missão e conclusão. Tudo é simulado: não há túnel, consulta de IP, acesso bancário, streaming ou conexão a uma rede real.
 
 ### Teste manual dos exercícios
 
@@ -85,10 +96,11 @@ Clique com o botão direito na barra de tarefas e escolha **Gerenciador de Taref
 - `js/apps`: Missões, Exercícios, Gerenciador de Tarefas, Terminal, navegador offline e superfícies de diagnóstico;
 - `js/missions`: catálogo, motor e persistência;
 - `js/exercises`: catálogo, máquina de estados e persistência dos exercícios;
+- `js/vpn`: estado global, catálogo, motor e persistência do laboratório VPN;
 - `js/core/network-manager.js` e `js/core/system-state.js`: estado canônico de rede, armazenamento, desempenho e snapshots;
 - `js/ui`: notificações, confirmações, widget e modal de conclusão;
 - `script.js`: integração com o shell, as janelas e os aplicativos existentes;
-- `css/missions.css` e `css/task-manager.css`: estilos das novas superfícies.
+- `css/learning.css`, `css/vpn.css`, `css/missions.css` e `css/task-manager.css`: estilos das superfícies educacionais e do sistema.
 
 Para adicionar uma missão, inclua uma entrada em `js/missions/mission-catalog.js` com dados, objetivos, dicas e as funções `setup`, `validate`, `cleanup` e `reset`. A validação deve consultar o estado real e reagir aos eventos de `OSLab.events`.
 
@@ -118,7 +130,7 @@ O OSLab é uma PWA instalável. Após o primeiro acesso completo, o Service Work
 
 No Chrome ou Chromebook, use **Instalar para usar offline** na tela de login ou no menu Iniciar. O progresso das missões, dos exercícios e as preferências continuam salvos no `localStorage` do dispositivo. O navegador, o Terminal e todas as funções internas usam dados simulados locais e continuam disponíveis sem internet.
 
-O cache atual é `oslab-offline-v4`. Ao alterar recursos, incremente `CACHE_VERSION` em `service-worker.js`; versões antigas são excluídas automaticamente e o site oferece a atualização quando a nova versão está pronta.
+O cache atual é `oslab-offline-v6`. Ao alterar recursos, incremente `CACHE_VERSION` em `service-worker.js`; versões antigas são excluídas automaticamente e o site oferece a atualização quando a nova versão está pronta.
 
 ## Créditos
 

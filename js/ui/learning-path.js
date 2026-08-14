@@ -24,11 +24,16 @@
   function nodeMarkup(item, index, selectedId, kind, hasNext) {
     const lane = lanes[index % lanes.length];
     const nextLane = lanes[(index + 1) % lanes.length];
-    const feminine = kind === "mission";
-    const selectAttr = kind === "mission" ? "data-mission-select" : "data-exercise-select";
+    const isMission = kind === "mission" || kind === "vpn-mission";
+    const feminine = isMission;
+    const selectAttr = kind === "mission"
+      ? "data-mission-select"
+      : kind === "vpn-mission"
+        ? "data-vpn-mission-select"
+        : "data-exercise-select";
     const connector = !hasNext ? "" : `<img class="learning-connector lane-${lane} ${connectorDirection(lane, nextLane)}" src="${icon("arrow_right")}" alt="" aria-hidden="true" />`;
     return `<div class="learning-step lane-${lane}">
-      <button type="button" class="learning-node is-${item.status} ${item.id === selectedId ? "is-selected" : ""}" ${selectAttr}="${safe(item.id)}" ${item.status === "locked" ? "disabled" : ""} ${item.status === "active" ? 'aria-current="step"' : ""} aria-label="${safe(`${kind === "mission" ? "Missão" : "Exercício"} ${item.order}: ${item.title}. ${statusLabel(item.status, feminine)}`)}">
+      <button type="button" class="learning-node is-${item.status} ${item.id === selectedId ? "is-selected" : ""}" ${selectAttr}="${safe(item.id)}" ${item.status === "locked" ? "disabled" : ""} ${item.status === "active" ? 'aria-current="step"' : ""} aria-label="${safe(`${isMission ? "Missão" : "Exercício"} ${item.order}: ${item.title}. ${statusLabel(item.status, feminine)}`)}">
         <span class="learning-node-face"><img src="${safe(item.icon)}" alt="" /></span>
         <span class="learning-node-state"><img src="${statusIcon(item.status)}" alt="" /></span>
         <span class="learning-node-number">${String(item.order).padStart(2, "0")}</span>
