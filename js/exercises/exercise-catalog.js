@@ -264,6 +264,19 @@
     },
   ];
 
-  catalog.forEach((exercise) => Object.freeze(exercise));
+  const presentation = {
+    "storage-full": "assets/learning/icons/hard_drive.svg",
+    "frozen-program": "assets/learning/icons/dismiss_circle.svg",
+    "high-cpu": "assets/learning/icons/top_speed.svg",
+    "low-memory": "assets/learning/icons/data_histogram.svg",
+    "slow-startup": "assets/learning/icons/timer.svg",
+    "wifi-disabled": "assets/learning/icons/wifi_1.svg",
+    "airplane-mode": "assets/learning/icons/airplane.svg",
+    "ethernet-cable": "assets/learning/icons/plug_connected.svg",
+    "wrong-ip": "assets/learning/icons/globe_error.svg",
+    "dns-failure": "assets/learning/icons/globe_search.svg",
+  };
+
+  catalog.forEach((exercise) => { exercise.icon = presentation[exercise.id]; Object.freeze(exercise); });
   OSLab.exerciseCatalog = Object.freeze(catalog);
 })(window);

@@ -49,12 +49,12 @@
     docx: "assets/icons/win/documents.png",
     image: "assets/icons/win/pictures.png",
     file: "assets/icons/win/documents.png",
-    mission: "assets/icons/taskmanager/details.png",
-    medal: "assets/icons/taskmanager/performance.png",
-    checklist: "assets/icons/taskmanager/details.png",
-    success: "assets/icons/context/restore-item.png",
+    mission: "assets/learning/icons/target_arrow.svg",
+    medal: "assets/learning/icons/ribbon.svg",
+    checklist: "assets/learning/icons/list_bar.svg",
+    success: "assets/learning/icons/checkmark_circle.svg",
     warning: "assets/icons/settings-rows/troubleshoot.png",
-    info: "assets/icons/settings-rows/focus.png",
+    info: "assets/learning/icons/lightbulb.svg",
     error: "assets/icons/context/delete.png",
   };
 

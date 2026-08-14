@@ -3,7 +3,6 @@
   const OSLab = global.OSLab = global.OSLab || {};
   let toastRoot;
   let modalRoot;
-  let widget;
 
   function ensureRoots() {
     if (!toastRoot) {
@@ -58,7 +57,7 @@
     ensureRoots();
     modalRoot.classList.remove("is-hidden");
     modalRoot.innerHTML = `<section class="oslab-dialog mission-result-dialog" role="dialog" aria-modal="true" aria-labelledby="mission-result-title">
-      <div class="mission-result-emblem"><img src="${OSLab.icons.get("success")}" alt="" /></div>
+      <div class="mission-result-emblem"><img src="assets/learning/mascot/oslab-mascot-celebrate.png" alt="Mascote do OSLab comemorando" /></div>
       <h2 id="mission-result-title">Missão concluída!</h2><h3>${escapeHtml(result.title)}</h3><p>${escapeHtml(result.concept)}</p>
       <div class="mission-result-stats"><span><strong>${result.score}</strong><small>Pontos</small></span><span><strong>${result.mistakes}</strong><small>Erros</small></span><span><strong>${result.hintsUsed}</strong><small>Dicas</small></span></div>
       <footer><button type="button" data-result-action="system">Voltar ao sistema</button><button type="button" data-result-action="repeat">Repetir missão</button><button class="is-primary" type="button" data-result-action="next">Próxima missão</button></footer>
@@ -70,27 +69,7 @@
     }));
   }
 
-  function renderWidget(progress) {
-    if (!widget) {
-      widget = document.createElement("aside"); widget.className = "mission-widget is-hidden"; widget.setAttribute("aria-live", "polite");
-      document.querySelector("#desktop")?.appendChild(widget);
-    }
-    const active = progress.active;
-    if (!active) { widget.classList.add("is-hidden"); widget.innerHTML = ""; return; }
-    const mission = OSLab.missionCatalog.find((entry) => entry.id === active.id);
-    widget.classList.remove("is-hidden");
-    widget.innerHTML = `<header><img src="${OSLab.icons.get("mission")}" alt="" /><span><small>Missão ativa</small><strong>${escapeHtml(mission.title)}</strong></span><button type="button" data-widget-toggle aria-label="Recolher painel"><img src="assets/icons/ui/right.png" alt="" /></button></header>
-      <div class="mission-widget-body"><ul>${mission.objectives.map((objective) => `<li class="${active.checklist[objective.id] ? "is-done" : ""}"><img src="${active.checklist[objective.id] ? OSLab.icons.get("success") : OSLab.icons.get("checklist")}" alt="" /><span>${escapeHtml(objective.label)}</span></li>`).join("")}</ul>
-      <footer><button type="button" data-widget-action="missions"><img src="${OSLab.icons.get("mission")}" alt="" />Abrir Missões</button><button type="button" data-widget-action="hint"><img src="${OSLab.icons.get("info")}" alt="" />Dica</button><button type="button" data-widget-action="restart"><img src="assets/icons/ui/refresh.png" alt="" />Reiniciar</button><button type="button" data-widget-action="abandon"><img src="assets/icons/context/delete.png" alt="" />Abandonar</button></footer></div>`;
-    widget.querySelector("[data-widget-toggle]").addEventListener("click", () => widget.classList.toggle("is-collapsed"));
-    widget.querySelectorAll("[data-widget-action]").forEach((button) => button.addEventListener("click", async () => {
-      const action = button.dataset.widgetAction;
-      if (action === "missions") OSLab.shell.openApp("missions");
-      if (action === "hint") { const hint = OSLab.missions.useHint(); if (hint) notify("Dica da missão", hint, "info", 6500); }
-      if (action === "restart" && await confirm({ title: "Reiniciar missão?", message: "O cenário atual será limpo e preparado novamente.", confirmLabel: "Reiniciar" })) OSLab.missions.restart();
-      if (action === "abandon" && await confirm({ title: "Abandonar missão?", message: "Os itens criados pela missão serão removidos.", confirmLabel: "Abandonar" })) OSLab.missions.abandon();
-    }));
-  }
+  function renderWidget() { OSLab.assistantRobot?.render?.(); }
 
   function runTaskDialog(apps) {
     ensureRoots();
@@ -101,7 +80,7 @@
   }
 
   document.addEventListener("keydown", (event) => { if (event.key === "Escape" && modalRoot && !modalRoot.classList.contains("is-hidden")) closeModal(false); });
-  document.addEventListener("DOMContentLoaded", () => { ensureRoots(); renderWidget(OSLab.missions?.getProgress?.() || { active: null }); OSLab.missions?.subscribe?.((progress) => renderWidget(progress)); });
+  document.addEventListener("DOMContentLoaded", ensureRoots);
   OSLab.events.subscribe("mission:completed", (event) => showMissionResult(event.detail.result));
 
   OSLab.ui = { notify, confirm, showMissionResult, renderWidget, runTaskDialog, escapeHtml };

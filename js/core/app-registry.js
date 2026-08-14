@@ -10,8 +10,8 @@
     settings: { title: "Configurações", icon: "assets/icons/settings.png", address: "Configurações", task: "settings", pinned: true },
     terminal: { title: "Terminal", icon: "assets/icons/terminal.png", address: "Terminal", task: "terminal" },
     taskmanager: { title: "Gerenciador de Tarefas", icon: "assets/icons/taskmanager.png", address: "Processos", task: "taskmanager" },
-    missions: { title: "Missões", icon: "assets/icons/taskmanager/details.png", address: "Missões", task: "missions", pinned: true },
-    exercises: { title: "Exercícios", icon: "assets/icons/settings-rows/troubleshoot.png", address: "Exercícios de Diagnóstico", task: "exercises", pinned: true },
+    missions: { title: "Missões", icon: "assets/learning/icons/target_arrow.svg", address: "Trilha de Missões", task: "missions", pinned: true },
+    exercises: { title: "Exercícios", icon: "assets/learning/icons/wrench.svg", address: "Trilha de Exercícios", task: "exercises", pinned: true },
     texteditor: { title: "Editor de Texto", icon: "assets/icons/notepad.png", address: "Documento sem título", task: "texteditor" },
   };
 

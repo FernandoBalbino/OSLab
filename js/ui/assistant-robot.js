@@ -1,40 +1,102 @@
-(function createAssistantRobot(global) {
+(function createLearningAssistant(global) {
   "use strict";
+
   const OSLab = global.OSLab = global.OSLab || {};
   let root = null;
+  let collapsed = false;
 
   function safe(value) { return OSLab.ui.escapeHtml(value); }
+  function icon(name) { return OSLab.learningPath.icon(name); }
+  function mascot(state) { return `assets/learning/mascot/oslab-mascot-${state}.png`; }
   function ensure() {
     if (root) return root;
-    root = document.createElement("aside"); root.className = "assistant-robot is-hidden"; root.setAttribute("aria-live", "polite");
-    document.querySelector("#desktop")?.appendChild(root); return root;
+    root = document.createElement("aside");
+    root.className = "learning-assistant is-hidden";
+    root.setAttribute("aria-live", "polite");
+    root.addEventListener("click", handleClick);
+    document.querySelector("#desktop")?.appendChild(root);
+    return root;
   }
-  function robotSvg() {
-    return `<svg viewBox="0 0 96 110" role="img" aria-label="Robô assistente"><path class="robot-antenna" d="M48 18V8"/><circle class="robot-signal" cx="48" cy="6" r="4"/><rect class="robot-head" x="14" y="19" width="68" height="55" rx="22"/><rect class="robot-face" x="23" y="30" width="50" height="32" rx="14"/><circle class="robot-eye" cx="37" cy="46" r="5"/><circle class="robot-eye" cx="59" cy="46" r="5"/><path class="robot-mouth" d="M39 56h18"/><rect class="robot-body" x="25" y="72" width="46" height="30" rx="14"/><path class="robot-arm" d="M25 81 10 91M71 81l15 10"/></svg>`;
+  function place() {
+    const focusedLayout = document.querySelector(".missions-window.is-focused .learning-layout, .exercises-window.is-focused .learning-layout");
+    const host = focusedLayout || document.querySelector("#desktop");
+    if (host && root.parentElement !== host) host.appendChild(root);
+    root.classList.toggle("is-docked", Boolean(focusedLayout));
   }
-  function phaseLabel(phase) { return ({ preparing: "Preparando ambiente", investigating: "Investigando", partial: "Progresso detectado", "awaiting-test": "Pronto para testar", testing: "Testando", completed: "Concluído" })[phase] || phase; }
+  function hintMarkup(hint, label) {
+    return hint ? OSLab.learningPath.renderHint(hint, label) : "";
+  }
+  function objectiveMarkup(mission, active) {
+    return `<ul class="assistant-checklist">${mission.objectives.map((objective) => `<li class="${active.checklist[objective.id] ? "is-done" : ""}"><img src="${icon(active.checklist[objective.id] ? "checkmark_circle" : "target_arrow")}" alt="" /><span>${safe(objective.label)}</span></li>`).join("")}</ul>`;
+  }
+  function exercisePhaseLabel(phase) {
+    return ({ preparing: "Preparando ambiente", investigating: "Investigando", partial: "Continue investigando", "awaiting-test": "Pronto para testar", testing: "Testando correção", completed: "Exercício concluído" })[phase] || "Atividade em andamento";
+  }
+  function renderMission(progress) {
+    const active = progress.active;
+    const mission = OSLab.missionCatalog.find((entry) => entry.id === active.id);
+    const hint = OSLab.missions.getHint();
+    const nextObjective = mission.objectives.find((objective) => !active.checklist[objective.id]);
+    return {
+      kind: "mission",
+      mascot: hint ? "help" : "neutral",
+      eyebrow: "Missão ativa",
+      title: mission.title,
+      message: nextObjective ? `Próximo objetivo: ${nextObjective.label}` : "Objetivos concluídos. Aguarde a confirmação da missão.",
+      body: `${objectiveMarkup(mission, active)}${hintMarkup(hint, "Dica da missão")}`,
+      actions: `<button type="button" data-assistant-action="mission-hint"><img src="${icon("lightbulb")}" alt="" />${hint ? "Reabrir dica" : "Dica"}</button><button type="button" data-assistant-action="mission-open"><img src="${icon("target_arrow")}" alt="" />Abrir trilha</button><button type="button" data-assistant-action="mission-restart"><img src="${icon("arrow_reset")}" alt="" />Reiniciar</button><button type="button" data-assistant-action="mission-exit"><img src="${icon("dismiss")}" alt="" />Sair</button>`,
+    };
+  }
+  function renderExercise(session) {
+    const exercise = OSLab.exerciseCatalog.find((entry) => entry.id === session.id);
+    const hint = OSLab.exercises.getHint();
+    const completed = session.phase === "completed";
+    return {
+      kind: "exercise",
+      mascot: completed ? "celebrate" : hint ? "help" : "neutral",
+      eyebrow: exercisePhaseLabel(session.phase),
+      title: exercise.title,
+      message: session.speech,
+      body: `${hint && !completed ? hintMarkup(hint, "Dica passo a passo") : ""}${completed ? `<div class="assistant-result"><span><strong>Causa</strong>${safe(session.result.cause)}</span><span><strong>Ferramenta</strong>${safe(session.result.tool)}</span><span><strong>Dica</strong>${session.result.hintUsed ? "Utilizada" : "Não utilizada"}</span></div>` : ""}`,
+      actions: completed
+        ? `<button type="button" data-assistant-action="exercise-return"><img src="${icon("arrow_left")}" alt="" />Voltar</button><button type="button" data-assistant-action="exercise-repeat"><img src="${icon("arrow_reset")}" alt="" />Refazer</button><button class="is-primary" type="button" data-assistant-action="exercise-next"><img src="${icon("arrow_right")}" alt="" />Próximo</button>`
+        : `<button type="button" data-assistant-action="exercise-hint"><img src="${icon("lightbulb")}" alt="" />${hint ? "Reabrir dica" : "Dica"}</button><button type="button" data-assistant-action="exercise-repeat-speech"><img src="${icon("more_horizontal")}" alt="" />Repetir fala</button><button class="is-primary" type="button" data-assistant-action="exercise-test"><img src="${icon("play")}" alt="" />Testar</button><button type="button" data-assistant-action="exercise-restart"><img src="${icon("arrow_reset")}" alt="" />Reiniciar</button><button type="button" data-assistant-action="exercise-exit"><img src="${icon("dismiss")}" alt="" />Sair</button>`,
+    };
+  }
   function render() {
     ensure();
-    const session = OSLab.exercises.getSession();
-    if (!session) { root.classList.add("is-hidden"); root.innerHTML = ""; return; }
-    const exercise = OSLab.exerciseCatalog.find((item) => item.id === session.id);
-    root.className = `assistant-robot mood-${session.mood || "waiting"} phase-${session.phase}`;
-    const completed = session.phase === "completed";
-    const hint = session.hint;
-    const hintMarkup = hint && !completed ? `<section class="robot-hint"><header><small>Dica passo a passo</small><strong>${safe(hint.title)}</strong></header><p>${safe(hint.intro)}</p><ol>${hint.steps.map((step) => `<li>${safe(step)}</li>`).join("")}</ol><div><strong>Como conferir</strong><span>${safe(hint.check)}</span></div></section>` : "";
-    root.innerHTML = `<div class="robot-speech"><header><span><small>${phaseLabel(session.phase)}</small><strong>${safe(exercise.title)}</strong></span><button type="button" data-robot-toggle aria-label="Recolher ajudante">−</button></header><p>${safe(session.speech)}</p>${hintMarkup}${completed ? `<section class="robot-result"><span><strong>Causa</strong>${safe(session.result.cause)}</span><span><strong>Ferramenta</strong>${safe(session.result.tool)}</span><span><strong>Dica</strong>${session.result.hintUsed ? "Utilizada" : "Não utilizada"}</span></section>` : ""}<footer>${completed ? `<button type="button" data-robot-action="return">Voltar</button><button type="button" data-robot-action="repeat">Refazer</button><button class="is-primary" type="button" data-robot-action="next">Próximo</button>` : `<button type="button" data-robot-action="hint" ${session.hintUsed ? "disabled" : ""}>${session.hintUsed ? "Dica utilizada" : "Dica"}</button><button type="button" data-robot-action="repeat-speech">Repetir fala</button><button class="is-primary" type="button" data-robot-action="test">Testar novamente</button><button type="button" data-robot-action="restart">Reiniciar</button><button type="button" data-robot-action="exit">Sair</button>`}</footer></div><div class="robot-character">${robotSvg()}</div>`;
-    root.querySelector("[data-robot-toggle]")?.addEventListener("click", () => root.classList.toggle("is-collapsed"));
-    root.querySelectorAll("[data-robot-action]").forEach((button) => button.addEventListener("click", async () => {
-      const action = button.dataset.robotAction;
-      if (action === "hint") OSLab.exercises.useHint();
-      if (action === "repeat-speech") { const copy = OSLab.exercises.repeatSpeech(); if (copy) OSLab.ui.notify("Robô assistente", copy, "info", 5200); }
-      if (action === "test") OSLab.exercises.runTest();
-      if (action === "restart" && await OSLab.ui.confirm({ title: "Reiniciar exercício?", message: "O ambiente será restaurado e o problema preparado novamente.", confirmLabel: "Reiniciar" })) OSLab.exercises.restart();
-      if (action === "exit" && await OSLab.ui.confirm({ title: "Sair do exercício?", message: "O sistema voltará exatamente ao estado anterior.", confirmLabel: "Sair" })) OSLab.exercises.exit();
-      if (["return", "repeat", "next"].includes(action)) OSLab.exercises.finish(action);
-    }));
+    const missionProgress = OSLab.missions?.getProgress?.();
+    const exerciseSession = OSLab.exercises?.getSession?.();
+    const view = exerciseSession ? renderExercise(exerciseSession) : missionProgress?.active ? renderMission(missionProgress) : null;
+    document.body.classList.toggle("has-learning-assistant", Boolean(view));
+    if (!view) { root.className = "learning-assistant is-hidden"; root.innerHTML = ""; place(); return; }
+    root.className = `learning-assistant is-${view.kind} ${collapsed ? "is-collapsed" : ""}`;
+    root.innerHTML = `<div class="assistant-shell"><header><img class="assistant-mascot" src="${mascot(view.mascot)}" alt="Mascote assistente do OSLab" /><span><small>${safe(view.eyebrow)}</small><strong>${safe(view.title)}</strong></span><button type="button" data-assistant-action="toggle" aria-expanded="${!collapsed}" aria-label="${collapsed ? "Expandir assistente" : "Recolher assistente"}"><img src="${icon("panel_right")}" alt="" /></button></header><div class="assistant-body"><p>${safe(view.message)}</p>${view.body}<footer>${view.actions}</footer></div></div>`;
+    place();
   }
+
+  async function handleClick(event) {
+    const action = event.target.closest("[data-assistant-action]")?.dataset.assistantAction;
+    if (!action) return;
+    if (action === "toggle") { collapsed = !collapsed; render(); return; }
+    if (action === "mission-hint") { OSLab.missions.useHint(); collapsed = false; render(); }
+    if (action === "mission-open") OSLab.shell.openApp("missions");
+    if (action === "mission-restart" && await OSLab.ui.confirm({ title: "Reiniciar missão?", message: "O cenário será preparado novamente.", confirmLabel: "Reiniciar" })) OSLab.missions.restart();
+    if (action === "mission-exit" && await OSLab.ui.confirm({ title: "Sair da missão?", message: "Os itens temporários da missão serão removidos.", confirmLabel: "Sair" })) OSLab.missions.abandon();
+    if (action === "exercise-hint") { OSLab.exercises.useHint(); collapsed = false; render(); }
+    if (action === "exercise-repeat-speech") { const speech = OSLab.exercises.repeatSpeech(); if (speech) OSLab.ui.notify("Assistente OSLab", speech, "info", 5200); }
+    if (action === "exercise-test") OSLab.exercises.runTest();
+    if (action === "exercise-restart" && await OSLab.ui.confirm({ title: "Reiniciar exercício?", message: "O ambiente será restaurado e preparado novamente.", confirmLabel: "Reiniciar" })) OSLab.exercises.restart();
+    if (action === "exercise-exit" && await OSLab.ui.confirm({ title: "Sair do exercício?", message: "O sistema voltará ao estado anterior.", confirmLabel: "Sair" })) OSLab.exercises.exit();
+    if (action === "exercise-return") OSLab.exercises.finish("return");
+    if (action === "exercise-repeat") OSLab.exercises.finish("repeat");
+    if (action === "exercise-next") OSLab.exercises.finish("next");
+  }
+
   document.addEventListener("DOMContentLoaded", render);
-  OSLab.exercises.subscribe(render);
-  OSLab.assistantRobot = { render };
+  document.addEventListener("oslab:window-focused", () => window.requestAnimationFrame(render));
+  OSLab.missions?.subscribe?.(render);
+  OSLab.exercises?.subscribe?.(render);
+  ["app:opened", "app:closed", "window:minimized", "window:maximized", "window:restored"].forEach((type) => OSLab.events?.subscribe?.(type, () => window.requestAnimationFrame(render)));
+  OSLab.assistantRobot = { render, expand() { collapsed = false; render(); }, collapse() { collapsed = true; render(); } };
 })(window);

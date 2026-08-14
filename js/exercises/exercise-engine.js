@@ -81,13 +81,14 @@
   function evaluate(event) {
     if (handlingEvent || !session || ["testing", "completed"].includes(session.phase)) return;
     const exercise = definition(session.id);
+    const isLearnerAction = /^(file:|recycle:|system-state:|network:|process:|startup:)/.test(event?.type || "");
     handlingEvent = true;
     try {
       const ready = Boolean(exercise.isReady?.(context(exercise)));
       if (ready && session.phase !== "awaiting-test") {
         session.phase = "awaiting-test";
         speech("A alteração parece ter funcionado. Vamos testar novamente?", "hopeful");
-      } else if (!ready && session.phase === "investigating" && event?.type && !event.type.startsWith("exercise:")) {
+      } else if (!ready && session.phase === "investigating" && isLearnerAction) {
         session.phase = "partial";
       }
       persist("evaluated", { exerciseId: session.id, eventType: event?.type || "manual", ready });
@@ -127,6 +128,7 @@
     speech("Dica aberta. Siga as etapas abaixo com calma e confira o resultado ao final.", "helpful");
     persist("hint", { exerciseId: session.id }); return clone(exercise.hint);
   }
+  function getHint() { return session?.hintUsed ? clone(session.hint || definition(session.id)?.hint) : null; }
   function repeatSpeech() { if (!session) return null; persist("speech-repeated", { exerciseId: session.id }); return session.speech; }
   function restart() { if (!session) return { ok: false }; const id = session.id; stop({ reason: "restarting", silent: true }); return start(id); }
   function finish(action = "return") {
@@ -148,7 +150,7 @@
 
   OSLab.events.subscribe("oslab:event", evaluate);
   OSLab.exercises = {
-    start, restart, exit: stop, runTest, useHint, repeatSpeech, finish,
+    start, restart, exit: stop, runTest, useHint, getHint, repeatSpeech, finish,
     getProgress: () => clone(progress), getSession: publicSession, getExercises: statuses,
     subscribe(listener) { listeners.add(listener); return () => listeners.delete(listener); },
     resetProgress() { if (session) stop({ silent: true }); progress = OSLab.exerciseStorage.reset(); persist("progress-reset"); return clone(progress); },

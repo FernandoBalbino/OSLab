@@ -8,6 +8,7 @@
 
   function catalog() { return OSLab.missionCatalog || []; }
   function missionById(id) { return catalog().find((mission) => mission.id === id) || null; }
+  function clone(value) { return value == null ? null : JSON.parse(JSON.stringify(value)); }
   function snapshot() { return JSON.parse(JSON.stringify(progress)); }
   function notify(reason, detail = {}) {
     OSLab.missionStorage.save(progress);
@@ -29,11 +30,15 @@
   }
 
   function statuses() {
-    return catalog().map((mission) => {
+    const ordered = catalog().slice().sort((a, b) => a.order - b.order);
+    const firstIncomplete = ordered.find((mission) => !progress.completed[mission.id]);
+    const boundaryOrder = firstIncomplete?.order ?? Number.POSITIVE_INFINITY;
+    return ordered.map((mission) => {
       let status = "locked";
       if (progress.active?.id === mission.id) status = "active";
+      else if (mission.order > boundaryOrder) status = "locked";
       else if (progress.completed[mission.id]) status = "completed";
-      else if (mission.order === 1 || progress.completed[catalog()[mission.order - 2]?.id]) status = "available";
+      else if (mission.order === boundaryOrder) status = "available";
       return { ...mission, status };
     });
   }
@@ -42,7 +47,7 @@
     return {
       id: mission.id,
       checklist: Object.fromEntries(mission.objectives.map((objective) => [objective.id, false])),
-      facts: {}, hintsUsed: 0, mistakes: 0, hintIndex: 0, scenario: {},
+      facts: {}, hintsUsed: 0, hintRevealed: false, mistakes: 0, hintIndex: 0, scenario: {},
       snapshot: { wallpaperId: OSLab.shell?.getWallpaper?.() || "1", audio: OSLab.shell?.getAudioState?.() || { volume: 100, muted: false } },
       startedAt: new Date().toISOString(),
     };
@@ -131,17 +136,33 @@
 
   OSLab.events.subscribe("oslab:event", handle);
 
+  function getHint() {
+    if (!progress.active || Number(progress.active.hintsUsed) <= 0) return null;
+    const mission = missionById(progress.active.id);
+    return clone(mission?.hint);
+  }
+
+  function useHint() {
+    if (!progress.active) return null;
+    const mission = missionById(progress.active.id);
+    if (!mission?.hint) return null;
+    const alreadyRevealed = Boolean(progress.active.hintRevealed) || Number(progress.active.hintsUsed) > 0;
+    if (alreadyRevealed) return clone(mission.hint);
+    progress.active.hintRevealed = true;
+    progress.active.hintsUsed = 1;
+    const hint = clone(mission.hint);
+    notify("hint", { missionId: mission.id, hint });
+    OSLab.events.emit("mission:hint", { missionId: mission.id, hint }, "missionEngine");
+    return hint;
+  }
+
   OSLab.missions = {
     start,
     continue() { return progress.active ? { ok: true, active: snapshot().active } : { ok: false, reason: "none" }; },
     restart() { if (!progress.active) return { ok: false }; const id = progress.active.id; const mission = missionById(id); try { mission?.reset?.(activeContext(mission)); } catch (error) { OSLab.diagnostics.push({ type: "mission:reset", missionId: id, message: error.message }); } cleanup(id, true); progress.active = null; notify("restarting", { missionId: id }); return start(id); },
     abandon() { if (!progress.active) return { ok: false }; const id = progress.active.id; cleanup(id, true); progress.active = null; notify("abandoned", { missionId: id }); return { ok: true }; },
-    useHint() {
-      if (!progress.active) return null;
-      const mission = missionById(progress.active.id); const index = Math.min(progress.active.hintIndex, mission.hints.length - 1);
-      const hint = mission.hints[index]; progress.active.hintIndex = Math.min(index + 1, mission.hints.length - 1); progress.active.hintsUsed += 1;
-      notify("hint", { missionId: mission.id, hint }); OSLab.events.emit("mission:hint", { missionId: mission.id, hint }, "missionEngine"); return hint;
-    },
+    useHint,
+    getHint,
     getProgress: snapshot,
     getMissions: statuses,
     subscribe(listener) { listeners.add(listener); return () => listeners.delete(listener); },

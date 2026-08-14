@@ -29,10 +29,10 @@ test("todos os JavaScripts passam no node --check", () => {
   });
 });
 
-test("todas as referências raster estáticas existem", () => {
+test("todas as referências de assets estáticos existem", () => {
   const sources = [path.join(root, "index.html"), path.join(root, "styles.css"), ...filesIn(path.join(root, "css"), ".css"), path.join(root, "script.js"), ...filesIn(path.join(root, "js"), ".js")];
   const missing = new Set();
-  const assetPattern = /(?:assets\/[A-Za-z0-9_./ -]+|bg\d*|logow11)\.(?:png|jpe?g|webp)/gi;
+  const assetPattern = /(?:assets\/[A-Za-z0-9_./ -]+|bg\d*|logow11)\.(?:png|jpe?g|webp|svg|ttf)/gi;
   sources.forEach((source) => {
     const contents = fs.readFileSync(source, "utf8");
     (contents.match(assetPattern) || []).forEach((reference) => {
@@ -51,7 +51,10 @@ test("catálogo possui 12 missões lineares e executáveis", () => {
   assert.equal(new Set(catalog.map((mission) => mission.id)).size, 12);
   catalog.forEach((mission) => {
     assert.ok(mission.title && mission.description && mission.concept);
-    assert.ok(mission.objectives.length > 0 && mission.hints.length > 0);
+    assert.ok(mission.objectives.length > 0);
+    assert.ok(mission.hint.title && mission.hint.intro && mission.hint.check);
+    assert.ok(Array.isArray(mission.hint.steps) && mission.hint.steps.length >= 4 && mission.hint.steps.length <= 6);
+    assert.ok(mission.icon && fs.existsSync(path.join(root, mission.icon)));
     assert.equal(typeof mission.setup, "function");
     assert.equal(typeof mission.validate, "function");
   });
@@ -119,6 +122,7 @@ test("catálogo possui os 10 exercícios de diagnóstico completos", () => {
     assert.ok(["Sistema", "Rede"].includes(exercise.category));
     assert.ok(exercise.hint.title && exercise.hint.intro && exercise.hint.check);
     assert.ok(Array.isArray(exercise.hint.steps) && exercise.hint.steps.length >= 4);
+    assert.ok(exercise.icon && fs.existsSync(path.join(root, exercise.icon)));
     assert.equal(typeof exercise.setup, "function");
     assert.equal(typeof exercise.isReady, "function");
     assert.equal(typeof exercise.test, "function");
@@ -183,6 +187,49 @@ test("motor de exercícios revela dica sob demanda e exige progressão sequencia
   assert.equal(restored, 2);
 });
 
+test("motor de missões aplica dica uma vez e corrige progresso legado furado", () => {
+  function createEngine(initialProgress) {
+    let saved = null;
+    const OSLab = {
+      diagnostics: [],
+      missionCatalog: [1, 2, 3].map((order) => ({
+        id: `mission-${order}`, order, title: `Missão ${order}`, concept: "Conceito", description: "Descrição",
+        objectives: [{ id: "step", label: "Etapa" }], hint: { title: "Ajuda", intro: "Introdução", steps: ["Abra", "Localize", "Faça", "Confira"], check: "Resultado" },
+        setup: () => ({}), validate: () => [], cleanup: () => {}, reset: () => {},
+      })),
+      missionStorage: {
+        load: () => JSON.parse(JSON.stringify(initialProgress)),
+        save: (value) => { saved = JSON.parse(JSON.stringify(value)); },
+        reset: () => ({ version: 1, completed: {}, active: null, medals: [], totalScore: 0 }),
+      },
+      fileSystem: { removeMissionItems: () => [] },
+      processManager: { resetMissionProcesses: () => [] },
+      activityCoordinator: { claim: () => {}, register: () => {} },
+      shell: { getWallpaper: () => "1", getAudioState: () => ({ volume: 100, muted: false }), closeMissionWindows: () => {}, refreshDesktop: () => {} },
+      events: { subscribe: () => {}, emit: () => {} },
+    };
+    vm.runInNewContext(fs.readFileSync(path.join(root, "js/missions/mission-engine.js"), "utf8"), { window: { OSLab } });
+    return { engine: OSLab.missions, saved: () => saved };
+  }
+
+  const base = { version: 1, active: null, completed: { "mission-3": { score: 100 } }, medals: [], totalScore: 100 };
+  const current = createEngine(base);
+  assert.deepEqual(Array.from(current.engine.getMissions(), (mission) => mission.status), ["available", "locked", "locked"]);
+  assert.equal(current.engine.start("mission-2").reason, "locked");
+  assert.equal(current.engine.start("mission-1").ok, true);
+  assert.equal(current.engine.getHint(), null, "a dica não aparece antes do clique");
+  assert.equal(current.engine.useHint().title, "Ajuda");
+  assert.equal(current.engine.useHint().title, "Ajuda", "a dica revelada pode ser reaberta");
+  assert.equal(current.engine.getHint().steps.length, 4);
+  assert.equal(current.engine.getProgress().active.hintsUsed, 1, "a pontuação é descontada apenas uma vez");
+  assert.equal(current.saved().active.hintsUsed, 1);
+
+  const legacy = createEngine({ ...base, completed: {}, active: { id: "mission-1", checklist: { step: false }, facts: {}, scenario: {}, snapshot: {}, hintsUsed: 2, mistakes: 0 } });
+  assert.equal(legacy.engine.getHint().title, "Ajuda");
+  assert.equal(legacy.engine.useHint().title, "Ajuda");
+  assert.equal(legacy.engine.getProgress().active.hintsUsed, 2, "sessões antigas mantêm a penalização já registrada");
+});
+
 test("próximo exercício preserva a fala explicativa durante a preparação", () => {
   const subscribers = [];
   let firstSolved = false;
@@ -217,8 +264,18 @@ test("precache inclui todos os recursos carregados pelo documento", () => {
   const entries = new Set(manifest.map((entry) => entry.replace(/^\.\//, "")));
   manifest.forEach((entry) => assert.ok(fs.existsSync(path.join(root, entry.replace(/^\.\//, ""))), `ausente: ${entry}`));
   const html = fs.readFileSync(path.join(root, "index.html"), "utf8");
-  const runtime = [...html.matchAll(/(?:src|href)="([^"#]+)"/g)].map((match) => match[1].replace(/^\.\//, "")).filter((entry) => /\.(?:js|css|png|jpe?g|webp|webmanifest)$/i.test(entry));
+  const runtime = [...html.matchAll(/(?:src|href)="([^"#]+)"/g)].map((match) => match[1].replace(/^\.\//, "")).filter((entry) => /\.(?:js|css|png|jpe?g|webp|svg|ttf|webmanifest)$/i.test(entry));
   runtime.forEach((entry) => assert.ok(entries.has(entry) || ["manifest.webmanifest", "assets/icons/pwa-192.png"].includes(entry), `fora do precache: ${entry}`));
+  [
+    "css/learning.css",
+    "js/ui/learning-path.js",
+    "assets/fonts/NunitoSans-Variable.ttf",
+    "assets/learning/mascot/oslab-mascot-neutral.png",
+    "assets/learning/mascot/oslab-mascot-help.png",
+    "assets/learning/mascot/oslab-mascot-celebrate.png",
+    "assets/learning/icons/target_arrow.svg",
+  ].forEach((entry) => assert.ok(entries.has(entry), `recurso educacional fora do precache: ${entry}`));
+  assert.match(fs.readFileSync(path.join(root, "service-worker.js"), "utf8"), /oslab-offline-v5/);
 });
 
 test("retomada das missões não referencia persist inexistente", () => {

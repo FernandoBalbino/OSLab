@@ -1150,6 +1150,7 @@
     record.element.style.zIndex = String(zCounter);
     windows.forEach((item) => item.element.classList.toggle("is-focused", item === record));
     updateTaskbarState();
+    document.dispatchEvent(new CustomEvent("oslab:window-focused", { detail: { windowId: record.windowId, appId: record.appId } }));
     if (wasMinimized) OSLab.events.emit("window:restored", { windowId: record.windowId, appId: record.appId }, "windowManager");
   }
 
@@ -1215,7 +1216,7 @@
     positionWindow(record);
     wireWindow(record);
     renderApp(record);
-    if (["settings", "taskmanager", "exercises"].includes(appId)) {
+    if (["settings", "taskmanager", "missions", "exercises"].includes(appId)) {
       element.classList.add("is-maximized");
       record.maximizeIcon.src = "assets/icons/ui/restore.png";
       record.maximizeIcon.closest("button").setAttribute("aria-label", "Restaurar");
