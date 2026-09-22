@@ -374,6 +374,98 @@ test("próximo exercício preserva a fala explicativa durante a preparação", (
   assert.equal(next.speech, "O programa congelou e precisa ser diagnosticado.");
 });
 
+test("catálogo de instalação possui exatamente 12 missões completas e sequenciais", () => {
+  const context = { window: { OSLab: {} } };
+  vm.runInNewContext(fs.readFileSync(path.join(root, "js/install/install-mission-catalog.js"), "utf8"), context);
+  const catalog = context.window.OSLab.installMissionCatalog;
+  assert.equal(catalog.length, 12);
+  assert.deepEqual(Array.from(catalog, (mission) => mission.order), Array.from({ length: 12 }, (_, index) => index + 1));
+  assert.equal(new Set(catalog.map((mission) => mission.id)).size, 12);
+  catalog.forEach((mission) => {
+    assert.ok(mission.title && mission.description && mission.goal && mission.instruction && mission.success);
+    assert.ok(Array.isArray(mission.objectives) && mission.objectives.length > 0);
+    assert.ok(mission.hint?.title && mission.hint?.intro && mission.hint?.check);
+    assert.ok(Array.isArray(mission.hint.steps) && mission.hint.steps.length >= 3);
+    assert.ok(mission.hint.visualTarget && mission.hint.visualLabel);
+    assert.ok(fs.existsSync(path.join(root, mission.icon)));
+  });
+});
+
+test("estado de software centraliza downloads, atalhos, instalação e desinstalação", () => {
+  const values = new Map();
+  const events = [];
+  const window = {
+    OSLab: { events: { emit: (type, detail) => events.push([type, detail]) } },
+    localStorage: { getItem: (key) => values.get(key) || null, setItem: (key, value) => values.set(key, value), removeItem: (key) => values.delete(key) },
+    setInterval: () => 1,
+    clearInterval: () => {},
+  };
+  vm.runInNewContext(fs.readFileSync(path.join(root, "js/install/software-state.js"), "utf8"), { window });
+  const software = window.OSLab.software;
+  assert.equal(software.DOWNLOAD_DURATION_MS, 60000);
+  assert.equal(software.startDownload("appjavafx").download.status, "downloading");
+  assert.equal(software.getDownload("appjavafx").fileName, "AppJavaFX-Setup.exe");
+  assert.equal(software.recordSearch("  AppJavaFX  "), "appjavafx");
+  assert.equal(software.installBundle("appjavafx", { desktopShortcut: true }).ok, true);
+  assert.equal(software.getProgram("appjavafx").desktopShortcut, true);
+  assert.equal(software.getProgram("appjavafx").startMenuShortcut, true);
+  assert.equal(software.markOpened("appjavafx"), true);
+  assert.equal(software.uninstall("appjavafx").ok, true);
+  assert.equal(software.getProgram("appjavafx").installed, false);
+  assert.equal(software.getProgram("appjavafx").desktopShortcut, false);
+  assert.equal(software.getProgram("appjavafx").startMenuShortcut, false);
+  assert.ok(events.some(([type]) => type === "install:download-started"));
+  assert.ok(events.some(([type]) => type === "install:uninstalled"));
+  assert.ok(values.has(software.storageKey));
+});
+
+test("motor da trilha de instalação exige ações reais e valida a remoção completa", () => {
+  const subscribers = [];
+  const completed = Object.fromEntries(Array.from({ length: 11 }, (_, index) => [`done-${index + 1}`, {}]));
+  const installed = { appjavafx: true };
+  const OSLab = {
+    diagnostics: [],
+    events: {
+      subscribe(type, listener) { if (type === "oslab:event") subscribers.push(listener); },
+      emit(type, detail = {}, source = "test") { const event = { type, detail, source }; subscribers.forEach((listener) => listener(event)); return event; },
+    },
+    installMissionStorage: { load: () => ({ version: 1, completed: {}, active: null }), save: () => {}, reset: () => ({ version: 1, completed: {}, active: null }) },
+    activityCoordinator: { claim: () => {}, release: () => {}, register: () => {} },
+    software: {
+      isInstalled: (id) => Boolean(installed[id]),
+      getProgram: (id) => ({ installed: Boolean(installed[id]), desktopShortcut: Boolean(installed[id]), startMenuShortcut: Boolean(installed[id]) }),
+      reset: () => {},
+    },
+    ui: { notify: () => {} },
+  };
+  const context = { window: { OSLab } };
+  vm.runInNewContext(fs.readFileSync(path.join(root, "js/install/install-mission-catalog.js"), "utf8"), context);
+  vm.runInNewContext(fs.readFileSync(path.join(root, "js/install/install-mission-engine.js"), "utf8"), context);
+  assert.equal(OSLab.installLab.getMissions().length, 12);
+  assert.equal(OSLab.installLab.start("install-search-appjavafx").reason, "locked");
+  assert.equal(OSLab.installLab.start("install-browser").ok, true);
+  OSLab.events.emit("app:opened", { appId: "settings" });
+  assert.equal(OSLab.installLab.getProgress().active.phase, "active");
+  OSLab.events.emit("app:opened", { appId: "google" });
+  assert.equal(OSLab.installLab.getProgress().active.phase, "completed");
+
+  OSLab.installMissionStorage.load = () => ({ version: 1, completed, active: null });
+  const source = fs.readFileSync(path.join(root, "js/install/install-mission-engine.js"), "utf8");
+  const OSLabFinal = {
+    ...OSLab,
+    events: { subscribe(type, listener) { if (type === "oslab:event") this.listener = listener; }, emit(type, detail = {}) { const event = { type, detail }; this.listener?.(event); return event; } },
+    installMissionCatalog: OSLab.installMissionCatalog,
+    installMissionStorage: { load: () => ({ version: 1, completed: Object.fromEntries(OSLab.installMissionCatalog.slice(0, 11).map((mission) => [mission.id, {}])), active: null }), save: () => {}, reset: () => ({}) },
+  };
+  vm.runInNewContext(source, { window: { OSLab: OSLabFinal } });
+  assert.equal(OSLabFinal.installLab.start("install-uninstall").ok, true);
+  OSLabFinal.events.emit("control-panel:programs-opened");
+  OSLabFinal.events.emit("control-panel:program-selected", { programId: "appjavafx" });
+  installed.appjavafx = false;
+  OSLabFinal.events.emit("install:uninstalled", { programId: "appjavafx" });
+  assert.equal(OSLabFinal.installLab.getProgress().active.phase, "completed");
+});
+
 test("precache inclui todos os recursos carregados pelo documento", () => {
   const manifest = JSON.parse(fs.readFileSync(path.join(root, "precache-manifest.json"), "utf8"));
   const entries = new Set(manifest.map((entry) => entry.replace(/^\.\//, "")));
@@ -396,8 +488,16 @@ test("precache inclui todos os recursos carregados pelo documento", () => {
     "js/apps/vpn-lab-app.js",
     "assets/vpn/flags/us.svg",
     "assets/vpn/posters/poster-20.jpg",
+    "css/install-lab.css",
+    "css/software-apps.css",
+    "js/install/software-state.js",
+    "js/install/install-mission-engine.js",
+    "js/apps/install-lab-app.js",
+    "js/apps/software-apps.js",
+    "assets/programs/appjavafx.svg",
+    "assets/programs/office.svg",
   ].forEach((entry) => assert.ok(entries.has(entry), `recurso educacional fora do precache: ${entry}`));
-  assert.match(fs.readFileSync(path.join(root, "service-worker.js"), "utf8"), /oslab-offline-v6/);
+  assert.match(fs.readFileSync(path.join(root, "service-worker.js"), "utf8"), /oslab-offline-v9/);
 });
 
 test("retomada das missões não referencia persist inexistente", () => {

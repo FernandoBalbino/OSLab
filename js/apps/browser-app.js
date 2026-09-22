@@ -3,7 +3,7 @@
 
   const OSLab = global.OSLab = global.OSLab || {};
   const records = new Set();
-  const knownHosts = ["google.com", "netflix.com", "meuip.com", "portal.empresa.local", "bancoos.com", "speedtest.os", "meet.os", "admin.escola.local"];
+  const knownHosts = ["google.com", "www.google.com", "appjavafx.local", "office.local", "netflix.com", "meuip.com", "portal.empresa.local", "bancoos.com", "speedtest.os", "meet.os", "admin.escola.local"];
   const movies = [
     ["Supernatural", "15 temporadas", ["Séries", "Terror", "Em alta"]], ["Horizonte de Aço", "Filme", ["Ação", "Populares"]], ["Código Aurora", "2 temporadas", ["Séries", "Ficção científica"]], ["Depois da Névoa", "Filme", ["Terror", "Em alta"]], ["Rota 2049", "Filme", ["Ficção científica", "Ação"]],
     ["Vozes do Vale", "3 temporadas", ["Séries", "Populares"]], ["O Último Farol", "Filme", ["Terror", "Filmes"]], ["Linha de Fuga", "Filme", ["Ação", "Em alta"]], ["Além do Gelo", "1 temporada", ["Séries", "Ficção científica"]], ["Cidade Submersa", "Filme", ["Ficção científica", "Filmes"]],
@@ -14,9 +14,12 @@
 
   function safe(value) { return OSLab.ui.escapeHtml(value); }
   function icon(name) { return OSLab.learningPath.icon(name); }
+  function highlighted(target) { return OSLab.installLab?.getActiveVisualTarget?.() === target ? " is-hint-target" : ""; }
   function hostFrom(value) {
     const clean = String(value || "").trim().toLocaleLowerCase("pt-BR").replace(/^https?:\/\//, "").split("/")[0];
     if (knownHosts.includes(clean)) return clean;
+    if (clean.includes("appjavafx")) return "appjavafx.local";
+    if (clean.includes("office") || clean.includes("produtividade")) return "office.local";
     if (clean.includes("netflix")) return "netflix.com";
     if (clean.includes("meu ip") || clean.includes("meuip")) return "meuip.com";
     if (clean.includes("speed")) return "speedtest.os";
@@ -48,14 +51,19 @@
   }
   function load(record, value, options = {}) {
     ensureHistory(record);
-    const host = hostFrom(value);
+    const raw = String(value || "");
+    const isSearch = raw.startsWith("search:");
+    const searchQuery = isSearch ? decodeURIComponent(raw.slice(7)) : "";
+    const host = isSearch ? "google.com" : hostFrom(raw);
+    const historyValue = isSearch ? `search:${encodeURIComponent(searchQuery)}` : host;
     if (options.push !== false) {
       record.browserHistory = record.browserHistory.slice(0, record.browserHistoryIndex + 1);
-      record.browserHistory.push(host);
+      record.browserHistory.push(historyValue);
       record.browserHistoryIndex = record.browserHistory.length - 1;
     }
     record.browserHost = host;
-    record.browserResult = OSLab.network.browse(host);
+    record.googleQuery = isSearch ? searchQuery : null;
+    record.browserResult = ["appjavafx.local", "office.local"].includes(host) ? { ok: true, host, ip: "127.0.0.1", reason: null } : OSLab.network.browse(host);
     record.browserPageState = pageState();
     if (host === "speedtest.os") record.speedResult = null;
     if (host === "meet.os") record.meetJoined = false;
@@ -64,6 +72,13 @@
     global.setTimeout(() => { if (!record.element?.isConnected) return; record.browserLoading = false; render(record); observe(record); }, 260);
     return record.browserResult;
   }
+  function performSearch(record, query) {
+    const term = String(query || "").trim();
+    if (!term) return load(record, "google.com");
+    OSLab.software?.recordSearch?.(term);
+    return load(record, `search:${encodeURIComponent(term)}`);
+  }
+  function currentLocation(record) { return record.googleQuery ? `search:${encodeURIComponent(record.googleQuery)}` : record.browserHost || "google.com"; }
   function observe(record) {
     const state = record.browserPageState;
     if (!record.browserResult?.ok || !state) return;
@@ -79,14 +94,41 @@
     ensureHistory(record);
     record.toolbar.classList.remove("is-hidden");
     record.toolbar.classList.add("vpn-browser-toolbar");
-    record.toolbar.innerHTML = `<button type="button" data-browser-nav="back" aria-label="Voltar" ${record.browserHistoryIndex <= 0 ? "disabled" : ""}><img src="assets/icons/ui/left.png" alt="" /></button><button type="button" data-browser-nav="forward" aria-label="Avançar" ${record.browserHistoryIndex >= record.browserHistory.length - 1 ? "disabled" : ""}><img src="assets/icons/ui/right.png" alt="" /></button><button type="button" data-browser-nav="refresh" aria-label="Atualizar"><img src="assets/icons/ui/refresh.png" alt="" /></button><form data-browser-address-form><span class="browser-lock">OS</span><input name="address" value="${safe(record.browserHost || "google.com")}" aria-label="Barra de endereço" spellcheck="false" /><button type="submit">Ir</button></form>${record.browserLoading ? `<span class="browser-loading" aria-label="Carregando"></span>` : ""}`;
+    const downloads = Object.values(OSLab.software?.getState?.().downloads || {});
+    const active = downloads.filter((download) => download.status === "downloading").length;
+    const address = record.googleQuery ? `google.com/search?q=${record.googleQuery}` : record.browserHost || "google.com";
+    record.toolbar.innerHTML = `<button type="button" data-browser-nav="back" aria-label="Voltar" ${record.browserHistoryIndex <= 0 ? "disabled" : ""}><img src="assets/icons/ui/left.png" alt="" /></button><button type="button" data-browser-nav="forward" aria-label="Avançar" ${record.browserHistoryIndex >= record.browserHistory.length - 1 ? "disabled" : ""}><img src="assets/icons/ui/right.png" alt="" /></button><button type="button" data-browser-nav="refresh" aria-label="Recarregar"><img src="assets/icons/ui/refresh.png" alt="" /></button><form data-browser-address-form><span class="browser-lock">OS</span><input name="address" value="${safe(address)}" aria-label="Barra de endereço" spellcheck="false" /><button type="submit">Ir</button></form><button type="button" class="browser-download-button${active ? " has-active" : ""}${highlighted("downloads-panel")}" data-browser-downloads aria-label="Downloads"><span>↓</span>${downloads.length ? `<b>${downloads.length}</b>` : ""}</button><button type="button" data-browser-nav="home" aria-label="Nova guia"><span>＋</span></button>${record.browserLoading ? `<span class="browser-loading" aria-label="Carregando"></span>` : ""}`;
   }
   function posterCard(movie) { return `<article class="netflix-card"><img src="${movie.poster}" alt="Capa fictícia de ${safe(movie.title)}" /><span><strong>${safe(movie.title)}</strong><small>${safe(movie.meta)}</small></span></article>`; }
   function browserHome() {
-    const shortcuts = [
-      ["netflix.com", "Netflix", "play"], ["meuip.com", "Meu IP", "globe_search"], ["speedtest.os", "SpeedTest", "top_speed"], ["portal.empresa.local", "Empresa OS", "building"], ["bancoos.com", "Banco OS", "lock_closed"], ["admin.escola.local", "Admin Escola", "shield_checkmark"],
-    ];
-    return `<section class="vpn-browser-home"><div class="browser-home-brand"><img src="${icon("globe_search")}" alt="" /><small>Navegador offline do OSLab</small><h1>Para onde vamos?</h1><p>Todos os sites abaixo são simulações locais e reagem ao estado do laboratório.</p></div><div class="browser-shortcuts">${shortcuts.map(([host, label, iconName]) => `<button type="button" data-browser-go="${host}"><img src="${icon(iconName)}" alt="" /><span>${label}</span><small>${host}</small></button>`).join("")}</div></section>`;
+    return `<section class="google-home-page"><header><span>Gmail</span><span>Imagens</span><button type="button" aria-label="Aplicativos Google">⋮⋮⋮</button><img src="assets/icons/avatar.webp" alt="Perfil do aluno" /></header><main><div class="google-color-logo" aria-label="Google"><i>G</i><i>o</i><i>o</i><i>g</i><i>l</i><i>e</i></div><form class="google-modern-search${highlighted("search-box")}" data-google-search><img src="assets/icons/search.png" alt="" /><input name="query" aria-label="Pesquisar no Google simulado" autocomplete="off" placeholder="Pesquise programas para o computador" /><button type="submit">Pesquisar</button></form><div class="google-home-actions"><button type="button" data-google-suggestion="AppJavaFX">AppJavaFX</button><button type="button" data-google-suggestion="pacote office">pacote office</button></div><p>Pesquisa simulada e local do OSLAB · nenhum dado é enviado à internet</p></main><footer><span>Brasil</span><div><span>Sobre</span><span>Privacidade</span><span>Termos</span></div></footer></section>`;
+  }
+  function searchResults(record) {
+    const query = String(record.googleQuery || "").trim();
+    const normalized = query.toLocaleLowerCase("pt-BR");
+    const office = ["office", "word", "excel", "apresenta", "slides", "produtividade"].some((term) => normalized.includes(term));
+    const java = normalized.includes("appjavafx") || normalized.includes("javafx");
+    const target = office ? "office" : "appjavafx";
+    const first = office
+      ? { host: "www.officeestudos.local", title: "Pacote Office para estudantes — Word, Excel e Slides", description: "Baixe o pacote de produtividade para criar documentos, organizar planilhas e preparar apresentações." }
+      : java
+        ? { host: "www.appjavafx.com.br", title: "AppJavaFX — Aplicativo para Windows", description: "Baixe gratuitamente o AppJavaFX para Windows e explore projetos, componentes e interfaces." }
+        : { host: "programas.oslab.local", title: "Programas para computador — Catálogo OSLAB", description: "Conheça aplicativos educacionais, editores, leitores de PDF e ferramentas para o seu computador." };
+    const extras = office
+      ? [["guiadeprodutividade.local", "Como escolher um pacote de produtividade", "Compare recursos para documentos, planilhas e apresentações."], ["ajuda.oslab.local", "Primeiros passos com programas de escritório", "Um guia visual para estudantes que estão começando."]]
+      : [["centraldeapps.local", "Aplicativos úteis para Windows", "Veja opções de editores, navegadores, leitores PDF e utilitários."], ["suporte.oslab.local", "Como instalar programas com segurança", "Aprenda a reconhecer downloads e assistentes de instalação."]];
+    return `<section class="google-results-page"><header><button type="button" class="google-mini-logo" data-browser-go="google.com" aria-label="Voltar ao Google">Google</button><form class="google-results-search" data-google-search><input name="query" value="${safe(query)}" aria-label="Pesquisar" /><button type="submit"><img src="assets/icons/search.png" alt="Pesquisar" /></button></form><img src="assets/icons/avatar.webp" alt="Perfil do aluno" /></header><nav><strong>Todos</strong><span>Imagens</span><span>Vídeos</span><span>Notícias</span><span>Mais</span></nav><main><p class="google-result-count">Aproximadamente 8 resultados simulados (0,21 segundos)</p><article class="google-result-card first-result${highlighted("first-result")}"><div><span class="result-favicon">${office ? "O" : "A"}</span><span><strong>${safe(first.host)}</strong><small>https://${safe(first.host)} › download</small></span></div><button type="button" data-install-site="${target}">${safe(first.title)}</button><p>${safe(first.description)}</p></article>${extras.map(([host, title, description]) => `<article class="google-result-card"><div><span class="result-favicon">OS</span><span><strong>${safe(host)}</strong><small>https://${safe(host)} › artigos</small></span></div><button type="button">${safe(title)}</button><p>${safe(description)}</p></article>`).join("")}<aside><h2>Pesquisas relacionadas</h2><div><button data-google-suggestion="baixar ${safe(query)}">baixar ${safe(query)}</button><button data-google-suggestion="programa para computador">programa para computador</button><button data-google-suggestion="leitor PDF">leitor PDF</button><button data-google-suggestion="editor de texto">editor de texto</button></div></aside></main></section>`;
+  }
+  function appJavaFxSite() {
+    return `<section class="fake-product-site java-site"><header><a href="#" data-site-section="top"><img src="assets/programs/appjavafx.svg" alt="" /><strong>AppJavaFX</strong></a><nav><button data-site-section="top">Início</button><button data-site-section="features">Recursos</button><button data-site-section="about">Sobre</button><button data-site-section="download">Download</button><button data-site-section="support">Suporte</button></nav></header><main data-site-anchor="top"><section class="product-hero"><div><small>APLICATIVO PARA WINDOWS</small><h1>Transforme ideias em interfaces com JavaFX</h1><p>Organize projetos, conheça componentes e explore exemplos em um ambiente simples, visual e feito para aprender.</p><button type="button" data-site-section="features">Conhecer recursos</button></div><img src="assets/programs/appjavafx.svg" alt="Ícone do AppJavaFX" /></section><section class="product-benefits" data-site-anchor="features"><small>RECURSOS</small><h2>Um ponto de partida para seus projetos</h2><div><article><b>01</b><h3>Projetos organizados</h3><p>Visualize estruturas e arquivos de forma clara.</p></article><article><b>02</b><h3>Componentes visuais</h3><p>Conheça controles usados em aplicações desktop.</p></article><article><b>03</b><h3>Aprendizado guiado</h3><p>Explore exemplos e boas práticas passo a passo.</p></article></div></section><section class="product-about" data-site-anchor="about"><div><small>SOBRE</small><h2>Feito para quem está começando</h2><p>O AppJavaFX é um aplicativo fictício do OSLAB. Ele simula um programa real sem executar código externo e sem acessar seus arquivos.</p></div><div class="product-stat"><strong>100%</strong><span>offline e seguro para a aula</span></div></section><section class="product-download${highlighted("download-button")}" data-site-anchor="download"><img src="assets/programs/appjavafx.svg" alt="" /><div><small>VERSÃO 1.0 PARA WINDOWS</small><h2>Baixe o AppJavaFX</h2><p>Arquivo simulado de 80 MB. O download leva exatamente 60 segundos e permanece dentro do OSLAB.</p><button type="button" data-download-start="appjavafx">Baixar AppJavaFX</button><span>AppJavaFX-Setup.exe · Windows 11</span></div></section><section class="product-faq" data-site-anchor="support"><small>SUPORTE</small><h2>Perguntas frequentes</h2><details open><summary>O download é real?</summary><p>Não. Todo o processo é uma simulação local e segura.</p></details><details><summary>Posso criar um atalho?</summary><p>Sim. O assistente permite escolher um atalho na Área de Trabalho.</p></details></section></main><footer><strong>AppJavaFX</strong><span>Produto educacional fictício do OSLAB</span></footer></section>`;
+  }
+  function officeSite() {
+    return `<section class="fake-product-site office-site"><header><a href="#" data-site-section="top"><img src="assets/programs/office.svg" alt="" /><strong>Office Estudos</strong></a><nav><button data-site-section="top">Início</button><button data-site-section="apps">Aplicativos</button><button data-site-section="about">Sobre</button><button data-site-section="download">Download</button><button data-site-section="support">Suporte</button></nav></header><main data-site-anchor="top"><section class="product-hero"><div><small>PRODUTIVIDADE PARA SEUS ESTUDOS</small><h1>Suas ideias, seus dados e suas apresentações</h1><p>Um pacote completo para trabalhos escolares, projetos e organização do dia a dia.</p><button type="button" data-site-section="apps">Conheça os aplicativos</button></div><img src="assets/programs/office.svg" alt="Ícone do pacote Office" /></section><section class="office-apps" data-site-anchor="apps"><small>CONHEÇA OS APLICATIVOS</small><h2>Três ferramentas, um único pacote</h2><div><article><img src="assets/programs/word.svg" alt="" /><h3>Word</h3><p>Crie documentos claros e bem organizados.</p></article><article><img src="assets/programs/excel.svg" alt="" /><h3>Excel</h3><p>Organize dados, tabelas e planilhas.</p></article><article><img src="assets/programs/slides.svg" alt="" /><h3>Apresentações</h3><p>Comunique ideias em slides visuais.</p></article></div></section><section class="product-about" data-site-anchor="about"><div><small>PARA A ESCOLA</small><h2>Produtividade em todos os trabalhos</h2><p>Comece um texto no Word, organize informações no Excel e apresente o resultado em Slides.</p></div><div class="product-stat"><strong>3 em 1</strong><span>aplicativos instalados juntos</span></div></section><section class="product-download office-download${highlighted("office-download")}" data-site-anchor="download"><img src="assets/programs/office.svg" alt="" /><div><small>PACOTE COMPLETO</small><h2>Baixar pacote para Windows</h2><p>OfficeSetup.exe instala Word, Excel e Apresentações Slides. Download simulado de 60 segundos.</p><button type="button" data-download-start="office">Baixar pacote</button><span>OfficeSetup.exe · 420 MB · versão 2026.1</span></div></section><section class="product-faq" data-site-anchor="support"><small>SUPORTE</small><h2>Dúvidas frequentes</h2><details open><summary>Quais aplicativos serão instalados?</summary><p>Word, Excel e Apresentações Slides.</p></details><details><summary>Preciso de internet?</summary><p>Não. Este site e o instalador funcionam localmente no OSLAB.</p></details></section></main><footer><strong>Office Estudos</strong><span>Pacote fictício para fins educacionais</span></footer></section>`;
+  }
+  function downloadsPanel(record) {
+    const downloads = Object.values(OSLab.software?.getState?.().downloads || {}).sort((a, b) => Number(b.startedAt) - Number(a.startedAt));
+    if (!record.downloadPanelOpen && !downloads.some((download) => download.status === "downloading")) return "";
+    return `<aside class="browser-downloads-panel${highlighted("downloads-panel")}" aria-label="Downloads"><header><span><strong>Downloads</strong><small>Arquivos simulados deste navegador</small></span><button type="button" data-download-close aria-label="Fechar">×</button></header>${downloads.length ? `<div>${downloads.map((download) => `<article class="download-item ${download.status === "completed" ? "is-complete" : ""}${download.installerId === "appjavafx" ? highlighted("download-file") : ""}"><img src="${OSLab.software.installers[download.installerId].icon}" alt="" /><span><strong>${safe(download.fileName)}</strong><small>${download.status === "completed" ? "Download concluído" : `${download.downloadedMb} MB de ${download.totalMb} MB · Baixando...`}</small><i><b style="width:${download.progress}%"></b></i></span><em>${download.progress}%</em><button type="button" data-open-download="${download.installerId}" ${download.status === "completed" ? "" : "disabled"}>${download.status === "completed" ? "Abrir arquivo" : "Aguarde"}</button></article>`).join("")}</div>` : `<p>Nenhum download nesta sessão.</p>`}</aside>`;
   }
   function netflix(record, state) {
     const region = state.vpn.countryName;
@@ -132,7 +174,9 @@
     const state = record.browserPageState || pageState();
     if (!record.browserResult) return browserHome();
     if (!record.browserResult.ok) { const copy = errorCopy(record.browserResult.reason); return `<section class="offline-browser-error"><span>!</span><h2>${copy[0]}</h2><p>${copy[1]}</p><button type="button" data-browser-nav="refresh">Tentar novamente</button></section>`; }
-    if (record.browserHost === "google.com" || record.browserHost === "www.google.com") return browserHome();
+    if (record.browserHost === "google.com" || record.browserHost === "www.google.com") return record.googleQuery ? searchResults(record) : browserHome();
+    if (record.browserHost === "appjavafx.local") return appJavaFxSite();
+    if (record.browserHost === "office.local") return officeSite();
     if (record.browserHost === "netflix.com") return netflix(record, state);
     if (record.browserHost === "portal.empresa.local") return portal(record, state);
     if (record.browserHost === "meuip.com") return myIp(record, state);
@@ -145,22 +189,32 @@
   function render(record) {
     records.add(record);
     toolbar(record);
-    record.address.textContent = record.browserHost ? `https://${record.browserHost}` : "Navegador do OSLab";
-    record.content.innerHTML = `<section class="offline-browser vpn-browser-shell">${site(record)}</section>`;
+    record.address.textContent = record.googleQuery ? `Resultados para ${record.googleQuery}` : record.browserHost ? `https://${record.browserHost}` : "Navegador do OSLab";
+    record.content.innerHTML = `<section class="offline-browser vpn-browser-shell">${site(record)}${downloadsPanel(record)}</section>`;
     if (!record.browserWired) {
       record.browserWired = true;
-      record.toolbar.addEventListener("submit", (event) => { const form = event.target.closest("[data-browser-address-form]"); if (!form) return; event.preventDefault(); load(record, new FormData(form).get("address")); });
+      record.toolbar.addEventListener("submit", (event) => { const form = event.target.closest("[data-browser-address-form]"); if (!form) return; event.preventDefault(); const value = String(new FormData(form).get("address") || "").trim(); if (/\s/.test(value) || /^(appjavafx|pacote office|word|excel|apresenta|slides|leitor pdf|editor de texto|navegador|programa para computador)/i.test(value)) performSearch(record, value); else load(record, value); });
       const navigateClick = (event) => {
         const nav = event.target.closest("[data-browser-nav]")?.dataset.browserNav;
         if (!nav) return;
-        if (nav === "refresh") load(record, record.browserHost || "google.com", { push: false });
+        if (nav === "refresh") load(record, currentLocation(record), { push: false });
+        if (nav === "home") load(record, "google.com");
         if (nav === "back" && record.browserHistoryIndex > 0) { record.browserHistoryIndex -= 1; load(record, record.browserHistory[record.browserHistoryIndex], { push: false }); }
         if (nav === "forward" && record.browserHistoryIndex < record.browserHistory.length - 1) { record.browserHistoryIndex += 1; load(record, record.browserHistory[record.browserHistoryIndex], { push: false }); }
       };
-      record.toolbar.addEventListener("click", navigateClick);
+      record.toolbar.addEventListener("click", (event) => {
+        navigateClick(event);
+        if (event.target.closest("[data-browser-downloads]")) { record.downloadPanelOpen = !record.downloadPanelOpen; render(record); }
+      });
       record.content.addEventListener("click", (event) => {
         navigateClick(event);
         const go = event.target.closest("[data-browser-go]")?.dataset.browserGo; if (go) load(record, go);
+        const suggestion = event.target.closest("[data-google-suggestion]")?.dataset.googleSuggestion; if (suggestion) performSearch(record, suggestion);
+        const installSite = event.target.closest("[data-install-site]")?.dataset.installSite; if (installSite) { OSLab.software.visitSite(installSite); load(record, installSite === "office" ? "office.local" : "appjavafx.local"); }
+        const section = event.target.closest("[data-site-section]")?.dataset.siteSection; if (section) { event.preventDefault(); record.content.querySelector(`[data-site-anchor="${CSS.escape(section)}"]`)?.scrollIntoView({ behavior: "smooth", block: "start" }); }
+        const downloadId = event.target.closest("[data-download-start]")?.dataset.downloadStart; if (downloadId) { const result = OSLab.software.startDownload(downloadId); record.downloadPanelOpen = true; render(record); if (result.existing && result.download.status === "completed") OSLab.ui.notify("Download disponível", `${result.download.fileName} já está pronto para abrir.`, "info"); }
+        const openDownload = event.target.closest("[data-open-download]")?.dataset.openDownload; if (openDownload) OSLab.software.openInstaller(openDownload);
+        if (event.target.closest("[data-download-close]")) { record.downloadPanelOpen = false; render(record); }
         const profile = event.target.closest("[data-netflix-profile]")?.dataset.netflixProfile; if (profile) { record.netflixProfile = profile; render(record); emit(record, "netflix-profile", { profile }); }
         const ticket = event.target.closest("[data-portal-ticket]")?.dataset.portalTicket; if (ticket) { record.portalTicket = ticket; render(record); if (ticket === "1542") emit(record, "portal-ticket-1542", { ticket }); }
         if (event.target.closest("[data-portal-back]")) { record.portalTicket = null; render(record); }
@@ -170,8 +224,10 @@
         if (event.target.closest("[data-netflix-watch]")) OSLab.ui.notify("Netflix simulada", "Reprodução fictícia iniciada. Nenhum vídeo real é transmitido.", "info");
       });
       record.content.addEventListener("submit", (event) => {
+        const googleForm = event.target.closest("[data-google-search]");
         const netflixForm = event.target.closest("[data-netflix-search]");
         const ipQuiz = event.target.closest("[data-myip-quiz]");
+        if (googleForm) { event.preventDefault(); performSearch(record, new FormData(googleForm).get("query")); }
         if (netflixForm) { event.preventDefault(); record.netflixSearch = String(new FormData(netflixForm).get("query") || "").trim(); render(record); if (record.netflixSearch.toLocaleLowerCase("pt-BR") === "supernatural") emit(record, netflixAvailable(record.browserPageState) ? "netflix-supernatural-us" : record.browserPageState.vpn.country === "BR" ? "netflix-unavailable-br" : "netflix-unavailable"); }
         if (ipQuiz) { event.preventDefault(); const values = new FormData(ipQuiz); const correct = values.get("physical") === "no" && values.get("changed") === "public-ip"; record.myIpQuizResult = correct; render(record); if (correct) emit(record, "myip-quiz-correct"); }
       });
@@ -180,5 +236,7 @@
   function navigate(record, value) { return load(record, value); }
 
   OSLab.vpnSites = { netflixAvailable, portalAllowed, schoolAllowed, bankAllowed, speedMetrics, movies: movies.map((movie) => ({ ...movie })) };
-  OSLab.browserApp = { render, navigate, refresh(record) { return load(record, record.browserHost || "google.com", { push: false }); } };
+  OSLab.software?.subscribe?.(() => { records.forEach((record) => record.element?.isConnected ? render(record) : records.delete(record)); });
+  OSLab.installLab?.subscribe?.(() => { records.forEach((record) => record.element?.isConnected ? render(record) : records.delete(record)); });
+  OSLab.browserApp = { render, navigate, search: performSearch, refresh(record) { return load(record, currentLocation(record), { push: false }); } };
 })(window);

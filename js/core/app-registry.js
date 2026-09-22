@@ -6,7 +6,7 @@
     computer: { title: "Computador", icon: "assets/icons/computer.png", address: "Este Computador", task: "explorer", pinned: true },
     explorer: { title: "Explorador de Arquivos", shortTitle: "Explorador", icon: "assets/icons/explorer.png", address: "Início", task: "explorer", pinned: true },
     recycle: { title: "Lixeira", icon: "assets/icons/recycle-bin.png", address: "Lixeira", task: "explorer", pinned: true },
-    google: { title: "Google", icon: "assets/icons/google.png", address: "https://www.google.com.br", task: "google", pinned: true },
+    google: { title: "Google", icon: "assets/icons/chrome.png", address: "https://www.google.com.br", task: "google", pinned: true },
     settings: { title: "Configurações", icon: "assets/icons/settings.png", address: "Configurações", task: "settings", pinned: true },
     terminal: { title: "Terminal", icon: "assets/icons/terminal.png", address: "Terminal", task: "terminal" },
     taskmanager: { title: "Gerenciador de Tarefas", icon: "assets/icons/taskmanager.png", address: "Processos", task: "taskmanager" },
@@ -14,6 +14,13 @@
     exercises: { title: "Exercícios", icon: "assets/learning/icons/wrench.svg", address: "Trilha de Exercícios", task: "exercises", pinned: true },
     vpn: { title: "VPN", icon: "assets/learning/icons/shield_checkmark.svg", address: "VPN do OSLab", task: "vpn", pinned: true },
     vpnlab: { title: "Laboratório VPN", icon: "assets/learning/icons/globe_search.svg", address: "Trilha de VPN", task: "vpnlab", pinned: true },
+    installlab: { title: "Instalação de Programas", shortTitle: "Instalação", icon: "assets/programs/install-lab.svg", address: "Instalação e Desinstalação", task: "installlab", pinned: true },
+    controlpanel: { title: "Painel de Controle", icon: "assets/programs/control-panel.png", address: "Painel de Controle", task: "controlpanel", pinned: true },
+    installer: { title: "Instalador", icon: "assets/programs/installer.svg", address: "Assistente de Instalação", task: "installer" },
+    appjavafx: { title: "AppJavaFX", icon: "assets/programs/appjavafx.svg", address: "AppJavaFX", task: "appjavafx", installedOnly: true },
+    word: { title: "Word", icon: "assets/programs/word.svg", address: "Documento1 — Word", task: "word", installedOnly: true },
+    excel: { title: "Excel", icon: "assets/programs/excel.svg", address: "Pasta1 — Excel", task: "excel", installedOnly: true },
+    slides: { title: "Apresentações Slides", shortTitle: "Apresentações", icon: "assets/programs/slides.svg", address: "Apresentação1", task: "slides", installedOnly: true },
     texteditor: { title: "Editor de Texto", icon: "assets/icons/notepad.png", address: "Documento sem título", task: "texteditor" },
   };
 

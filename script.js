@@ -317,9 +317,26 @@
   }
 
   function renderDesktopFolders() {
-    $$("[data-desktop-item], [data-desktop-folder]", desktopIcons).forEach((element) => element.remove());
+    $$("[data-desktop-item], [data-desktop-folder], [data-installed-desktop]", desktopIcons).forEach((element) => element.remove());
     desktopIcons.classList.remove("view-large", "view-medium", "view-small");
     desktopIcons.classList.add(`view-${state.desktopView}`);
+
+    (OSLab.software?.getInstalledPrograms?.() || []).filter((program) => program.desktopShortcut).forEach((program) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "desktop-shortcut installed-program-shortcut";
+      button.dataset.installedDesktop = program.id;
+      button.dataset.app = program.id;
+      button.innerHTML = `<img src="${escapeHtml(program.icon)}" alt="" /><span>${escapeHtml(program.name)}</span>`;
+      button.addEventListener("click", (event) => {
+        event.stopPropagation();
+        $$(".desktop-shortcut").forEach((item) => item.classList.remove("is-selected"));
+        button.classList.add("is-selected");
+      });
+      button.addEventListener("dblclick", () => openApp(program.id));
+      button.addEventListener("keydown", (event) => { if (event.key === "Enter") openApp(program.id); });
+      desktopIcons.appendChild(button);
+    });
 
     sortedDesktopFolders().forEach((item) => {
       const button = document.createElement("button");
@@ -339,6 +356,23 @@
       button.append(image, label);
       desktopIcons.appendChild(button);
     });
+  }
+
+  function renderInstalledStartApps() {
+    const container = $("#start-apps");
+    if (!container) return;
+    $$(".installed-start-app", container).forEach((element) => element.remove());
+    (OSLab.software?.getInstalledPrograms?.() || []).filter((program) => program.startMenuShortcut).forEach((program) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "installed-start-app";
+      button.dataset.app = program.id;
+      button.innerHTML = `<img src="${escapeHtml(program.icon)}" alt="" /><span>${escapeHtml(program.name)}</span>`;
+      button.addEventListener("click", () => openApp(program.id));
+      container.appendChild(button);
+    });
+    const query = $("#start-search-input")?.value.trim().toLocaleLowerCase("pt-BR") || "";
+    $$("#start-apps [data-app]").forEach((button) => button.classList.toggle("is-hidden", !button.textContent.trim().toLocaleLowerCase("pt-BR").includes(query)));
   }
 
   function uniqueItemName(baseName, extension = "") {
@@ -1017,7 +1051,7 @@
     const rows = [
       { name: "Aplicativos instalados", description: "Desinstalar e gerenciar aplicativos no computador", icon: "assets/settings/Apps.webp" },
       { name: "Configurações avançadas dos aplicativos", description: "Escolha onde obter aplicativos, arquivar aplicativos, desinstalar atualizações", icon: "assets/icons/settings.png" },
-      { name: "Aplicativos padrão", description: "Padrões para tipos de arquivos e de links, outros padrões", icon: "assets/icons/google.png" },
+      { name: "Aplicativos padrão", description: "Padrões para tipos de arquivos e de links, outros padrões", icon: "assets/icons/chrome.png" },
       { name: "Ações", description: "O Windows pode recomendar ações desses aplicativos.", icon: "assets/icons/context/new.png" },
       { name: "Mapas offline", description: "Downloads, local de armazenamento, atualizações de mapa", icon: "assets/icons/settings-rows/maps.png" },
       { name: "Aplicativos para sites", description: "Sites que podem ser abertos em um aplicativo, em vez de um navegador", icon: "assets/icons/context/link.png" },
@@ -1142,6 +1176,8 @@
     if (record.appId === "exercises") OSLab.exercisesApp.render(record);
     if (record.appId === "vpn") OSLab.vpnApp.render(record);
     if (record.appId === "vpnlab") OSLab.vpnLabApp.render(record);
+    if (record.appId === "installlab") OSLab.installLabApp.render(record);
+    if (OSLab.softwareApps?.appIds?.has(record.appId)) OSLab.softwareApps.render(record);
     if (record.appId === "texteditor") renderTextEditor(record);
   }
 
@@ -1202,13 +1238,15 @@
     record.address.textContent = definition.address;
     record.toolbar.classList.toggle("browser-toolbar", appId === "google");
     element.classList.toggle("settings-window", appId === "settings");
-    record.toolbar.classList.toggle("is-hidden", ["settings", "taskmanager", "missions", "exercises", "vpn", "vpnlab", "texteditor"].includes(appId));
+    record.toolbar.classList.toggle("is-hidden", ["settings", "taskmanager", "missions", "exercises", "vpn", "vpnlab", "installlab", "controlpanel", "installer", "appjavafx", "word", "excel", "slides", "texteditor"].includes(appId));
     record.settingsSearch.classList.toggle("is-hidden", appId !== "settings" && appId !== "taskmanager");
     element.classList.toggle("taskmanager-window", appId === "taskmanager");
     element.classList.toggle("missions-window", appId === "missions");
     element.classList.toggle("exercises-window", appId === "exercises");
     element.classList.toggle("vpn-window", appId === "vpn");
     element.classList.toggle("vpn-lab-window", appId === "vpnlab");
+    element.classList.toggle("install-lab-window", appId === "installlab");
+    element.classList.toggle("software-window", OSLab.softwareApps?.appIds?.has(appId));
     element.classList.toggle("texteditor-window", appId === "texteditor");
     if (appId === "taskmanager") {
       const taskSearchInput = $("input", record.settingsSearch);
@@ -1221,7 +1259,7 @@
     positionWindow(record);
     wireWindow(record);
     renderApp(record);
-    if (["settings", "taskmanager", "missions", "exercises", "vpnlab"].includes(appId)) {
+    if (["settings", "taskmanager", "missions", "exercises", "vpnlab", "installlab"].includes(appId)) {
       element.classList.add("is-maximized");
       record.maximizeIcon.src = "assets/icons/ui/restore.png";
       record.maximizeIcon.closest("button").setAttribute("aria-label", "Restaurar");
@@ -1234,7 +1272,7 @@
       icon: definition.icon,
       status: "Em execução",
       cpu: appId === "taskmanager" ? 0.3 : 0.1,
-      memory: appId === "google" ? 64.2 : ["missions", "exercises", "vpnlab"].includes(appId) ? 42.6 : appId === "vpn" ? 34.8 : appId === "texteditor" ? 42 : 28.4,
+      memory: appId === "google" ? 64.2 : ["missions", "exercises", "vpnlab", "installlab"].includes(appId) ? 42.6 : ["word", "excel", "slides"].includes(appId) ? 78.4 : appId === "vpn" ? 34.8 : appId === "texteditor" ? 42 : 28.4,
       missionId: options.missionId || null,
       efficient: appId === "google",
     });
@@ -1252,6 +1290,12 @@
   }
 
   function openApp(appId, options = {}) {
+    const requestedDefinition = appDefinitions[appId];
+    if (requestedDefinition?.installedOnly && !OSLab.software?.isInstalled?.(appId)) {
+      OSLab.ui.notify("Programa não instalado", `${requestedDefinition.title} precisa ser instalado antes de ser aberto.`, "warning");
+      OSLab.events.emit("app:launch-blocked", { appId, reason: "not-installed" }, "windowManager");
+      return null;
+    }
     const existing = windows.get(appId);
     if (existing) {
       focusWindow(existing);
@@ -1348,6 +1392,12 @@
     closeMissionWindows(missionId) { Array.from(windows.values()).filter((record) => record.options?.missionId === missionId).forEach((record) => closeWindow(record, { force: true })); },
     isWindowOpen(windowId) { return windows.has(windowId); },
     refreshDesktop() { renderDesktopFolders(); const explorer = windows.get("explorer"); if (explorer?.currentFolderId) renderFolder(explorer, explorer.currentFolderId); },
+    refreshPrograms() {
+      renderDesktopFolders();
+      renderInstalledStartApps();
+      const controlPanel = windows.get("controlpanel");
+      if (controlPanel) OSLab.softwareApps?.render?.(controlPanel);
+    },
     setWallpaper(id, emit = true) { applyWallpaper(id, emit); if (!emit) { state.wallpaperId = id; saveState(); } },
     getWallpaper() { return currentWallpaperId; },
     setVolume,
@@ -1879,19 +1929,10 @@
 
   $("#global-search-input").addEventListener("input", (event) => {
     const query = event.target.value.trim().toLocaleLowerCase("pt-BR");
-    const matches = [
-      { id: "computer", name: "Computador", icon: "assets/icons/computer.png" },
-      { id: "explorer", name: "Explorador de Arquivos", icon: "assets/icons/explorer.png" },
-      { id: "recycle", name: "Lixeira", icon: "assets/icons/recycle-bin.png" },
-      { id: "google", name: "Google", icon: "assets/icons/google.png" },
-      { id: "settings", name: "Configurações", icon: "assets/icons/settings.png" },
-      { id: "taskmanager", name: "Gerenciador de Tarefas", icon: "assets/icons/taskmanager.png" },
-      { id: "missions", name: "Missões", icon: "assets/icons/taskmanager/details.png" },
-      { id: "exercises", name: "Exercícios", icon: "assets/icons/settings-rows/troubleshoot.png" },
-      { id: "vpn", name: "VPN", icon: "assets/learning/icons/shield_checkmark.svg" },
-      { id: "vpnlab", name: "Laboratório VPN", icon: "assets/learning/icons/globe_search.svg" },
-      { id: "terminal", name: "Terminal", icon: "assets/icons/terminal.png" },
-    ].filter((item) => item.name.toLocaleLowerCase("pt-BR").includes(query));
+    const matches = OSLab.apps.list()
+      .filter((item) => item.id !== "installer" && (!item.installedOnly || OSLab.software?.isInstalled?.(item.id)))
+      .map((item) => ({ id: item.id, name: item.title, icon: item.icon }))
+      .filter((item) => item.name.toLocaleLowerCase("pt-BR").includes(query));
 
     $("#search-results").innerHTML = `
       <p>${query ? "Melhor correspondência" : "Principais aplicativos"}</p>
@@ -2086,6 +2127,11 @@
   OSLab.apps.synchronizeStaticEntries(document);
   applyWallpaper(currentWallpaperId, false);
   renderDesktopFolders();
+  renderInstalledStartApps();
+  OSLab.software?.subscribe?.(() => {
+    renderDesktopFolders();
+    renderInstalledStartApps();
+  });
   syncQuickSettings();
   saveState();
   updateClock();

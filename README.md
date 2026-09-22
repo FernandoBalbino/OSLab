@@ -19,6 +19,7 @@ Laboratório virtual estático para alunos praticarem conceitos de Sistemas Oper
 - aplicativo Missões com 12 atividades reais, progressão linear, dicas, pontuação, medalhas, checklist, retomada e limpeza de cenários;
 - aplicativo Exercícios com 10 diagnósticos de Sistema e Rede, progressão sequencial, ajudante robô, dicas passo a passo sob demanda, testes finais e restauração segura do ambiente;
 - laboratório VPN com sete missões práticas, servidores comerciais e corporativos, indicador global, sites simulados, dicas progressivas, revisão final e modo professor;
+- trilha **Instalação e Desinstalação** com 12 missões, Google local, downloads `.exe` de 60 segundos, instaladores em etapas, atalhos sincronizados, pacote Office fictício e Painel de Controle clássico;
 - Gerenciador de Tarefas inspirado no Windows 11, com processos dinâmicos, pesquisa por nome/PID, seleção, ordenação, grupos, modo de eficiência e encerramento de tarefas;
 - menu de contexto inspirado no Windows 11, com submenus de exibição, classificação e criação;
 - menu de contexto próprio para arquivos e pastas, com ações de abrir, renomear, copiar caminho e excluir;
@@ -51,6 +52,29 @@ O navegador oferece páginas locais para `netflix.com`, `meuip.com`, `portal.emp
 O estado canônico da conexão é mantido por `js/vpn/vpn-state.js` na chave `oslab.vpn.state.v1`. O motor das atividades usa `js/vpn/vpn-lab-engine.js`, e as conclusões, dicas, checklist e revisão ficam em `oslab.vpn.progress.v1`. Para adicionar um servidor, inclua a definição em `servers` dentro de `vpn-state.js`; para adicionar uma missão, crie a entrada estruturada em `vpn-mission-catalog.js` e a respectiva regra de checklist no motor.
 
 As capas estão em `assets/vpn/posters` e seus créditos em `assets/vpn/posters/CREDITS.md`; as bandeiras e licença ficam em `assets/vpn/flags`. **Redefinir laboratório** apaga conexão e progresso VPN. O modo professor abre pelo botão **Painel do professor** no aplicativo VPN ou pelo atalho `Ctrl + Shift + Alt + V`, permitindo selecionar Wi-Fi, servidor, missão e conclusão. Tudo é simulado: não há túnel, consulta de IP, acesso bancário, streaming ou conexão a uma rede real.
+
+## Instalação e desinstalação de programas
+
+O aplicativo **Instalação de Programas** fica na Área de Trabalho e no Menu Iniciar. Sua trilha preserva as missões originais e adiciona 12 atividades sequenciais: abrir o navegador, pesquisar AppJavaFX, escolher o resultado correto, encontrar o download, aguardar 60 segundos, abrir o `.exe`, concluir o instalador, executar o programa, localizar o pacote Office, instalar Word/Excel/Apresentações, testar os três aplicativos e remover o AppJavaFX pelo Painel de Controle.
+
+O navegador continua totalmente local. A página inicial lembra o Google em tema claro e responde a pesquisas por AppJavaFX, pacote Office, Word, Excel, apresentações, leitor PDF, editor de texto, navegador e programas para computador. Os primeiros resultados de AppJavaFX e Office abrem landing pages fictícias completas; nenhum endereço externo é carregado.
+
+Os downloads são temporizadores visuais de exatamente 60 segundos. `AppJavaFX-Setup.exe` e `OfficeSetup.exe` nunca existem como executáveis reais. O assistente reutilizável possui destino, opções, confirmação, progresso e conclusão. No AppJavaFX, a caixa **Criar atalho na Área de Trabalho** controla o Desktop, enquanto o Menu Iniciar recebe o programa em qualquer instalação. O pacote Office adiciona Word, Excel e Apresentações Slides, cada um com uma interface visual própria.
+
+O estado canônico fica em `js/install/software-state.js`, persistido na chave `oslab.software.state.v1`. Downloads, programas instalados, atalhos, pesquisas, sites visitados, instaladores e programas abertos são atualizados pelo mesmo módulo. O progresso pedagógico usa `oslab.install.missions.progress.v1`. **Redefinir trilha** limpa somente esse laboratório e seus programas simulados.
+
+O **Painel de Controle** segue a aparência clássica por categorias. Em **Programas → Desinstalar um programa**, a tabela Programas e Recursos reflete imediatamente o estado instalado. Ao remover o AppJavaFX, sua janela, o item da tabela e os atalhos do Menu Iniciar e da Área de Trabalho desaparecem juntos.
+
+### Teste manual da trilha de instalação
+
+1. Entre com a senha `alunos2026`, abra **Instalação de Programas** e inicie a missão 1.
+2. Abra o Google, pesquise `AppJavaFX` e escolha o primeiro resultado.
+3. Use o menu **Download**, baixe `AppJavaFX-Setup.exe` e acompanhe os 60 segundos no painel do navegador.
+4. Abra o arquivo, avance até as opções, marque o atalho, instale e conclua.
+5. Abra o AppJavaFX pela Área de Trabalho. Para testar a opção contrária, reinstale sem marcar a caixa e confirme que ele permanece apenas no Menu Iniciar.
+6. Pesquise `pacote office`, abra o primeiro resultado, baixe `OfficeSetup.exe`, aguarde e instale o pacote.
+7. Abra Word, Excel e Apresentações Slides pelo Menu Iniciar.
+8. Abra **Painel de Controle → Programas → Desinstalar um programa**, selecione AppJavaFX e confirme a remoção.
 
 ### Teste manual dos exercícios
 
@@ -97,10 +121,11 @@ Clique com o botão direito na barra de tarefas e escolha **Gerenciador de Taref
 - `js/missions`: catálogo, motor e persistência;
 - `js/exercises`: catálogo, máquina de estados e persistência dos exercícios;
 - `js/vpn`: estado global, catálogo, motor e persistência do laboratório VPN;
+- `js/install`: estado de software, catálogo, motor e persistência da trilha de instalação;
 - `js/core/network-manager.js` e `js/core/system-state.js`: estado canônico de rede, armazenamento, desempenho e snapshots;
 - `js/ui`: notificações, confirmações, widget e modal de conclusão;
 - `script.js`: integração com o shell, as janelas e os aplicativos existentes;
-- `css/learning.css`, `css/vpn.css`, `css/missions.css` e `css/task-manager.css`: estilos das superfícies educacionais e do sistema.
+- `css/learning.css`, `css/vpn.css`, `css/install-lab.css`, `css/software-apps.css`, `css/missions.css` e `css/task-manager.css`: estilos das superfícies educacionais e do sistema.
 
 Para adicionar uma missão, inclua uma entrada em `js/missions/mission-catalog.js` com dados, objetivos, dicas e as funções `setup`, `validate`, `cleanup` e `reset`. A validação deve consultar o estado real e reagir aos eventos de `OSLab.events`.
 
@@ -130,7 +155,7 @@ O OSLab é uma PWA instalável. Após o primeiro acesso completo, o Service Work
 
 No Chrome ou Chromebook, use **Instalar para usar offline** na tela de login ou no menu Iniciar. O progresso das missões, dos exercícios e as preferências continuam salvos no `localStorage` do dispositivo. O navegador, o Terminal e todas as funções internas usam dados simulados locais e continuam disponíveis sem internet.
 
-O cache atual é `oslab-offline-v6`. Ao alterar recursos, incremente `CACHE_VERSION` em `service-worker.js`; versões antigas são excluídas automaticamente e o site oferece a atualização quando a nova versão está pronta.
+O cache atual é `oslab-offline-v9`. Ao alterar recursos, incremente `CACHE_VERSION` em `service-worker.js`; versões antigas são excluídas automaticamente e o site oferece a atualização quando a nova versão está pronta.
 
 ## Créditos
 

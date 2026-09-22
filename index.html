@@ -18,6 +18,8 @@
     <link rel="stylesheet" href="css/exercises.css" />
     <link rel="stylesheet" href="css/learning.css" />
     <link rel="stylesheet" href="css/vpn.css" />
+    <link rel="stylesheet" href="css/install-lab.css" />
+    <link rel="stylesheet" href="css/software-apps.css" />
   </head>
   <body>
     <main id="oslab" class="oslab" data-state="login">
@@ -79,7 +81,7 @@
             <span>Explorador de Arquivos</span>
           </button>
           <button class="desktop-shortcut" type="button" data-app="google">
-            <img src="assets/icons/google.png" alt="" />
+            <img src="assets/icons/chrome.png" alt="" />
             <span>Google</span>
           </button>
           <button class="desktop-shortcut" type="button" data-app="settings">
@@ -101,6 +103,14 @@
           <button class="desktop-shortcut" type="button" data-app="vpnlab">
             <img src="assets/learning/icons/globe_search.svg" alt="" />
             <span>Laboratório VPN</span>
+          </button>
+          <button class="desktop-shortcut" type="button" data-app="installlab">
+            <img src="assets/programs/install-lab.svg" alt="" />
+            <span>Instalação de Programas</span>
+          </button>
+          <button class="desktop-shortcut" type="button" data-app="controlpanel">
+            <img src="assets/programs/control-panel.png" alt="" />
+            <span>Painel de Controle</span>
           </button>
         </div>
 
@@ -165,7 +175,7 @@
               <span>Lixeira</span>
             </button>
             <button type="button" data-app="google">
-              <img src="assets/icons/google.png" alt="" />
+              <img src="assets/icons/chrome.png" alt="" />
               <span>Google</span>
             </button>
             <button type="button" data-app="settings">
@@ -187,6 +197,14 @@
             <button type="button" data-app="vpnlab">
               <img src="assets/learning/icons/globe_search.svg" alt="" />
               <span>Laboratório VPN</span>
+            </button>
+            <button type="button" data-app="installlab">
+              <img src="assets/programs/install-lab.svg" alt="" />
+              <span>Instalação</span>
+            </button>
+            <button type="button" data-app="controlpanel">
+              <img src="assets/programs/control-panel.png" alt="" />
+              <span>Painel de Controle</span>
             </button>
           </div>
           <footer class="start-footer">
@@ -394,7 +412,7 @@
               <img src="assets/icons/explorer.png" alt="" />
             </button>
             <button class="taskbar-button task-app" type="button" data-app="google" aria-label="Google">
-              <img src="assets/icons/google.png" alt="" />
+              <img src="assets/icons/chrome.png" alt="" />
             </button>
             <button class="taskbar-button task-app" type="button" data-app="settings" aria-label="Configurações">
               <img src="assets/icons/settings.png" alt="" />
@@ -432,6 +450,10 @@
     <script defer src="js/core/network-manager.js"></script>
     <script defer src="js/core/system-state.js"></script>
     <script defer src="js/core/activity-coordinator.js"></script>
+    <script defer src="js/install/software-state.js"></script>
+    <script defer src="js/install/install-mission-catalog.js"></script>
+    <script defer src="js/install/install-mission-storage.js"></script>
+    <script defer src="js/install/install-mission-engine.js"></script>
     <script defer src="js/missions/mission-catalog.js"></script>
     <script defer src="js/missions/mission-storage.js"></script>
     <script defer src="js/missions/mission-engine.js"></script>
@@ -446,10 +468,12 @@
     <script defer src="js/ui/learning-path.js"></script>
     <script defer src="js/ui/assistant-robot.js"></script>
     <script defer src="js/apps/missions-app.js"></script>
+    <script defer src="js/apps/install-lab-app.js"></script>
     <script defer src="js/apps/exercises-app.js"></script>
     <script defer src="js/apps/task-manager.js"></script>
     <script defer src="js/apps/terminal-app.js"></script>
     <script defer src="js/apps/browser-app.js"></script>
+    <script defer src="js/apps/software-apps.js"></script>
     <script defer src="js/apps/vpn-app.js"></script>
     <script defer src="js/apps/vpn-lab-app.js"></script>
     <script defer src="js/apps/system-tools.js"></script>
