@@ -508,7 +508,7 @@ test("precache inclui todos os recursos carregados pelo documento", () => {
     "assets/browser/brave.png",
     "assets/browser/opera.png",
   ].forEach((entry) => assert.ok(entries.has(entry), `recurso educacional fora do precache: ${entry}`));
-  assert.match(fs.readFileSync(path.join(root, "service-worker.js"), "utf8"), /oslab-offline-v16/);
+  assert.match(fs.readFileSync(path.join(root, "service-worker.js"), "utf8"), /oslab-offline-v17/);
 });
 
 test("estado do navegador mantém histórico por aba, fechadas e favoritos", () => {

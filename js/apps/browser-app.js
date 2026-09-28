@@ -334,6 +334,15 @@
     }
   }
   function navigate(record, value) { return load(record, value); }
+  function openGoogle(record) {
+    ensureHistory(record);
+    if (record.browserState.currentUrl === "google.com") {
+      const tab = OSLab.browserState.open(record.browserState, "newtab");
+      load(record, tab.url, { push: false });
+      changed(record, "new-tab", { openedTabId: tab.id });
+    }
+    return load(record, "google.com", { source: "assistant" });
+  }
   function prepareMission(order) {
     const record = OSLab.windowManager?.getWindows?.().find((item) => item.appId === "google") || OSLab.shell?.openApp?.("google");
     if (!record) return;
@@ -349,5 +358,5 @@
   OSLab.software?.subscribe?.(() => { records.forEach((record) => record.element?.isConnected ? render(record) : records.delete(record)); });
   OSLab.installLab?.subscribe?.(() => { records.forEach((record) => record.element?.isConnected ? render(record) : records.delete(record)); });
   OSLab.browserTrail?.subscribe?.(() => { records.forEach((record) => { if (record.element?.isConnected) record.element.dataset.browserHint = visualTarget(record); else records.delete(record); }); });
-  OSLab.browserApp = { render, navigate, search: performSearch, prepareMission, browsers, getState(record) { return OSLab.browserState.snapshot(record.browserState); }, refresh(record) { record.pageRefreshed = true; return load(record, currentLocation(record), { push: false, action: "refresh" }); } };
+  OSLab.browserApp = { render, navigate, openGoogle, search: performSearch, prepareMission, browsers, getState(record) { return OSLab.browserState.snapshot(record.browserState); }, refresh(record) { record.pageRefreshed = true; return load(record, currentLocation(record), { push: false, action: "refresh" }); } };
 })(window);

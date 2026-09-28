@@ -113,9 +113,9 @@
       kind: "browser-trail", mascot: completed ? "celebrate" : "neutral",
       eyebrow: completed ? "Missão concluída" : "Navegadores e Internet",
       title: mission.title,
-      message: completed ? mission.success : mission.order === 13 ? "Agora faça tudo sozinho. Siga os objetivos em ordem." : next ? next.label : mission.instruction,
+      message: completed ? mission.success : mission.order === 13 ? "Agora faça tudo sozinho. Siga os objetivos em ordem." : mission.order === 6 && active.index === 0 ? "Clique em Abrir Google abaixo para voltar à página de pesquisa." : next ? next.label : mission.instruction,
       body: `${mission.order === 10 && !completed ? "<p>Use Ctrl+Shift+T. Se o navegador do computador reservar o atalho, use Histórico → Abas fechadas recentemente.</p>" : ""}<ul class="assistant-checklist">${mission.objectives.map((item) => `<li class="${active.checklist[item.id] ? "is-done" : ""}"><img src="${icon(active.checklist[item.id] ? "checkmark_circle" : "target_arrow")}" alt="" /><span>${safe(item.label)}</span></li>`).join("")}</ul>`,
-      actions: completed ? `<button type="button" data-assistant-action="browser-trail-return">Voltar</button><button type="button" data-assistant-action="browser-trail-repeat">Refazer</button><button class="is-primary" type="button" data-assistant-action="browser-trail-next">${mission.order === 13 ? "Ver trilha" : "Próxima"}</button>` : `<button type="button" data-assistant-action="browser-trail-browser">Navegador</button><button type="button" data-assistant-action="browser-trail-open">Trilha</button><button type="button" data-assistant-action="browser-trail-exit">Sair</button>`,
+      actions: completed ? `<button type="button" data-assistant-action="browser-trail-return">Voltar</button><button type="button" data-assistant-action="browser-trail-repeat">Refazer</button><button class="is-primary" type="button" data-assistant-action="browser-trail-next">${mission.order === 13 ? "Ver trilha" : "Próxima"}</button>` : `<button type="button" data-assistant-action="browser-trail-browser">${mission.order === 6 ? "Abrir Google" : "Navegador"}</button><button type="button" data-assistant-action="browser-trail-open">Trilha</button><button type="button" data-assistant-action="browser-trail-exit">Sair</button>`,
     };
   }
   function render() {
@@ -171,7 +171,7 @@
     if (action === "install-lab-return") OSLab.installLab.finish("return");
     if (action === "install-lab-repeat") OSLab.installLab.finish("repeat");
     if (action === "install-lab-next") OSLab.installLab.finish("next");
-    if (action === "browser-trail-browser") OSLab.shell.openApp("google");
+    if (action === "browser-trail-browser") { const record = OSLab.shell.openApp("google"); if (record && OSLab.browserTrail?.getProgress?.().active?.id === "browser-6") OSLab.browserApp.openGoogle(record); }
     if (action === "browser-trail-open") OSLab.shell.openApp("browsertrail");
     if (action === "browser-trail-exit" && await OSLab.ui.confirm({ title: "Sair da missão?", message: "Esta tentativa será encerrada.", confirmLabel: "Sair" })) OSLab.browserTrail.exit();
     if (action === "browser-trail-return") OSLab.browserTrail.finish("return");
