@@ -332,9 +332,8 @@
         event.stopPropagation();
         $$(".desktop-shortcut").forEach((item) => item.classList.remove("is-selected"));
         button.classList.add("is-selected");
+        if (event.detail <= 1) openApp(program.id);
       });
-      button.addEventListener("dblclick", () => openApp(program.id));
-      button.addEventListener("keydown", (event) => { if (event.key === "Enter") openApp(program.id); });
       desktopIcons.appendChild(button);
     });
 
@@ -1882,10 +1881,7 @@
       event.stopPropagation();
       $$(".desktop-shortcut").forEach((item) => item.classList.remove("is-selected"));
       shortcut.classList.add("is-selected");
-    });
-    shortcut.addEventListener("dblclick", () => openApp(shortcut.dataset.app));
-    shortcut.addEventListener("keydown", (event) => {
-      if (event.key === "Enter") openApp(shortcut.dataset.app);
+      if (event.detail <= 1) openApp(shortcut.dataset.app);
     });
   });
 

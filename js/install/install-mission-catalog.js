@@ -10,7 +10,7 @@
       id: "install-browser", order: 1, title: "Conhecendo o navegador", category: "Navegador", difficulty: "Fácil", icon: icon("globe_search"),
       description: "Abra o navegador do OSLAB pelo Menu Iniciar ou pela Área de Trabalho.", goal: "Reconhecer o navegador como ponto de partida para localizar programas.", instruction: "Abra o aplicativo Google do OSLAB.",
       objectives: [{ id: "browser-opened", label: "Abrir o navegador do OSLAB" }],
-      hint: hint("Onde fica o navegador?", "Procure um atalho conhecido antes de explorar outras áreas.", ["Abra o Menu Iniciar ou observe os ícones da Área de Trabalho.", "Localize o ícone colorido com o nome Google.", "Abra o aplicativo com um clique no menu ou dois cliques na Área de Trabalho."], "A janela deve mostrar uma barra de endereço e a página inicial de pesquisa.", "browser-shortcut", "Atalho do Google"),
+      hint: hint("Onde fica o navegador?", "Procure um atalho conhecido antes de explorar outras áreas.", ["Abra o Menu Iniciar ou observe os ícones da Área de Trabalho.", "Localize o ícone colorido com o nome Google.", "Clique no atalho para abrir o aplicativo."], "A janela deve mostrar uma barra de endereço e a página inicial de pesquisa.", "browser-shortcut", "Atalho do Google"),
       success: "Você abriu o navegador simulado e identificou os controles principais.",
     },
     {

@@ -496,7 +496,7 @@
   position: absolute;
   z-index: 96;
   right: 16px;
-  bottom: calc(var(--taskbar-height) + 14px);
+  bottom: calc(var(--taskbar-height) + var(--system-edge-inset) + 14px);
   width: min(354px, calc(100vw - 32px));
   max-height: min(610px, 66vh);
   color: var(--learning-ink);
@@ -666,7 +666,7 @@
 }
 
 @media (max-width: 720px) {
-  .learning-assistant { right: 8px; bottom: calc(var(--taskbar-height) + 8px); width: min(354px, calc(100vw - 16px)); max-height: 62vh; }
+  .learning-assistant { right: 8px; bottom: calc(var(--taskbar-height) + var(--system-edge-inset) + 8px); width: min(354px, calc(100vw - 16px)); max-height: 62vh; }
 }
 
 @media (prefers-reduced-motion: reduce) {
