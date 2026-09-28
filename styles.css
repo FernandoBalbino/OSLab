@@ -3,7 +3,6 @@
   font-family: "Segoe UI Variable", "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
   font-synthesis: none;
   --taskbar-height: 48px;
-  --system-edge-inset: 0px;
   --glass: rgba(243, 243, 243, 0.84);
   --glass-strong: rgba(245, 245, 245, 0.94);
   --text: #202020;
@@ -32,10 +31,6 @@ body,
 button,
 input {
   font: inherit;
-}
-
-:root:fullscreen {
-  --system-edge-inset: 56px;
 }
 
 body {
@@ -284,7 +279,7 @@ img {
   z-index: 2;
   top: 10px;
   right: 8px;
-  bottom: calc(var(--taskbar-height) + var(--system-edge-inset) + 8px);
+  bottom: calc(var(--taskbar-height) + 8px);
   left: 8px;
   display: grid;
   width: auto;
@@ -309,7 +304,7 @@ img {
   gap: 3px;
   padding: 5px 4px 3px;
   background: transparent;
-  cursor: default;
+  cursor: pointer;
 }
 
 .desktop-shortcut:hover,
@@ -394,7 +389,7 @@ img {
 .window-layer {
   position: absolute;
   z-index: 20;
-  inset: 0 0 calc(var(--taskbar-height) + var(--system-edge-inset));
+  inset: 0 0 var(--taskbar-height);
   pointer-events: none;
 }
 
@@ -1708,7 +1703,7 @@ img {
 
 .start-menu {
   left: 50%;
-  bottom: calc(var(--taskbar-height) + var(--system-edge-inset) + 12px);
+  bottom: calc(var(--taskbar-height) + 12px);
   width: min(560px, calc(100vw - 24px));
   min-height: 515px;
   transform: translateX(-50%);
@@ -1863,7 +1858,7 @@ img {
 
 .search-panel {
   left: 50%;
-  bottom: calc(var(--taskbar-height) + var(--system-edge-inset) + 12px);
+  bottom: calc(var(--taskbar-height) + 12px);
   width: min(600px, calc(100vw - 24px));
   min-height: 395px;
   transform: translateX(-50%);
@@ -1924,7 +1919,7 @@ img {
 
 .quick-panel {
   right: 12px;
-  bottom: calc(var(--taskbar-height) + var(--system-edge-inset) + 12px);
+  bottom: calc(var(--taskbar-height) + 12px);
   width: 360px;
   padding: 20px 20px 0;
   color: #fff;
@@ -2083,7 +2078,7 @@ img {
 
 .calendar-panel {
   right: 12px;
-  bottom: calc(var(--taskbar-height) + var(--system-edge-inset) + 12px);
+  bottom: calc(var(--taskbar-height) + 12px);
   width: 330px;
   padding: 24px;
 }
@@ -2104,7 +2099,7 @@ img {
   position: absolute;
   z-index: 150;
   left: calc(50% + 118px);
-  bottom: calc(79px + var(--system-edge-inset));
+  bottom: 79px;
   width: 155px;
   overflow: hidden;
   border: 1px solid rgba(0, 0, 0, 0.1);
@@ -2760,7 +2755,7 @@ img {
   position: absolute;
   z-index: 100;
   right: 0;
-  bottom: var(--system-edge-inset);
+  bottom: 0;
   left: 0;
   height: var(--taskbar-height);
   border-top: 1px solid rgba(255, 255, 255, 0.12);
