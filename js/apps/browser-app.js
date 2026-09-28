@@ -3,7 +3,14 @@
 
   const OSLab = global.OSLab = global.OSLab || {};
   const records = new Set();
-  const knownHosts = ["google.com", "www.google.com", "appjavafx.local", "office.local", "netflix.com", "meuip.com", "portal.empresa.local", "bancoos.com", "speedtest.os", "meet.os", "admin.escola.local"];
+  const knownHosts = ["google.com", "www.google.com", "wikipedia.org", "youtube.com", "hardware.oslab.local", "componentes.oslab.local", "falha.oslab.local", "appjavafx.local", "office.local", "netflix.com", "meuip.com", "portal.empresa.local", "bancoos.com", "speedtest.os", "meet.os", "admin.escola.local"];
+  const browsers = {
+    google: { name: "Google Chrome", logo: "assets/browser/chrome.svg", maker: "Google", description: "O Chrome é um dos navegadores mais utilizados no mundo.", menu: "⋮" },
+    edge: { name: "Microsoft Edge", logo: "assets/browser/edge.png", maker: "Microsoft", description: "É o navegador padrão das versões atuais do Windows.", menu: "⋯" },
+    firefox: { name: "Mozilla Firefox", logo: "assets/browser/firefox.png", maker: "Mozilla", description: "É um navegador de código aberto, conhecido por seu foco em privacidade e independência.", menu: "☰" },
+    brave: { name: "Brave", logo: "assets/browser/brave-icon.png", maker: "Brave Software", description: "Possui recursos integrados voltados para privacidade e bloqueio de rastreadores.", menu: "☰" },
+    opera: { name: "Opera", logo: "assets/browser/opera.png", maker: "Opera", description: "Possui diversos recursos integrados à própria interface.", menu: "☰" },
+  };
   const movies = [
     ["Supernatural", "15 temporadas", ["Séries", "Terror", "Em alta"]], ["Horizonte de Aço", "Filme", ["Ação", "Populares"]], ["Código Aurora", "2 temporadas", ["Séries", "Ficção científica"]], ["Depois da Névoa", "Filme", ["Terror", "Em alta"]], ["Rota 2049", "Filme", ["Ficção científica", "Ação"]],
     ["Vozes do Vale", "3 temporadas", ["Séries", "Populares"]], ["O Último Farol", "Filme", ["Terror", "Filmes"]], ["Linha de Fuga", "Filme", ["Ação", "Em alta"]], ["Além do Gelo", "1 temporada", ["Séries", "Ficção científica"]], ["Cidade Submersa", "Filme", ["Ficção científica", "Filmes"]],
@@ -46,8 +53,13 @@
     OSLab.events.emit("vpn-browser:action", { host: record.browserHost, action, vpn: state.vpn, wifi: state.network.connectedSsid, ...detail }, "browser");
   }
   function ensureHistory(record) {
-    record.browserHistory = record.browserHistory || [];
-    record.browserHistoryIndex = Number.isInteger(record.browserHistoryIndex) ? record.browserHistoryIndex : -1;
+    record.browserState = record.browserState || OSLab.browserState.create(record.appId === "google" && OSLab.browserTrail?.getProgress?.().active?.id !== "browser-13" ? "google.com" : "newtab");
+    const tab = OSLab.browserState.active(record.browserState);
+    record.browserHistory = tab.history;
+    record.browserHistoryIndex = tab.historyIndex;
+  }
+  function changed(record, action, detail = {}) {
+    OSLab.events.emit("browser:action", { browserId: record.appId, action, tabId: record.browserState.activeTab, url: record.browserState.currentUrl, ...detail }, "browserApp");
   }
   function load(record, value, options = {}) {
     ensureHistory(record);
@@ -56,29 +68,35 @@
     const searchQuery = isSearch ? decodeURIComponent(raw.slice(7)) : "";
     const host = isSearch ? "google.com" : hostFrom(raw);
     const historyValue = isSearch ? `search:${encodeURIComponent(searchQuery)}` : host;
-    if (options.push !== false) {
-      record.browserHistory = record.browserHistory.slice(0, record.browserHistoryIndex + 1);
-      record.browserHistory.push(historyValue);
-      record.browserHistoryIndex = record.browserHistory.length - 1;
-    }
+    const didChange = OSLab.browserState.navigate(record.browserState, historyValue, { push: options.push });
+    ensureHistory(record);
     record.browserHost = host;
     record.googleQuery = isSearch ? searchQuery : null;
-    record.browserResult = ["appjavafx.local", "office.local"].includes(host) ? { ok: true, host, ip: "127.0.0.1", reason: null } : OSLab.network.browse(host);
+    record.browserResult = ["appjavafx.local", "office.local", "newtab", "wikipedia.org", "youtube.com", "hardware.oslab.local", "componentes.oslab.local", "falha.oslab.local"].includes(host) ? { ok: true, host, ip: "127.0.0.1", reason: null } : OSLab.network.browse(host);
     record.browserPageState = pageState();
     if (host === "speedtest.os") record.speedResult = null;
     if (host === "meet.os") record.meetJoined = false;
     record.browserLoading = true;
     render(record);
     global.setTimeout(() => { if (!record.element?.isConnected) return; record.browserLoading = false; render(record); observe(record); }, 260);
+    if (didChange || options.action === "refresh") changed(record, options.action || (isSearch ? "search" : "navigate"), { query: searchQuery, source: options.source || "address", value: historyValue });
     return record.browserResult;
   }
-  function performSearch(record, query) {
+  function performSearch(record, query, source = "page") {
     const term = String(query || "").trim();
     if (!term) return load(record, "google.com");
     OSLab.software?.recordSearch?.(term);
-    return load(record, `search:${encodeURIComponent(term)}`);
+    return load(record, `search:${encodeURIComponent(term)}`, { source });
   }
-  function currentLocation(record) { return record.googleQuery ? `search:${encodeURIComponent(record.googleQuery)}` : record.browserHost || "google.com"; }
+  function restoreClosed(record) {
+    const tab = OSLab.browserState.restore(record.browserState);
+    if (!tab) return false;
+    record.browserState.historyOpen = false;
+    load(record, tab.url, { push: false });
+    changed(record, "restore-tab", { restoredUrl: tab.url, restoredTabId: tab.id });
+    return true;
+  }
+  function currentLocation(record) { return record.browserState?.currentUrl || (record.googleQuery ? `search:${encodeURIComponent(record.googleQuery)}` : record.browserHost || "google.com"); }
   function observe(record) {
     const state = record.browserPageState;
     if (!record.browserResult?.ok || !state) return;
@@ -92,12 +110,32 @@
   }
   function toolbar(record) {
     ensureHistory(record);
+    record.element.dataset.browserHint = visualTarget(record);
+    const browser = browsers[record.appId] || browsers.google;
+    record.element.dataset.browser = record.appId;
+    record.element.classList.add("sim-browser-window");
     record.toolbar.classList.remove("is-hidden");
     record.toolbar.classList.add("vpn-browser-toolbar");
     const downloads = Object.values(OSLab.software?.getState?.().downloads || {});
     const active = downloads.filter((download) => download.status === "downloading").length;
-    const address = record.googleQuery ? `google.com/search?q=${record.googleQuery}` : record.browserHost || "google.com";
-    record.toolbar.innerHTML = `<button type="button" data-browser-nav="back" aria-label="Voltar" ${record.browserHistoryIndex <= 0 ? "disabled" : ""}><img src="assets/icons/ui/left.png" alt="" /></button><button type="button" data-browser-nav="forward" aria-label="Avançar" ${record.browserHistoryIndex >= record.browserHistory.length - 1 ? "disabled" : ""}><img src="assets/icons/ui/right.png" alt="" /></button><button type="button" data-browser-nav="refresh" aria-label="Recarregar"><img src="assets/icons/ui/refresh.png" alt="" /></button><form data-browser-address-form><span class="browser-lock">OS</span><input name="address" value="${safe(address)}" aria-label="Barra de endereço" spellcheck="false" /><button type="submit">Ir</button></form><button type="button" class="browser-download-button${active ? " has-active" : ""}${highlighted("downloads-panel")}" data-browser-downloads aria-label="Downloads"><span>↓</span>${downloads.length ? `<b>${downloads.length}</b>` : ""}</button><button type="button" data-browser-nav="home" aria-label="Nova guia"><span>＋</span></button>${record.browserLoading ? `<span class="browser-loading" aria-label="Carregando"></span>` : ""}`;
+    const state = record.browserState;
+    const address = record.googleQuery ? `google.com/search?q=${record.googleQuery}` : state.currentUrl === "newtab" ? "" : record.browserHost || "google.com";
+    const fav = state.favorites.some((item) => item.url === state.currentUrl);
+    const identity = record.titlebar.querySelector(".window-identity");
+    identity.classList.add("browser-window-identity");
+    let strip = record.titlebar.querySelector(".browser-tabstrip");
+    if (!strip) { strip = document.createElement("div"); strip.className = "browser-tabstrip"; record.titlebar.insertBefore(strip, record.titlebar.querySelector(".window-controls")); }
+    strip.innerHTML = `${record.appId === "opera" ? `<span class="opera-menu-mark" aria-hidden="true"><img src="${browser.logo}" alt="" /></span>` : ""}${state.tabs.map((tab) => `<div class="browser-tab ${tab.id === state.activeTab ? "is-active" : ""}" data-browser-tab="${tab.id}"><img src="${tab.url === "newtab" ? browser.logo : tab.url === "google.com" ? browsers.google.logo : browser.logo}" alt="" /><button type="button" data-browser-switch="${tab.id}" aria-label="Aba ${safe(tab.title)}" ${tab.id === state.activeTab ? 'aria-current="page"' : ""}>${safe(tab.title)}</button><button type="button" data-browser-close="${tab.id}" aria-label="Fechar aba ${safe(tab.title)}">×</button></div>`).join("")}<button type="button" class="browser-new-tab" data-browser-new-tab aria-label="Nova aba" title="Nova aba">+</button>`;
+    record.toolbar.innerHTML = `<button type="button" data-browser-nav="back" aria-label="Voltar" ${record.browserHistoryIndex <= 0 ? "disabled" : ""}><img src="assets/icons/ui/left.png" alt="" /></button><button type="button" data-browser-nav="forward" aria-label="Avançar" ${record.browserHistoryIndex >= record.browserHistory.length - 1 ? "disabled" : ""}><img src="assets/icons/ui/right.png" alt="" /></button><button type="button" data-browser-nav="refresh" aria-label="Atualizar"><img src="assets/icons/ui/refresh.png" alt="" /></button><form data-browser-address-form><span class="browser-lock" aria-hidden="true">${record.appId === "firefox" ? "◈" : "⌕"}</span><input name="address" value="${safe(address)}" aria-label="Barra de endereço" title="Barra de endereço" spellcheck="false" placeholder="Pesquise ou digite um endereço" /><button type="submit" aria-label="Ir para endereço">→</button></form>${record.appId === "brave" ? '<button type="button" class="brave-shield" aria-label="Proteções Brave"><img src="assets/learning/icons/shield_checkmark.svg" alt="" /></button>' : ""}<button type="button" class="browser-favorite${fav ? " is-saved" : ""}" data-browser-favorite aria-label="${fav ? "Favorito salvo" : "Adicionar aos favoritos"}" title="Favoritos">${fav ? "★" : "☆"}</button><button type="button" data-browser-history aria-label="Histórico" title="Histórico">◷</button><button type="button" class="browser-download-button${downloads.length ? " has-downloads" : ""}${active ? " has-active" : ""}${highlighted("downloads-panel")}" data-browser-downloads aria-label="Downloads"><span>↓</span>${downloads.length ? `<b>${downloads.length}</b>` : ""}</button><button type="button" data-browser-menu aria-label="Menu do navegador" title="Menu do navegador">${browser.menu}</button>${record.browserLoading ? `<span class="browser-loading" aria-label="Carregando"></span>` : ""}`;
+  }
+  function visualTarget(record) {
+    if (record.appId !== "google") return "";
+    const active = OSLab.browserTrail?.getProgress?.().active;
+    if (!active || active.phase === "completed") return "";
+    if (active.id === "browser-2") return ["address", "menu", "new-tab"][active.index] || "";
+    if (active.id === "browser-3") return "address";
+    if (active.id === "browser-4") return "search";
+    return "";
   }
   function posterCard(movie) { return `<article class="netflix-card"><img src="${movie.poster}" alt="Capa fictícia de ${safe(movie.title)}" /><span><strong>${safe(movie.title)}</strong><small>${safe(movie.meta)}</small></span></article>`; }
   function browserHome() {
@@ -106,6 +144,9 @@
   function searchResults(record) {
     const query = String(record.googleQuery || "").trim();
     const normalized = query.toLocaleLowerCase("pt-BR");
+    if (normalized.includes("hardware") || normalized.includes("peças") || normalized.includes("pecas")) {
+      return `<section class="google-results-page"><header><button type="button" class="google-mini-logo" data-browser-go="google.com">Google</button><form class="google-results-search" data-google-search><input name="query" value="${safe(query)}" aria-label="Pesquisar" /><button type="submit">Pesquisar</button></form></header><nav><strong>Todos</strong><span>Imagens</span><span>Vídeos</span><span>Notícias</span></nav><main><p class="google-result-count">Resultados simulados para ${safe(query)}</p>${[["hardware.oslab.local", "Hardware — Guia Básico", "Conheça as peças principais de um computador."], ["componentes.oslab.local", "Componentes internos do computador", "Processador, memória, placa-mãe e armazenamento."], ["wikipedia.org", "Wikipédia — Computador", "Visão geral do computador e de seus componentes."], ["hardware.oslab.local", "Peças principais de um computador", "Guia para quem está começando."]].map(([url, title, description], index) => `<article class="google-result-card ${index === 0 ? "first-result" : ""}"><div><span class="result-favicon">OS</span><span><strong>${url}</strong><small>https://${url}</small></span></div><button type="button" data-browser-go="${url}" ${index === 0 ? "data-browser-first-result" : ""}>${title}</button><p>${description}</p></article>`).join("")}</main></section>`;
+    }
     const office = ["office", "word", "excel", "apresenta", "slides", "produtividade"].some((term) => normalized.includes(term));
     const java = normalized.includes("appjavafx") || normalized.includes("javafx");
     const target = office ? "office" : "appjavafx";
@@ -172,9 +213,12 @@
   }
   function site(record) {
     const state = record.browserPageState || pageState();
+    const location = record.browserState?.currentUrl;
+    if (location === "newtab") return newTabPage(record);
     if (!record.browserResult) return browserHome();
     if (!record.browserResult.ok) { const copy = errorCopy(record.browserResult.reason); return `<section class="offline-browser-error"><span>!</span><h2>${copy[0]}</h2><p>${copy[1]}</p><button type="button" data-browser-nav="refresh">Tentar novamente</button></section>`; }
     if (record.browserHost === "google.com" || record.browserHost === "www.google.com") return record.googleQuery ? searchResults(record) : browserHome();
+    if (["wikipedia.org", "youtube.com", "hardware.oslab.local", "componentes.oslab.local", "falha.oslab.local"].includes(record.browserHost)) return educationalPage(record);
     if (record.browserHost === "appjavafx.local") return appJavaFxSite();
     if (record.browserHost === "office.local") return officeSite();
     if (record.browserHost === "netflix.com") return netflix(record, state);
@@ -186,29 +230,73 @@
     if (record.browserHost === "admin.escola.local") return school(record, state);
     return `<section class="offline-browser-success"><span class="browser-secure">● Conexão simulada segura</span><h2>${safe(record.browserHost)}</h2><p>A página foi carregada corretamente pelo navegador virtual.</p></section>`;
   }
+  function newTabPage(record) {
+    const browser = browsers[record.appId];
+    const links = `<div class="browser-quick-links"><button data-browser-go="google.com">Google</button><button data-browser-go="youtube.com">YouTube</button><button data-browser-go="wikipedia.org">Wikipédia</button></div>`;
+    if (record.appId === "edge") return `<section class="browser-newtab-page is-edge"><header><span>Microsoft Bing</span><span>☀ 24° &nbsp; ⚙</span></header><main><h1>Microsoft Edge</h1><form data-google-search><input name="query" aria-label="Pesquisar na página inicial" placeholder="Pesquise na Web" /><button>🔍</button></form>${links}<p>Descubra a Web com o Microsoft Edge</p></main></section>`;
+    if (record.appId === "firefox") return `<section class="browser-newtab-page is-firefox"><main><h1><img src="${browser.logo}" alt="" /> Firefox</h1><form data-google-search><input name="query" aria-label="Pesquisar na página inicial" placeholder="Pesquise com o Google ou digite um endereço" /><button>Pesquisar</button></form><h2>Atalhos</h2>${links}</main></section>`;
+    if (record.appId === "brave") return `<section class="browser-newtab-page is-brave"><header><span><strong>0</strong> rastreadores e anúncios bloqueados</span><span><strong>0 B</strong> economizados</span><span><strong>0 s</strong> poupados</span></header><main><h1 class="brave-clock">${new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</h1><form data-google-search><input name="query" aria-label="Pesquisar na página inicial" placeholder="Pesquisar com Brave Search" /><button>Pesquisar</button></form>${links}</main></section>`;
+    if (record.appId === "opera") return `<section class="browser-newtab-page is-opera"><aside aria-label="Barra lateral do Opera"><img src="${browser.logo}" alt="" /><span>◉</span><span>▦</span><span>♡</span></aside><main><h1>Speed Dial</h1><form data-google-search><input name="query" aria-label="Pesquisar na página inicial" placeholder="Pesquisar na Web" /><button>Pesquisar</button></form>${links}</main></section>`;
+    return browserHome();
+  }
+  function educationalPage(record) {
+    const host = record.browserHost;
+    if (host === "falha.oslab.local" && !record.pageRefreshed) return `<section class="browser-study-page"><h1>Não foi possível carregar completamente esta página.</h1><p>Tente atualizar a página.</p></section>`;
+    if (host === "wikipedia.org") return `<section class="browser-study-page is-wiki"><header><strong>W</strong><span>WIKIPÉDIA<small>A enciclopédia livre · página simulada</small></span></header><main><h1>Computador</h1><p>Um computador processa informações com a ajuda de componentes físicos e programas.</p><h2>Conteúdo</h2><p>Processador, memória e armazenamento trabalham em conjunto.</p></main></section>`;
+    if (host === "youtube.com") return `<section class="browser-study-page is-youtube"><header><strong>▶ YouTube</strong><span>Pesquisa simulada</span></header><main><h1>Aprenda sobre computadores</h1><p>Esta é uma representação local do YouTube para explorar abas.</p></main></section>`;
+    return `<section class="browser-study-page"><header><strong>OSLab Estudos</strong><small>Conteúdo local · ${safe(host)}</small></header><main><small>GUIA PARA INICIANTES</small><h1>${host === "componentes.oslab.local" ? "Componentes internos" : "Hardware — Guia Básico"}</h1><p>O hardware é a parte física do computador. Conheça os componentes que fazem tudo funcionar.</p><div class="study-parts"><article><h2>Processador</h2><p>Executa instruções.</p></article><article><h2>Memória RAM</h2><p>Mantém dados em uso.</p></article><article><h2>Armazenamento</h2><p>Guarda arquivos.</p></article></div>${host === "hardware.oslab.local" ? '<button type="button" data-browser-open-tab="componentes.oslab.local">Abrir “Componentes internos” em nova aba ↗</button>' : ""}</main></section>`;
+  }
   function render(record) {
     records.add(record);
     toolbar(record);
-    record.address.textContent = record.googleQuery ? `Resultados para ${record.googleQuery}` : record.browserHost ? `https://${record.browserHost}` : "Navegador do OSLab";
-    record.content.innerHTML = `<section class="offline-browser vpn-browser-shell">${site(record)}${downloadsPanel(record)}</section>`;
+    record.address.textContent = record.googleQuery ? `Resultados para ${record.googleQuery}` : record.browserHost ? `https://${record.browserHost}` : "Nova aba";
+    const state = record.browserState;
+    const browser = browsers[record.appId] || browsers.google;
+    const menu = record.browserMenuOpen ? `<div class="browser-popover browser-menu" role="menu"><button type="button" data-browser-menu-action="new-tab">Nova aba <kbd>Ctrl+T</kbd></button><button type="button" data-browser-menu-action="history">Histórico <kbd>Ctrl+H</kbd></button><button type="button" data-browser-menu-action="favorites">Favoritos</button><button type="button" data-browser-menu-action="restore">Abas fechadas recentemente <kbd>Ctrl+Shift+T</kbd></button></div>` : "";
+    const history = state.historyOpen ? `<div class="browser-popover browser-history" role="dialog" aria-label="Histórico"><header><h2>Histórico</h2><button type="button" data-browser-history-close aria-label="Fechar histórico">×</button></header><h3>Hoje</h3>${state.closedTabs.length ? `<button type="button" data-browser-restore>Abas fechadas recentemente · ${safe(state.closedTabs[0].tab.title)}</button>` : ""}${state.history.map((item) => `<button type="button" data-browser-history-go="${safe(item.url)}"><span>${new Date(item.at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</span><strong>${safe(item.title)}</strong><small>${safe(item.url)}</small></button>`).join("")}</div>` : "";
+    const favorites = record.favoritesOpen ? `<div class="browser-popover browser-favorites" role="dialog" aria-label="Favoritos"><header><h2>Favoritos</h2><button type="button" data-browser-favorites-close aria-label="Fechar favoritos">×</button></header>${state.favorites.length ? state.favorites.map((item) => `<button type="button" data-browser-go="${safe(item.url)}">★ ${safe(item.title)}</button>`).join("") : "Nenhum favorito salvo."}</div>` : "";
+    const bookmark = record.bookmarkOpen ? `<form class="browser-popover browser-bookmark" data-browser-bookmark-form><h2>Adicionar favorito</h2><label>Nome<input name="name" value="${safe(OSLab.browserState.label(state.currentUrl))}" /></label><label>Pasta<select name="folder"><option>Barra de favoritos</option></select></label><footer><button type="button" data-browser-bookmark-cancel>Cancelar</button><button type="submit">Concluído</button></footer></form>` : "";
+    const museum = OSLab.browserMuseum?.getSelected?.() === record.appId ? `<aside class="browser-museum-info"><img src="${browser.logo}" alt="" /><span><strong>${browser.name}</strong><small>Desenvolvido por ${browser.maker}. ${browser.description}</small></span><button type="button" data-browser-return-museum>Voltar para navegadores</button></aside>` : "";
+    record.content.innerHTML = `<section class="offline-browser vpn-browser-shell">${site(record)}${downloadsPanel(record)}${menu}${history}${favorites}${bookmark}${museum}</section>`;
     if (!record.browserWired) {
       record.browserWired = true;
-      record.toolbar.addEventListener("submit", (event) => { const form = event.target.closest("[data-browser-address-form]"); if (!form) return; event.preventDefault(); const value = String(new FormData(form).get("address") || "").trim(); if (/\s/.test(value) || /^(appjavafx|pacote office|word|excel|apresenta|slides|leitor pdf|editor de texto|navegador|programa para computador)/i.test(value)) performSearch(record, value); else load(record, value); });
+      record.toolbar.addEventListener("submit", (event) => { const form = event.target.closest("[data-browser-address-form]"); if (!form) return; event.preventDefault(); const value = String(new FormData(form).get("address") || "").trim(); if (/\s/.test(value) || /^(appjavafx|pacote office|word|excel|apresenta|slides|leitor pdf|editor de texto|navegador|programa para computador)/i.test(value)) performSearch(record, value, "address"); else load(record, value, { source: "address" }); });
       const navigateClick = (event) => {
         const nav = event.target.closest("[data-browser-nav]")?.dataset.browserNav;
         if (!nav) return;
-        if (nav === "refresh") load(record, currentLocation(record), { push: false });
+        if (nav === "refresh") { record.pageRefreshed = true; load(record, currentLocation(record), { push: false, action: "refresh" }); }
         if (nav === "home") load(record, "google.com");
-        if (nav === "back" && record.browserHistoryIndex > 0) { record.browserHistoryIndex -= 1; load(record, record.browserHistory[record.browserHistoryIndex], { push: false }); }
-        if (nav === "forward" && record.browserHistoryIndex < record.browserHistory.length - 1) { record.browserHistoryIndex += 1; load(record, record.browserHistory[record.browserHistoryIndex], { push: false }); }
+        if (nav === "back" && OSLab.browserState.back(record.browserState)) { load(record, currentLocation(record), { push: false }); changed(record, "back"); }
+        if (nav === "forward" && OSLab.browserState.forward(record.browserState)) { load(record, currentLocation(record), { push: false }); changed(record, "forward"); }
       };
+      record.titlebar.addEventListener("click", (event) => {
+        const switchId = event.target.closest("[data-browser-switch]")?.dataset.browserSwitch;
+        const closeId = event.target.closest("[data-browser-close]")?.dataset.browserClose;
+        if (event.target.closest("[data-browser-new-tab]")) { const tab = OSLab.browserState.open(record.browserState, record.appId === "google" ? "google.com" : "newtab"); load(record, tab.url, { push: false }); changed(record, "new-tab", { openedTabId: tab.id }); }
+        if (switchId && OSLab.browserState.activate(record.browserState, switchId)) { load(record, currentLocation(record), { push: false }); changed(record, "switch-tab"); }
+        if (closeId) { const closed = OSLab.browserState.close(record.browserState, closeId); if (closed) { load(record, currentLocation(record), { push: false }); changed(record, "close-tab", { closedUrl: closed.url, closedTabId: closed.id }); } }
+      });
       record.toolbar.addEventListener("click", (event) => {
         navigateClick(event);
         if (event.target.closest("[data-browser-downloads]")) { record.downloadPanelOpen = !record.downloadPanelOpen; render(record); }
+        if (event.target.closest(".brave-shield")) OSLab.ui.notify("Proteções Brave", "As proteções de privacidade estão ativas nesta simulação local.", "info");
+        if (event.target.closest("[data-browser-menu]")) { record.browserMenuOpen = !record.browserMenuOpen; render(record); changed(record, "menu"); }
+        if (event.target.closest("[data-browser-history]")) { const opened = OSLab.browserState.openHistory(record.browserState); record.browserMenuOpen = false; render(record); if (opened) changed(record, "history-open"); }
+        if (event.target.closest("[data-browser-favorite]")) { record.bookmarkOpen = true; render(record); changed(record, "favorite-dialog"); }
       });
+      record.toolbar.addEventListener("focusin", (event) => { if (event.target.matches("[name='address']")) changed(record, "focus-address"); });
       record.content.addEventListener("click", (event) => {
         navigateClick(event);
-        const go = event.target.closest("[data-browser-go]")?.dataset.browserGo; if (go) load(record, go);
+        const go = event.target.closest("[data-browser-go]")?.dataset.browserGo; if (go) { load(record, go, { source: "page" }); if (event.target.closest("[data-browser-first-result]")) changed(record, "first-result", { value: go }); }
+        const tabUrl = event.target.closest("[data-browser-open-tab]")?.dataset.browserOpenTab; if (tabUrl) { const tab = OSLab.browserState.open(record.browserState, tabUrl); load(record, tabUrl, { push: false }); changed(record, "open-tab", { value: tabUrl, openedTabId: tab.id }); }
+        const historyGo = event.target.closest("[data-browser-history-go]")?.dataset.browserHistoryGo; if (historyGo) { record.browserState.historyOpen = false; load(record, historyGo, { source: "history" }); changed(record, "history-select", { value: historyGo }); }
+        if (event.target.closest("[data-browser-history-close]")) { record.browserState.historyOpen = false; render(record); }
+        if (event.target.closest("[data-browser-restore]")) restoreClosed(record);
+        if (event.target.closest("[data-browser-favorites-close]")) { record.favoritesOpen = false; render(record); }
+        if (event.target.closest("[data-browser-bookmark-cancel]")) { record.bookmarkOpen = false; render(record); }
+        if (event.target.closest("[data-browser-return-museum]")) { OSLab.browserMuseum?.select?.(null); OSLab.shell.openApp("browsermuseum"); OSLab.windowManager.minimize(record.windowId); }
+        const menuAction = event.target.closest("[data-browser-menu-action]")?.dataset.browserMenuAction;
+        if (menuAction) { record.browserMenuOpen = false; if (menuAction === "new-tab") { const tab = OSLab.browserState.open(record.browserState, record.appId === "google" ? "google.com" : "newtab"); load(record, tab.url, { push: false }); changed(record, "new-tab", { openedTabId: tab.id }); } else if (menuAction === "history") { const opened = OSLab.browserState.openHistory(record.browserState); render(record); if (opened) changed(record, "history-open"); } else if (menuAction === "favorites") { record.favoritesOpen = true; render(record); changed(record, "favorites-open"); } else if (menuAction === "restore") restoreClosed(record); }
         const suggestion = event.target.closest("[data-google-suggestion]")?.dataset.googleSuggestion; if (suggestion) performSearch(record, suggestion);
         const installSite = event.target.closest("[data-install-site]")?.dataset.installSite; if (installSite) { OSLab.software.visitSite(installSite); load(record, installSite === "office" ? "office.local" : "appjavafx.local"); }
         const section = event.target.closest("[data-site-section]")?.dataset.siteSection; if (section) { event.preventDefault(); record.content.querySelector(`[data-site-anchor="${CSS.escape(section)}"]`)?.scrollIntoView({ behavior: "smooth", block: "start" }); }
@@ -228,15 +316,38 @@
         const netflixForm = event.target.closest("[data-netflix-search]");
         const ipQuiz = event.target.closest("[data-myip-quiz]");
         if (googleForm) { event.preventDefault(); performSearch(record, new FormData(googleForm).get("query")); }
+        const bookmarkForm = event.target.closest("[data-browser-bookmark-form]");
+        if (bookmarkForm) { event.preventDefault(); const name = new FormData(bookmarkForm).get("name"); if (OSLab.browserState.favorite(record.browserState, String(name || ""))) changed(record, "favorite-added", { value: record.browserState.currentUrl }); record.bookmarkOpen = false; render(record); }
         if (netflixForm) { event.preventDefault(); record.netflixSearch = String(new FormData(netflixForm).get("query") || "").trim(); render(record); if (record.netflixSearch.toLocaleLowerCase("pt-BR") === "supernatural") emit(record, netflixAvailable(record.browserPageState) ? "netflix-supernatural-us" : record.browserPageState.vpn.country === "BR" ? "netflix-unavailable-br" : "netflix-unavailable"); }
         if (ipQuiz) { event.preventDefault(); const values = new FormData(ipQuiz); const correct = values.get("physical") === "no" && values.get("changed") === "public-ip"; record.myIpQuizResult = correct; render(record); if (correct) emit(record, "myip-quiz-correct"); }
+      });
+      record.content.addEventListener("focusin", (event) => { if (event.target.closest("[data-google-search]") && event.target.matches("input")) changed(record, "focus-search"); });
+      record.element.addEventListener("keydown", (event) => {
+        if (!event.ctrlKey || event.altKey) return;
+        const key = event.key.toLowerCase();
+        if (key === "t" && event.shiftKey) { event.preventDefault(); restoreClosed(record); }
+        else if (key === "t") { event.preventDefault(); const tab = OSLab.browserState.open(record.browserState, record.appId === "google" ? "google.com" : "newtab"); load(record, tab.url, { push: false }); changed(record, "new-tab", { openedTabId: tab.id, via: "shortcut" }); }
+        else if (key === "w") { event.preventDefault(); const closed = OSLab.browserState.close(record.browserState); if (closed) { load(record, currentLocation(record), { push: false }); changed(record, "close-tab", { closedUrl: closed.url, closedTabId: closed.id, via: "shortcut" }); } }
+        else if (key === "l") { event.preventDefault(); const input = record.toolbar.querySelector("[name='address']"); input?.focus(); input?.select(); }
+        else if (key === "h") { event.preventDefault(); if (OSLab.browserState.openHistory(record.browserState)) { render(record); changed(record, "history-open", { via: "shortcut" }); } }
       });
     }
   }
   function navigate(record, value) { return load(record, value); }
+  function prepareMission(order) {
+    const record = OSLab.windowManager?.getWindows?.().find((item) => item.appId === "google") || OSLab.shell?.openApp?.("google");
+    if (!record) return;
+    if ([7, 9, 10].includes(order)) { record.browserState = OSLab.browserState.create("google.com"); record.pageRefreshed = false; load(record, "google.com", { push: false }); }
+    if (order === 7) { performSearch(record, "peças de um computador"); load(record, "hardware.oslab.local"); }
+    if (order === 8) { record.pageRefreshed = false; load(record, "falha.oslab.local"); }
+    if (order === 10) { const tab = OSLab.browserState.open(record.browserState, "componentes.oslab.local"); load(record, tab.url, { push: false }); }
+    if (order === 11) load(record, "hardware.oslab.local");
+    if (order === 12) { load(record, "wikipedia.org"); load(record, "hardware.oslab.local"); }
+  }
 
   OSLab.vpnSites = { netflixAvailable, portalAllowed, schoolAllowed, bankAllowed, speedMetrics, movies: movies.map((movie) => ({ ...movie })) };
   OSLab.software?.subscribe?.(() => { records.forEach((record) => record.element?.isConnected ? render(record) : records.delete(record)); });
   OSLab.installLab?.subscribe?.(() => { records.forEach((record) => record.element?.isConnected ? render(record) : records.delete(record)); });
-  OSLab.browserApp = { render, navigate, search: performSearch, refresh(record) { return load(record, currentLocation(record), { push: false }); } };
+  OSLab.browserTrail?.subscribe?.(() => { records.forEach((record) => { if (record.element?.isConnected) record.element.dataset.browserHint = visualTarget(record); else records.delete(record); }); });
+  OSLab.browserApp = { render, navigate, search: performSearch, prepareMission, browsers, getState(record) { return OSLab.browserState.snapshot(record.browserState); }, refresh(record) { record.pageRefreshed = true; return load(record, currentLocation(record), { push: false, action: "refresh" }); } };
 })(window);

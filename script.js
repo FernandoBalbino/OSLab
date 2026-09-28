@@ -1168,7 +1168,7 @@
     if (record.appId === "computer") renderComputer(record);
     if (record.appId === "explorer") renderExplorerHome(record);
     if (record.appId === "recycle") renderRecycleBin(record);
-    if (record.appId === "google") renderGoogle(record);
+    if (["google", "edge", "firefox", "brave", "opera"].includes(record.appId)) renderGoogle(record);
     if (record.appId === "settings") renderSettings(record);
     if (record.appId === "terminal") renderTerminal(record);
     if (record.appId === "taskmanager") OSLab.taskManagerApp ? OSLab.taskManagerApp.render(record) : renderTaskManager(record);
@@ -1177,6 +1177,8 @@
     if (record.appId === "vpn") OSLab.vpnApp.render(record);
     if (record.appId === "vpnlab") OSLab.vpnLabApp.render(record);
     if (record.appId === "installlab") OSLab.installLabApp.render(record);
+    if (record.appId === "browsertrail") OSLab.browserTrailsApp.renderTrail(record);
+    if (record.appId === "browsermuseum") OSLab.browserTrailsApp.renderMuseum(record);
     if (OSLab.softwareApps?.appIds?.has(record.appId)) OSLab.softwareApps.render(record);
     if (record.appId === "texteditor") renderTextEditor(record);
   }
@@ -1185,6 +1187,8 @@
     if (!record || !record.element.isConnected) return;
     const wasMinimized = record.element.classList.contains("is-minimized");
     record.element.classList.remove("is-minimized");
+    constrainBrowserWindow(record);
+    window.requestAnimationFrame(() => constrainBrowserWindow(record));
     zCounter += 1;
     record.element.style.zIndex = String(zCounter);
     windows.forEach((item) => item.element.classList.toggle("is-focused", item === record));
@@ -1203,6 +1207,18 @@
     record.element.style.left = `${Math.max(18, left)}px`;
     record.element.style.top = `${Math.max(16, top)}px`;
   }
+
+  function constrainBrowserWindow(record) {
+    if (!record || !["google", "edge", "firefox", "brave", "opera"].includes(record.appId) || record.element.classList.contains("is-maximized")) return;
+    const rect = record.element.getBoundingClientRect();
+    if (!rect.width || !rect.height) return;
+    const maxLeft = Math.max(0, window.innerWidth - rect.width - 8);
+    const maxTop = Math.max(0, window.innerHeight - rect.height - 56);
+    record.element.style.left = `${Math.max(0, Math.min(rect.left, maxLeft))}px`;
+    record.element.style.top = `${Math.max(0, Math.min(rect.top, maxTop))}px`;
+  }
+
+  window.addEventListener("resize", () => windows.forEach(constrainBrowserWindow));
 
   function createWindow(appId, options = {}) {
     const definition = appDefinitions[appId];
@@ -1236,9 +1252,9 @@
     title.textContent = definition.title;
     $("[data-window-role='icon']", element).src = appId === "settings" ? "assets/icons/ui/left.png" : definition.icon;
     record.address.textContent = definition.address;
-    record.toolbar.classList.toggle("browser-toolbar", appId === "google");
+    record.toolbar.classList.toggle("browser-toolbar", ["google", "edge", "firefox", "brave", "opera"].includes(appId));
     element.classList.toggle("settings-window", appId === "settings");
-    record.toolbar.classList.toggle("is-hidden", ["settings", "taskmanager", "missions", "exercises", "vpn", "vpnlab", "installlab", "controlpanel", "installer", "appjavafx", "word", "excel", "slides", "texteditor"].includes(appId));
+    record.toolbar.classList.toggle("is-hidden", ["settings", "taskmanager", "missions", "exercises", "vpn", "vpnlab", "installlab", "browsertrail", "browsermuseum", "controlpanel", "installer", "appjavafx", "word", "excel", "slides", "texteditor"].includes(appId));
     record.settingsSearch.classList.toggle("is-hidden", appId !== "settings" && appId !== "taskmanager");
     element.classList.toggle("taskmanager-window", appId === "taskmanager");
     element.classList.toggle("missions-window", appId === "missions");
@@ -1246,6 +1262,8 @@
     element.classList.toggle("vpn-window", appId === "vpn");
     element.classList.toggle("vpn-lab-window", appId === "vpnlab");
     element.classList.toggle("install-lab-window", appId === "installlab");
+    element.classList.toggle("browser-trail-window", appId === "browsertrail");
+    element.classList.toggle("browser-museum-window", appId === "browsermuseum");
     element.classList.toggle("software-window", OSLab.softwareApps?.appIds?.has(appId));
     element.classList.toggle("texteditor-window", appId === "texteditor");
     if (appId === "taskmanager") {
@@ -1256,10 +1274,15 @@
 
     windows.set(appId, record);
     windowLayer.appendChild(element);
+    element.addEventListener("animationend", function onWindowAnimationEnd(event) {
+      if (event.target !== element) return;
+      element.removeEventListener("animationend", onWindowAnimationEnd);
+      constrainBrowserWindow(record);
+    });
     positionWindow(record);
     wireWindow(record);
     renderApp(record);
-    if (["settings", "taskmanager", "missions", "exercises", "vpnlab", "installlab"].includes(appId)) {
+    if (["settings", "taskmanager", "missions", "exercises", "vpnlab", "installlab", "browsertrail", "browsermuseum"].includes(appId)) {
       element.classList.add("is-maximized");
       record.maximizeIcon.src = "assets/icons/ui/restore.png";
       record.maximizeIcon.closest("button").setAttribute("aria-label", "Restaurar");
@@ -1272,7 +1295,7 @@
       icon: definition.icon,
       status: "Em execução",
       cpu: appId === "taskmanager" ? 0.3 : 0.1,
-      memory: appId === "google" ? 64.2 : ["missions", "exercises", "vpnlab", "installlab"].includes(appId) ? 42.6 : ["word", "excel", "slides"].includes(appId) ? 78.4 : appId === "vpn" ? 34.8 : appId === "texteditor" ? 42 : 28.4,
+      memory: ["google", "edge", "firefox", "brave", "opera"].includes(appId) ? 64.2 : ["missions", "exercises", "vpnlab", "installlab", "browsertrail", "browsermuseum"].includes(appId) ? 42.6 : ["word", "excel", "slides"].includes(appId) ? 78.4 : appId === "vpn" ? 34.8 : appId === "texteditor" ? 42 : 28.4,
       missionId: options.missionId || null,
       efficient: appId === "google",
     });
@@ -1672,7 +1695,7 @@
     });
 
     titlebar.addEventListener("pointerdown", (event) => {
-      if (event.button !== 0 || event.target.closest(".window-controls") || element.classList.contains("is-maximized")) return;
+      if (event.button !== 0 || event.target.closest(".window-controls, button") || element.classList.contains("is-maximized")) return;
       const rect = element.getBoundingClientRect();
       dragState = {
         pointerId: event.pointerId,

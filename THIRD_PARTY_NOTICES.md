@@ -45,3 +45,18 @@ O OSLab não é afiliado à Microsoft. A interface é uma simulação educaciona
 - Créditos individuais: `assets/vpn/posters/CREDITS.md`
 - Uso no OSLab: imagens locais recortadas como capas fictícias dos 20 títulos da Netflix simulada.
 - Observação: não são pôsteres oficiais da Netflix nem de séries reais; os títulos e metadados do catálogo são fictícios, salvo o nome usado na atividade pedagógica de disponibilidade regional.
+
+## Logotipos e marcas dos navegadores
+
+O OSLab apresenta interfaces educacionais simuladas. Não é afiliado nem endossado pelos fabricantes. Os arquivos abaixo são cópias locais; não há carregamento remoto de imagens durante as atividades.
+
+| Arquivo | Fonte oficial | Observação |
+| --- | --- | --- |
+| `assets/browser/chrome.svg` | [Google Chrome](https://www.google.com/chrome/static/images/chrome-logo-m100.svg) | Logotipo do produto. Chrome e Google são marcas do Google. Consulte o [Google Brand Resource Center](https://about.google/brand-resource-center/products-and-services/). |
+| `assets/browser/edge.png` | Ícone extraído da instalação oficial `msedge.exe` do Microsoft Edge para Windows no computador de desenvolvimento | Representa o navegador Microsoft Edge (Chromium). Microsoft e Edge são marcas da Microsoft. Consulte as [diretrizes do Edge 2026](https://cdn-dynmedia-1.microsoft.com/is/content/microsoftcorp/microsoft/mscle/documents/presentations/Microsoft_Edge_trademark_guidelines_2026.pdf). |
+| `assets/browser/firefox.png` | [Mozilla Firefox favicon](https://www.mozilla.org/media/img/favicons/firefox/browser/favicon-196x196.png) | Firefox é marca da Mozilla. Consulte as [diretrizes de marcas](https://www.mozilla.org/en-US/foundation/trademarks/policy/). A biblioteca de assets Mozilla Protocol é distribuída sob MPL 2.0, mas este arquivo foi obtido diretamente do site Mozilla. |
+| `assets/browser/brave-icon.png` | [Brave favicon](https://brave.com/static-assets/images/brave-favicon.png) | Brave é marca da Brave Software. |
+| `assets/browser/brave.png` | [Pacote oficial Brave](https://brave.com/static-assets/files/BrandBrave.zip), arquivo `Brave-Logos/light background/PNG/brave_color_lightbackground.png` | Logotipo completo para o card do museu. Consulte a [página de branding](https://brave.com/brave-branding-assets/). |
+| `assets/browser/opera.png` | [Pacote oficial Opera One 2026](https://media-production-opera-website.operacdn.com/media/documents/Opera_Logo.zip), arquivo `2. Marque/For Screen/PNG/Medium/Opera_Marque_med.png` | Opera é marca da Opera Norway AS. Consulte as [diretrizes Opera](https://brand.opera.com/opera-product-logos). |
+
+As marcas são usadas apenas para identificar os navegadores na atividade comparativa. As páginas visitadas, telas e dados exibidos no OSLab são simulações locais.

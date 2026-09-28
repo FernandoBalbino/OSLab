@@ -24,7 +24,7 @@
   function nodeMarkup(item, index, selectedId, kind, hasNext) {
     const lane = lanes[index % lanes.length];
     const nextLane = lanes[(index + 1) % lanes.length];
-    const isMission = kind === "mission" || kind === "vpn-mission" || kind === "install-mission";
+    const isMission = kind === "mission" || kind === "vpn-mission" || kind === "install-mission" || kind === "browser-mission";
     const feminine = isMission;
     const selectAttr = kind === "mission"
       ? "data-mission-select"
@@ -32,6 +32,8 @@
         ? "data-vpn-mission-select"
         : kind === "install-mission"
           ? "data-install-mission-select"
+          : kind === "browser-mission"
+            ? "data-browser-mission-select"
         : "data-exercise-select";
     const connector = !hasNext ? "" : `<img class="learning-connector lane-${lane} ${connectorDirection(lane, nextLane)}" src="${icon("arrow_right")}" alt="" aria-hidden="true" />`;
     return `<div class="learning-step lane-${lane}">

@@ -496,8 +496,114 @@ test("precache inclui todos os recursos carregados pelo documento", () => {
     "js/apps/software-apps.js",
     "assets/programs/appjavafx.svg",
     "assets/programs/office.svg",
+    "css/browser.css",
+    "js/browser/browser-state.js",
+    "js/browser/browser-trail.js",
+    "js/browser/browser-museum.js",
+    "js/apps/browser-trails-app.js",
+    "assets/browser/chrome.svg",
+    "assets/browser/edge.png",
+    "assets/browser/firefox.png",
+    "assets/browser/brave-icon.png",
+    "assets/browser/brave.png",
+    "assets/browser/opera.png",
   ].forEach((entry) => assert.ok(entries.has(entry), `recurso educacional fora do precache: ${entry}`));
-  assert.match(fs.readFileSync(path.join(root, "service-worker.js"), "utf8"), /oslab-offline-v9/);
+  assert.match(fs.readFileSync(path.join(root, "service-worker.js"), "utf8"), /oslab-offline-v16/);
+});
+
+test("estado do navegador mantém histórico por aba, fechadas e favoritos", () => {
+  const context = { window: { OSLab: {} } };
+  vm.runInNewContext(fs.readFileSync(path.join(root, "js/browser/browser-state.js"), "utf8"), context);
+  const api = context.window.OSLab.browserState;
+  const state = api.create();
+  assert.equal(state.tabs.length, 1);
+  assert.equal(api.navigate(state, "wikipedia.org"), true);
+  assert.equal(api.back(state), true);
+  assert.equal(state.currentUrl, "google.com");
+  assert.equal(api.forward(state), true);
+  assert.equal(state.currentUrl, "wikipedia.org");
+  const firstId = state.activeTab;
+  const second = api.open(state, "youtube.com");
+  assert.equal(state.tabs.length, 2);
+  assert.equal(api.activate(state, firstId), true);
+  assert.equal(state.currentUrl, "wikipedia.org");
+  assert.equal(api.close(state, second.id).url, "youtube.com");
+  assert.equal(state.closedTabs.length, 1);
+  assert.equal(api.restore(state).id, second.id);
+  assert.equal(state.currentUrl, "youtube.com");
+  assert.equal(api.favorite(state, "YouTube"), true);
+  assert.equal(api.favorite(state, "YouTube"), false);
+  assert.equal(state.favorites.length, 1);
+  assert.equal(api.openHistory(state), true);
+  assert.equal(api.openHistory(state), false);
+  assert.ok(state.history.some((item) => item.url === "wikipedia.org"));
+});
+
+test("trilha de navegador avança em ações reais e desafio final exige ordem", () => {
+  const scripts = ["js/browser/browser-trail.js"];
+  const values = new Map();
+  const listeners = [];
+  const OSLab = {
+    events: { subscribe(type, listener) { if (type === "oslab:event") listeners.push(listener); }, emit(type, detail = {}) { const event = { type, detail }; listeners.forEach((listener) => listener(event)); } },
+    activityCoordinator: { claim: () => {}, release: () => {}, register: () => {} },
+    shell: { closeApp: () => {}, openApp: () => {} },
+    browserApp: { prepareMission: () => {} },
+    ui: { notify: () => {} },
+  };
+  const window = { OSLab, localStorage: { getItem: (key) => values.get(key) || null, setItem: (key, value) => values.set(key, value), removeItem: (key) => values.delete(key) } };
+  scripts.forEach((file) => vm.runInNewContext(fs.readFileSync(path.join(root, file), "utf8"), { window }));
+  const trail = OSLab.browserTrail;
+  assert.equal(trail.catalog.length, 13);
+  assert.equal(trail.start("browser-2").ok, false);
+  assert.equal(trail.start("browser-1").ok, true);
+  OSLab.events.emit("app:opened", { appId: "edge" });
+  assert.equal(trail.getProgress().active.index, 0);
+  OSLab.events.emit("app:opened", { appId: "google" });
+  assert.equal(trail.getProgress().active.phase, "completed");
+  trail.finish("next");
+  assert.equal(trail.getProgress().active.id, "browser-2");
+  ["focus-address", "menu", "new-tab"].forEach((action) => OSLab.events.emit("browser:action", { action }));
+  assert.equal(trail.getProgress().active.phase, "completed");
+  trail.exit({ silent: true });
+
+  const previous = Object.fromEntries(trail.catalog.slice(0, 12).map((mission) => [mission.id, { completedAt: "test" }]));
+  values.set("oslab.browser.trail.progress.v1", JSON.stringify({ version: 1, completed: previous, active: null }));
+  const fresh = { ...OSLab, events: { subscribe(type, listener) { if (type === "oslab:event") this.listener = listener; }, emit(type, detail = {}) { this.listener?.({ type, detail }); } } };
+  const freshWindow = { ...window, OSLab: fresh };
+  vm.runInNewContext(fs.readFileSync(path.join(root, "js/browser/browser-trail.js"), "utf8"), { window: freshWindow });
+  const challenge = fresh.browserTrail;
+  assert.equal(challenge.start("browser-13").ok, true);
+  fresh.events.emit("browser:action", { action: "navigate", value: "google.com", source: "address" });
+  assert.equal(challenge.getProgress().active.index, 0, "não aceita ação fora de ordem");
+  challenge.catalog[12].steps.forEach((item, index) => { fresh.events.emit(item.type, { action: item.action, ...item.fields }); assert.equal(challenge.getProgress().active.index, index + 1); });
+  assert.equal(challenge.getProgress().active.phase, "completed");
+  assert.ok(challenge.getProgress().completed["browser-13"]);
+});
+
+test("museu conta cada navegador uma vez e conclui após os cinco", () => {
+  const values = new Map();
+  const OSLab = { shell: { openApp: (id) => ({ appId: id }) }, browserApp: { render: () => {} }, windowManager: { minimize: () => {} }, ui: { notify: () => {} }, events: { emit: () => {} } };
+  const window = { OSLab, localStorage: { getItem: (key) => values.get(key) || null, setItem: (key, value) => values.set(key, value), removeItem: (key) => values.delete(key) } };
+  vm.runInNewContext(fs.readFileSync(path.join(root, "js/browser/browser-museum.js"), "utf8"), { window });
+  const museum = OSLab.browserMuseum;
+  assert.equal(museum.ids.length, 5);
+  assert.equal(museum.open("google"), true);
+  const first = museum.getProgress().visited.google;
+  museum.open("google");
+  assert.equal(museum.getProgress().visited.google, first);
+  museum.ids.slice(1).forEach((id) => museum.open(id));
+  assert.equal(Object.keys(museum.getProgress().visited).length, 5);
+  assert.ok(museum.getProgress().completedAt);
+  museum.select(null);
+  assert.equal(museum.getSelected(), null);
+});
+
+test("IDs legados do Chrome e sites de VPN e instalação permanecem", () => {
+  const registry = { window: { OSLab: {} } };
+  vm.runInNewContext(fs.readFileSync(path.join(root, "js/core/app-registry.js"), "utf8"), registry);
+  assert.equal(registry.window.OSLab.apps.get("google").title, "Google Chrome");
+  const source = fs.readFileSync(path.join(root, "js/apps/browser-app.js"), "utf8");
+  ["appjavafx.local", "office.local", "netflix.com", "portal.empresa.local", "meuip.com", "bancoos.com", "speedtest.os", "meet.os", "admin.escola.local", "vpn-browser:action"].forEach((text) => assert.ok(source.includes(text), text));
 });
 
 test("retomada das missões não referencia persist inexistente", () => {

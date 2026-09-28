@@ -20,6 +20,7 @@
     <link rel="stylesheet" href="css/vpn.css" />
     <link rel="stylesheet" href="css/install-lab.css" />
     <link rel="stylesheet" href="css/software-apps.css" />
+    <link rel="stylesheet" href="css/browser.css" />
   </head>
   <body>
     <main id="oslab" class="oslab" data-state="login">
@@ -81,8 +82,8 @@
             <span>Explorador de Arquivos</span>
           </button>
           <button class="desktop-shortcut" type="button" data-app="google">
-            <img src="assets/icons/chrome.png" alt="" />
-            <span>Google</span>
+            <img src="assets/browser/chrome.svg" alt="" />
+            <span>Google Chrome</span>
           </button>
           <button class="desktop-shortcut" type="button" data-app="settings">
             <img src="assets/icons/settings.png" alt="" />
@@ -107,6 +108,14 @@
           <button class="desktop-shortcut" type="button" data-app="installlab">
             <img src="assets/programs/install-lab.svg" alt="" />
             <span>Instalação de Programas</span>
+          </button>
+          <button class="desktop-shortcut" type="button" data-app="browsertrail">
+            <img src="assets/learning/icons/globe_search.svg" alt="" />
+            <span>Navegadores e Internet</span>
+          </button>
+          <button class="desktop-shortcut" type="button" data-app="browsermuseum">
+            <img src="assets/learning/icons/apps.svg" alt="" />
+            <span>Conhecendo os Navegadores</span>
           </button>
           <button class="desktop-shortcut" type="button" data-app="controlpanel">
             <img src="assets/programs/control-panel.png" alt="" />
@@ -175,8 +184,8 @@
               <span>Lixeira</span>
             </button>
             <button type="button" data-app="google">
-              <img src="assets/icons/chrome.png" alt="" />
-              <span>Google</span>
+              <img src="assets/browser/chrome.svg" alt="" />
+              <span>Google Chrome</span>
             </button>
             <button type="button" data-app="settings">
               <img src="assets/icons/settings.png" alt="" />
@@ -201,6 +210,14 @@
             <button type="button" data-app="installlab">
               <img src="assets/programs/install-lab.svg" alt="" />
               <span>Instalação</span>
+            </button>
+            <button type="button" data-app="browsertrail">
+              <img src="assets/learning/icons/globe_search.svg" alt="" />
+              <span>Navegadores e Internet</span>
+            </button>
+            <button type="button" data-app="browsermuseum">
+              <img src="assets/learning/icons/apps.svg" alt="" />
+              <span>Conhecendo os Navegadores</span>
             </button>
             <button type="button" data-app="controlpanel">
               <img src="assets/programs/control-panel.png" alt="" />
@@ -411,8 +428,8 @@
             <button class="taskbar-button task-app" type="button" data-app="explorer" aria-label="Explorador de Arquivos">
               <img src="assets/icons/explorer.png" alt="" />
             </button>
-            <button class="taskbar-button task-app" type="button" data-app="google" aria-label="Google">
-              <img src="assets/icons/chrome.png" alt="" />
+            <button class="taskbar-button task-app" type="button" data-app="google" aria-label="Google Chrome">
+              <img src="assets/browser/chrome.svg" alt="" />
             </button>
             <button class="taskbar-button task-app" type="button" data-app="settings" aria-label="Configurações">
               <img src="assets/icons/settings.png" alt="" />
@@ -464,6 +481,9 @@
     <script defer src="js/vpn/vpn-mission-catalog.js"></script>
     <script defer src="js/vpn/vpn-lab-storage.js"></script>
     <script defer src="js/vpn/vpn-lab-engine.js"></script>
+    <script defer src="js/browser/browser-state.js"></script>
+    <script defer src="js/browser/browser-trail.js"></script>
+    <script defer src="js/browser/browser-museum.js"></script>
     <script defer src="js/ui/system-ui.js"></script>
     <script defer src="js/ui/learning-path.js"></script>
     <script defer src="js/ui/assistant-robot.js"></script>
@@ -473,6 +493,7 @@
     <script defer src="js/apps/task-manager.js"></script>
     <script defer src="js/apps/terminal-app.js"></script>
     <script defer src="js/apps/browser-app.js"></script>
+    <script defer src="js/apps/browser-trails-app.js"></script>
     <script defer src="js/apps/software-apps.js"></script>
     <script defer src="js/apps/vpn-app.js"></script>
     <script defer src="js/apps/vpn-lab-app.js"></script>

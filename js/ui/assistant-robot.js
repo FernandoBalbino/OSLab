@@ -18,7 +18,7 @@
     return root;
   }
   function place() {
-    const focusedLayout = document.querySelector(".missions-window.is-focused .learning-layout, .exercises-window.is-focused .learning-layout, .vpn-lab-window.is-focused .learning-layout, .install-lab-window.is-focused .learning-layout");
+    const focusedLayout = document.querySelector(".missions-window.is-focused .learning-layout, .exercises-window.is-focused .learning-layout, .vpn-lab-window.is-focused .learning-layout, .install-lab-window.is-focused .learning-layout, .browser-trail-window.is-focused .learning-layout");
     const host = focusedLayout || document.querySelector("#desktop");
     if (host && root.parentElement !== host) host.appendChild(root);
     root.classList.toggle("is-docked", Boolean(focusedLayout));
@@ -103,13 +103,36 @@
         : `<button type="button" data-assistant-action="install-lab-hint"><img src="${icon("lightbulb")}" alt="" />${hint ? "Reabrir dica" : "Dica"}</button><button type="button" data-assistant-action="install-lab-tool"><img src="${icon(mission.order === 12 ? "apps" : "globe_search")}" alt="" />${mission.order === 12 ? "Painel de Controle" : "Navegador"}</button><button type="button" data-assistant-action="install-lab-open"><img src="${icon("target_arrow")}" alt="" />Trilha</button><button type="button" data-assistant-action="install-lab-exit"><img src="${icon("dismiss")}" alt="" />Sair</button>`,
     };
   }
+  function renderBrowserTrail(progress) {
+    const active = progress.active;
+    const mission = OSLab.browserTrail.catalog.find((item) => item.id === active.id);
+    if (!mission) return null;
+    const completed = active.phase === "completed";
+    const next = mission.objectives.find((item) => !active.checklist[item.id]);
+    return {
+      kind: "browser-trail", mascot: completed ? "celebrate" : "neutral",
+      eyebrow: completed ? "Missão concluída" : "Navegadores e Internet",
+      title: mission.title,
+      message: completed ? mission.success : mission.order === 13 ? "Agora faça tudo sozinho. Siga os objetivos em ordem." : next ? next.label : mission.instruction,
+      body: `${mission.order === 10 && !completed ? "<p>Use Ctrl+Shift+T. Se o navegador do computador reservar o atalho, use Histórico → Abas fechadas recentemente.</p>" : ""}<ul class="assistant-checklist">${mission.objectives.map((item) => `<li class="${active.checklist[item.id] ? "is-done" : ""}"><img src="${icon(active.checklist[item.id] ? "checkmark_circle" : "target_arrow")}" alt="" /><span>${safe(item.label)}</span></li>`).join("")}</ul>`,
+      actions: completed ? `<button type="button" data-assistant-action="browser-trail-return">Voltar</button><button type="button" data-assistant-action="browser-trail-repeat">Refazer</button><button class="is-primary" type="button" data-assistant-action="browser-trail-next">${mission.order === 13 ? "Ver trilha" : "Próxima"}</button>` : `<button type="button" data-assistant-action="browser-trail-browser">Navegador</button><button type="button" data-assistant-action="browser-trail-open">Trilha</button><button type="button" data-assistant-action="browser-trail-exit">Sair</button>`,
+    };
+  }
   function render() {
     ensure();
     const missionProgress = OSLab.missions?.getProgress?.();
     const exerciseSession = OSLab.exercises?.getSession?.();
     const vpnLabProgress = OSLab.vpnLab?.getProgress?.();
     const installLabProgress = OSLab.installLab?.getProgress?.();
-    const view = installLabProgress?.active ? renderInstallLab(installLabProgress) : vpnLabProgress?.active ? renderVpnLab(vpnLabProgress) : exerciseSession ? renderExercise(exerciseSession) : missionProgress?.active ? renderMission(missionProgress) : null;
+    const browserTrailProgress = OSLab.browserTrail?.getProgress?.();
+    const view = browserTrailProgress?.active ? renderBrowserTrail(browserTrailProgress) : installLabProgress?.active ? renderInstallLab(installLabProgress) : vpnLabProgress?.active ? renderVpnLab(vpnLabProgress) : exerciseSession ? renderExercise(exerciseSession) : missionProgress?.active ? renderMission(missionProgress) : null;
+    if (view?.kind === "browser-trail" && (document.querySelector(".browser-museum-window.is-focused:not(.is-minimized)") || OSLab.browserMuseum?.getSelected?.())) {
+      document.body.classList.remove("has-learning-assistant");
+      root.className = "learning-assistant is-hidden";
+      root.innerHTML = "";
+      place();
+      return;
+    }
     document.body.classList.toggle("has-learning-assistant", Boolean(view));
     if (!view) { root.className = "learning-assistant is-hidden"; root.innerHTML = ""; place(); return; }
     root.className = `learning-assistant is-${view.kind} ${collapsed ? "is-collapsed" : ""}`;
@@ -148,6 +171,12 @@
     if (action === "install-lab-return") OSLab.installLab.finish("return");
     if (action === "install-lab-repeat") OSLab.installLab.finish("repeat");
     if (action === "install-lab-next") OSLab.installLab.finish("next");
+    if (action === "browser-trail-browser") OSLab.shell.openApp("google");
+    if (action === "browser-trail-open") OSLab.shell.openApp("browsertrail");
+    if (action === "browser-trail-exit" && await OSLab.ui.confirm({ title: "Sair da missão?", message: "Esta tentativa será encerrada.", confirmLabel: "Sair" })) OSLab.browserTrail.exit();
+    if (action === "browser-trail-return") OSLab.browserTrail.finish("return");
+    if (action === "browser-trail-repeat") OSLab.browserTrail.finish("repeat");
+    if (action === "browser-trail-next") OSLab.browserTrail.finish("next");
   }
 
   document.addEventListener("DOMContentLoaded", render);
@@ -156,6 +185,7 @@
   OSLab.exercises?.subscribe?.(render);
   OSLab.vpnLab?.subscribe?.(render);
   OSLab.installLab?.subscribe?.(render);
+  OSLab.browserTrail?.subscribe?.(render);
   ["app:opened", "app:closed", "window:minimized", "window:maximized", "window:restored"].forEach((type) => OSLab.events?.subscribe?.(type, () => window.requestAnimationFrame(render)));
   OSLab.assistantRobot = { render, expand() { collapsed = false; render(); }, collapse() { collapsed = true; render(); } };
 })(window);
