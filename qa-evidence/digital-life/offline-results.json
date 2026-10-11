@@ -1,0 +1,41 @@
+{
+  "serverOnline": false,
+  "routes": [
+    {
+      "service": "gmail",
+      "rendered": "gmail"
+    },
+    {
+      "service": "outlook",
+      "rendered": "outlook"
+    },
+    {
+      "service": "yahoo",
+      "rendered": "yahoo"
+    },
+    {
+      "service": "netflix",
+      "rendered": "netflix"
+    },
+    {
+      "service": "spotify",
+      "rendered": "spotify"
+    },
+    {
+      "service": "discord",
+      "rendered": "discord"
+    },
+    {
+      "service": "youtube",
+      "rendered": "youtube"
+    },
+    {
+      "service": "drive",
+      "rendered": "drive"
+    }
+  ],
+  "resources": {
+    "youtubeVisibleImages": true
+  },
+  "progress": "12/12"
+}

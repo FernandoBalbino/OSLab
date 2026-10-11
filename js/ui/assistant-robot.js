@@ -4,6 +4,7 @@
   const OSLab = global.OSLab = global.OSLab || {};
   let root = null;
   let collapsed = false;
+  let previousKind = null;
 
   function safe(value) { return OSLab.ui.escapeHtml(value); }
   function icon(name) { return OSLab.learningPath.icon(name); }
@@ -125,7 +126,7 @@
     const vpnLabProgress = OSLab.vpnLab?.getProgress?.();
     const installLabProgress = OSLab.installLab?.getProgress?.();
     const browserTrailProgress = OSLab.browserTrail?.getProgress?.();
-    const view = browserTrailProgress?.active ? renderBrowserTrail(browserTrailProgress) : installLabProgress?.active ? renderInstallLab(installLabProgress) : vpnLabProgress?.active ? renderVpnLab(vpnLabProgress) : exerciseSession ? renderExercise(exerciseSession) : missionProgress?.active ? renderMission(missionProgress) : null;
+    const view = OSLab.digitalLifeApp?.assistantView() || (browserTrailProgress?.active ? renderBrowserTrail(browserTrailProgress) : installLabProgress?.active ? renderInstallLab(installLabProgress) : vpnLabProgress?.active ? renderVpnLab(vpnLabProgress) : exerciseSession ? renderExercise(exerciseSession) : missionProgress?.active ? renderMission(missionProgress) : null);
     if (view?.kind === "browser-trail" && (document.querySelector(".browser-museum-window.is-focused:not(.is-minimized)") || OSLab.browserMuseum?.getSelected?.())) {
       document.body.classList.remove("has-learning-assistant");
       root.className = "learning-assistant is-hidden";
@@ -133,6 +134,8 @@
       place();
       return;
     }
+    if (view?.kind === "digital-life" && previousKind !== "digital-life") collapsed = true;
+    previousKind = view?.kind || null;
     document.body.classList.toggle("has-learning-assistant", Boolean(view));
     if (!view) { root.className = "learning-assistant is-hidden"; root.innerHTML = ""; place(); return; }
     root.className = `learning-assistant is-${view.kind} ${collapsed ? "is-collapsed" : ""}`;
@@ -143,6 +146,11 @@
   async function handleClick(event) {
     const action = event.target.closest("[data-assistant-action]")?.dataset.assistantAction;
     if (!action) return;
+    if (action === "digital-hint") OSLab.digitalLifeTrail.hint();
+    if (action === "digital-browser") OSLab.shell.openApp("google");
+    if (action === "digital-open") OSLab.shell.openApp("digitallife");
+    if (action === "digital-next") OSLab.digitalLifeTrail.next();
+    if (action === "digital-pause") OSLab.digitalLifeTrail.stop();
     if (action === "toggle") { collapsed = !collapsed; render(); return; }
     if (action === "mission-hint") { OSLab.missions.useHint(); collapsed = false; render(); }
     if (action === "mission-open") OSLab.shell.openApp("missions");

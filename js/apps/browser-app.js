@@ -53,33 +53,40 @@
     OSLab.events.emit("vpn-browser:action", { host: record.browserHost, action, vpn: state.vpn, wifi: state.network.connectedSsid, ...detail }, "browser");
   }
   function ensureHistory(record) {
-    record.browserState = record.browserState || OSLab.browserState.create(record.appId === "google" && OSLab.browserTrail?.getProgress?.().active?.id !== "browser-13" ? "google.com" : "newtab");
+    record.browserState = record.browserState || (OSLab.digitalLifeTrail?.getProgress().active && !OSLab.digitalLifeTrail.getProgress().active.suspended ? OSLab.browserState.hydrate(OSLab.digitalLife.browser(record.appId)) : null) || OSLab.browserState.create(record.appId === "google" && OSLab.browserTrail?.getProgress?.().active?.id !== "browser-13" ? "google.com" : "newtab");
     const tab = OSLab.browserState.active(record.browserState);
     record.browserHistory = tab.history;
     record.browserHistoryIndex = tab.historyIndex;
   }
   function changed(record, action, detail = {}) {
+    persistDigitalBrowser(record);
     OSLab.events.emit("browser:action", { browserId: record.appId, action, tabId: record.browserState.activeTab, url: record.browserState.currentUrl, ...detail }, "browserApp");
   }
+  function persistDigitalBrowser(record) { if (OSLab.digitalLifeTrail?.getProgress().active && record.browserState) OSLab.digitalLife.browser(record.appId, OSLab.browserState.snapshot(record.browserState)); }
   function load(record, value, options = {}) {
+    OSLab.digitalSites?.capture(record);
     ensureHistory(record);
     const raw = String(value || "");
     const isSearch = raw.startsWith("search:");
     const searchQuery = isSearch ? decodeURIComponent(raw.slice(7)) : "";
-    const host = isSearch ? "google.com" : hostFrom(raw);
-    const historyValue = isSearch ? `search:${encodeURIComponent(searchQuery)}` : host;
+    const digitalRoute = OSLab.digitalSites?.resolve(raw);
+    const host = isSearch ? "google.com" : digitalRoute ? digitalRoute.service + ".oslab.local" : hostFrom(raw);
+    const historyValue = isSearch ? `search:${encodeURIComponent(searchQuery)}` : digitalRoute ? digitalRoute.url : raw.includes("/") || raw.includes("?") ? raw.replace(/^https?:\/\//, "") : host;
     const didChange = OSLab.browserState.navigate(record.browserState, historyValue, { push: options.push });
     ensureHistory(record);
     record.browserHost = host;
     record.googleQuery = isSearch ? searchQuery : null;
-    record.browserResult = ["appjavafx.local", "office.local", "newtab", "wikipedia.org", "youtube.com", "hardware.oslab.local", "componentes.oslab.local", "falha.oslab.local"].includes(host) ? { ok: true, host, ip: "127.0.0.1", reason: null } : OSLab.network.browse(host);
+    record.browserResult = digitalRoute ? { ok: true, host, ip: "127.0.0.1", reason: null } : ["appjavafx.local", "office.local", "newtab", "wikipedia.org", "youtube.com", "hardware.oslab.local", "componentes.oslab.local", "falha.oslab.local"].includes(host) ? { ok: true, host, ip: "127.0.0.1", reason: null } : OSLab.network.browse(host);
     record.browserPageState = pageState();
     if (host === "speedtest.os") record.speedResult = null;
     if (host === "meet.os") record.meetJoined = false;
-    record.browserLoading = true;
+    record.browserLoading = !digitalRoute;
     render(record);
-    global.setTimeout(() => { if (!record.element?.isConnected) return; record.browserLoading = false; render(record); observe(record); }, 260);
+    record.content.scrollTop = 0;
+    const loadId = record.browserLoadId = (record.browserLoadId || 0) + 1;
+    if (!digitalRoute) global.setTimeout(() => { if (!record.element?.isConnected || record.browserLoadId !== loadId) return; record.browserLoading = false; record.toolbar.querySelector(".browser-loading")?.remove(); observe(record); }, 260);
     if (didChange || options.action === "refresh") changed(record, options.action || (isSearch ? "search" : "navigate"), { query: searchQuery, source: options.source || "address", value: historyValue });
+    persistDigitalBrowser(record);
     return record.browserResult;
   }
   function performSearch(record, query, source = "page") {
@@ -119,7 +126,7 @@
     const downloads = Object.values(OSLab.software?.getState?.().downloads || {});
     const active = downloads.filter((download) => download.status === "downloading").length;
     const state = record.browserState;
-    const address = record.googleQuery ? `google.com/search?q=${record.googleQuery}` : state.currentUrl === "newtab" ? "" : record.browserHost || "google.com";
+    const address = record.googleQuery ? `google.com/search?q=${record.googleQuery}` : state.currentUrl === "newtab" ? "" : state.currentUrl || "google.com";
     const fav = state.favorites.some((item) => item.url === state.currentUrl);
     const identity = record.titlebar.querySelector(".window-identity");
     identity.classList.add("browser-window-identity");
@@ -139,10 +146,12 @@
   }
   function posterCard(movie) { return `<article class="netflix-card"><img src="${movie.poster}" alt="Capa fictícia de ${safe(movie.title)}" /><span><strong>${safe(movie.title)}</strong><small>${safe(movie.meta)}</small></span></article>`; }
   function browserHome() {
-    return `<section class="google-home-page"><header><span>Gmail</span><span>Imagens</span><button type="button" aria-label="Aplicativos Google">⋮⋮⋮</button><img src="assets/icons/avatar.webp" alt="Perfil do aluno" /></header><main><div class="google-color-logo" aria-label="Google"><i>G</i><i>o</i><i>o</i><i>g</i><i>l</i><i>e</i></div><form class="google-modern-search${highlighted("search-box")}" data-google-search><img src="assets/icons/search.png" alt="" /><input name="query" aria-label="Pesquisar no Google simulado" autocomplete="off" placeholder="Pesquise programas para o computador" /><button type="submit">Pesquisar</button></form><div class="google-home-actions"><button type="button" data-google-suggestion="AppJavaFX">AppJavaFX</button><button type="button" data-google-suggestion="pacote office">pacote office</button></div><p>Pesquisa simulada e local do OSLAB · nenhum dado é enviado à internet</p></main><footer><span>Brasil</span><div><span>Sobre</span><span>Privacidade</span><span>Termos</span></div></footer></section>`;
+    return `<section class="google-home-page"><header><button type="button" data-browser-go="gmail.oslab.local/inbox">Gmail</button><span>Imagens</span><button type="button" aria-label="Aplicativos Google">⋮⋮⋮</button><img src="assets/icons/avatar.webp" alt="Perfil do aluno" /></header><main><div class="google-color-logo" aria-label="Google"><i>G</i><i>o</i><i>o</i><i>g</i><i>l</i><i>e</i></div><form class="google-modern-search${highlighted("search-box")}" data-google-search><img src="assets/icons/search.png" alt="" /><input name="query" aria-label="Pesquisar no Google simulado" autocomplete="off" placeholder="Pesquise no Google simulado" /><button type="submit">Pesquisar</button></form><div class="google-home-actions"><button type="button" data-google-suggestion="AppJavaFX">AppJavaFX</button><button type="button" data-google-suggestion="pacote office">pacote office</button></div><p>Pesquisa simulada e local do OSLAB · nenhum dado é enviado à internet</p></main><footer><span>Brasil</span><div><span>Sobre</span><span>Privacidade</span><span>Termos</span></div></footer></section>`;
   }
   function searchResults(record) {
     const query = String(record.googleQuery || "").trim();
+    const digital = OSLab.digitalSites?.searchResult(query);
+    if (digital) return digital;
     const normalized = query.toLocaleLowerCase("pt-BR");
     if (normalized.includes("hardware") || normalized.includes("peças") || normalized.includes("pecas")) {
       return `<section class="google-results-page"><header><button type="button" class="google-mini-logo" data-browser-go="google.com">Google</button><form class="google-results-search" data-google-search><input name="query" value="${safe(query)}" aria-label="Pesquisar" /><button type="submit">Pesquisar</button></form></header><nav><strong>Todos</strong><span>Imagens</span><span>Vídeos</span><span>Notícias</span></nav><main><p class="google-result-count">Resultados simulados para ${safe(query)}</p>${[["hardware.oslab.local", "Hardware — Guia Básico", "Conheça as peças principais de um computador."], ["componentes.oslab.local", "Componentes internos do computador", "Processador, memória, placa-mãe e armazenamento."], ["wikipedia.org", "Wikipédia — Computador", "Visão geral do computador e de seus componentes."], ["hardware.oslab.local", "Peças principais de um computador", "Guia para quem está começando."]].map(([url, title, description], index) => `<article class="google-result-card ${index === 0 ? "first-result" : ""}"><div><span class="result-favicon">OS</span><span><strong>${url}</strong><small>https://${url}</small></span></div><button type="button" data-browser-go="${url}" ${index === 0 ? "data-browser-first-result" : ""}>${title}</button><p>${description}</p></article>`).join("")}</main></section>`;
@@ -212,6 +221,8 @@
     return `<section class="school-site"><header><img src="${icon("shield_checkmark")}" alt="" /><span><small>IP autorizado</small><strong>Escola OS · Painel Administrativo</strong></span></header><main><h1>${record.schoolView === "labs" ? "Laboratórios" : "Bem-vindo ao painel"}</h1>${record.schoolView === "labs" ? `<div class="school-labs">${labButton}<button><img src="${icon("apps")}" alt="" /><span><strong>Laboratório 01</strong><small>24 computadores · 24 online</small></span></button></div>` : `<div class="corporate-modules"><button><img src="${icon("hard_drive")}" alt="" /><span><strong>Computadores</strong><small>Inventário</small></span></button><button><img src="${icon("wifi_1")}" alt="" /><span><strong>Rede</strong><small>Gateways e switches</small></span></button><button data-school-view="labs"><img src="${icon("apps")}" alt="" /><span><strong>Laboratórios</strong><small>Salas e estações</small></span></button><button><img src="${icon("list_bar")}" alt="" /><span><strong>Chamados</strong><small>Suporte técnico</small></span></button></div>`}</main></section>`;
   }
   function site(record) {
+    const digital = OSLab.digitalSites?.render(record);
+    if (digital) return digital;
     const state = record.browserPageState || pageState();
     const location = record.browserState?.currentUrl;
     if (location === "newtab") return newTabPage(record);
@@ -247,8 +258,10 @@
     return `<section class="browser-study-page"><header><strong>OSLab Estudos</strong><small>Conteúdo local · ${safe(host)}</small></header><main><small>GUIA PARA INICIANTES</small><h1>${host === "componentes.oslab.local" ? "Componentes internos" : "Hardware — Guia Básico"}</h1><p>O hardware é a parte física do computador. Conheça os componentes que fazem tudo funcionar.</p><div class="study-parts"><article><h2>Processador</h2><p>Executa instruções.</p></article><article><h2>Memória RAM</h2><p>Mantém dados em uso.</p></article><article><h2>Armazenamento</h2><p>Guarda arquivos.</p></article></div>${host === "hardware.oslab.local" ? '<button type="button" data-browser-open-tab="componentes.oslab.local">Abrir “Componentes internos” em nova aba ↗</button>' : ""}</main></section>`;
   }
   function render(record) {
+    OSLab.digitalSites?.capture(record);
     records.add(record);
     toolbar(record);
+    if (!record.browserHost) { const loc = record.browserState.currentUrl; record.browserHost = loc.startsWith("search:") ? "google.com" : hostFrom(loc); record.googleQuery = loc.startsWith("search:") ? decodeURIComponent(loc.slice(7)) : null; record.browserResult = { ok: true }; record.browserPageState = pageState(); }
     record.address.textContent = record.googleQuery ? `Resultados para ${record.googleQuery}` : record.browserHost ? `https://${record.browserHost}` : "Nova aba";
     const state = record.browserState;
     const browser = browsers[record.appId] || browsers.google;
@@ -258,9 +271,10 @@
     const bookmark = record.bookmarkOpen ? `<form class="browser-popover browser-bookmark" data-browser-bookmark-form><h2>Adicionar favorito</h2><label>Nome<input name="name" value="${safe(OSLab.browserState.label(state.currentUrl))}" /></label><label>Pasta<select name="folder"><option>Barra de favoritos</option></select></label><footer><button type="button" data-browser-bookmark-cancel>Cancelar</button><button type="submit">Concluído</button></footer></form>` : "";
     const museum = OSLab.browserMuseum?.getSelected?.() === record.appId ? `<aside class="browser-museum-info"><img src="${browser.logo}" alt="" /><span><strong>${browser.name}</strong><small>Desenvolvido por ${browser.maker}. ${browser.description}</small></span><button type="button" data-browser-return-museum>Voltar para navegadores</button></aside>` : "";
     record.content.innerHTML = `<section class="offline-browser vpn-browser-shell">${site(record)}${downloadsPanel(record)}${menu}${history}${favorites}${bookmark}${museum}</section>`;
+    OSLab.digitalSites?.wire(record);
     if (!record.browserWired) {
       record.browserWired = true;
-      record.toolbar.addEventListener("submit", (event) => { const form = event.target.closest("[data-browser-address-form]"); if (!form) return; event.preventDefault(); const value = String(new FormData(form).get("address") || "").trim(); if (/\s/.test(value) || /^(appjavafx|pacote office|word|excel|apresenta|slides|leitor pdf|editor de texto|navegador|programa para computador)/i.test(value)) performSearch(record, value, "address"); else load(record, value, { source: "address" }); });
+      record.toolbar.addEventListener("submit", (event) => { const form = event.target.closest("[data-browser-address-form]"); if (!form) return; event.preventDefault(); const value = String(new FormData(form).get("address") || "").trim(); if (/^(gmail|outlook|yahoo|netflix|spotify|discord|youtube|drive)$/i.test(value) || /\s/.test(value) || /^(appjavafx|pacote office|word|excel|apresenta|slides|leitor pdf|editor de texto|navegador|programa para computador)/i.test(value)) performSearch(record, value, "address"); else load(record, value, { source: "address" }); });
       const navigateClick = (event) => {
         const nav = event.target.closest("[data-browser-nav]")?.dataset.browserNav;
         if (!nav) return;

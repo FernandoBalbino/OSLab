@@ -1,0 +1,32 @@
+[
+  {
+    "route": "gmail.oslab.local/login",
+    "heading": "Faça login",
+    "overflow": 0
+  },
+  {
+    "route": "gmail.oslab.local/signup/name",
+    "heading": "Crie uma Conta do Google",
+    "overflow": 0
+  },
+  {
+    "route": "gmail.oslab.local/signup/basic",
+    "heading": "Informações básicas",
+    "overflow": 0
+  },
+  {
+    "route": "gmail.oslab.local/signup/email",
+    "heading": "Crie sua conta",
+    "overflow": 0
+  },
+  {
+    "route": "gmail.oslab.local/signup/password",
+    "heading": "Crie uma senha forte",
+    "overflow": 0
+  },
+  {
+    "route": "netflix.oslab.local/signup/verify",
+    "heading": "Verifique seu e-mail",
+    "overflow": 0
+  }
+]

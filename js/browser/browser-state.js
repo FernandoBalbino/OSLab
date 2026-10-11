@@ -3,7 +3,7 @@
   const OSLab = global.OSLab = global.OSLab || {};
   let nextId = 1;
   const copy = (value) => JSON.parse(JSON.stringify(value));
-  const label = (url) => ({ "newtab": "Nova aba", "google.com": "Google", "www.google.com": "Google", "wikipedia.org": "Wikipédia", "youtube.com": "YouTube", "hardware.oslab.local": "Hardware — Guia Básico", "componentes.oslab.local": "Componentes internos", "falha.oslab.local": "Página de estudo" })[url] || (url.startsWith("search:") ? "Resultados da pesquisa" : url);
+  const label = (url) => ({ gmail: "Gmail", outlook: "Outlook", yahoo: "Yahoo Mail", netflix: "Netflix", spotify: "Spotify", discord: "Discord", youtube: "YouTube", drive: "Google Drive" })[String(url).match(/^([a-z]+)\.oslab\.local(?:\/|$)/)?.[1]] || ({ "newtab": "Nova aba", "google.com": "Google", "www.google.com": "Google", "wikipedia.org": "Wikipédia", "youtube.com": "YouTube", "hardware.oslab.local": "Hardware — Guia Básico", "componentes.oslab.local": "Componentes internos", "falha.oslab.local": "Página de estudo" })[url] || (url.startsWith("search:") ? "Resultados da pesquisa" : url);
   function tab(url = "google.com") {
     return { id: `tab-${nextId++}`, title: label(url), url, page: url, history: [url], historyIndex: 0 };
   }
@@ -57,5 +57,12 @@
     state.favorites.push({ url, title: name || label(url), folder: "Barra de favoritos" }); return true;
   }
   function openHistory(state) { if (state.historyOpen) return false; state.historyOpen = true; return true; }
-  OSLab.browserState = { create, active, navigate, back, forward, open, activate, close, restore, favorite, openHistory, label, snapshot: copy };
+  function hydrate(saved) {
+    if (!saved?.tabs?.length || !saved.tabs.every(t => typeof t.url === "string" && Array.isArray(t.history))) return null;
+    const state = copy(saved);
+    [...state.tabs, ...(state.closedTabs || []).map(e => e.tab)].forEach(t => t.title = label(t.url));
+    nextId = Math.max(nextId, ...[...state.tabs, ...(state.closedTabs || []).map(e => e.tab)].map(t => Number(t.id.replace("tab-", "")) + 1));
+    sync(state); return state;
+  }
+  OSLab.browserState = { hydrate, create, active, navigate, back, forward, open, activate, close, restore, favorite, openHistory, label, snapshot: copy };
 })(window);

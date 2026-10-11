@@ -491,7 +491,7 @@
     desktop.classList.remove("is-hidden");
     document.title = "OSLab — Área de Trabalho";
     updateClock();
-    if (!missionsResumed) { missionsResumed = true; OSLab.missions.resumeAfterBoot(); }
+    if (!missionsResumed) { missionsResumed = true; OSLab.missions.resumeAfterBoot(); if (new URLSearchParams(window.location.search).get("app") === "digitallife") openApp("digitallife"); }
   }
 
   function resetLogin() {
@@ -1176,6 +1176,7 @@
     if (record.appId === "vpn") OSLab.vpnApp.render(record);
     if (record.appId === "vpnlab") OSLab.vpnLabApp.render(record);
     if (record.appId === "installlab") OSLab.installLabApp.render(record);
+    if (record.appId === "digitallife") OSLab.digitalLifeApp.render(record);
     if (record.appId === "browsertrail") OSLab.browserTrailsApp.renderTrail(record);
     if (record.appId === "browsermuseum") OSLab.browserTrailsApp.renderMuseum(record);
     if (OSLab.softwareApps?.appIds?.has(record.appId)) OSLab.softwareApps.render(record);
@@ -1253,7 +1254,7 @@
     record.address.textContent = definition.address;
     record.toolbar.classList.toggle("browser-toolbar", ["google", "edge", "firefox", "brave", "opera"].includes(appId));
     element.classList.toggle("settings-window", appId === "settings");
-    record.toolbar.classList.toggle("is-hidden", ["settings", "taskmanager", "missions", "exercises", "vpn", "vpnlab", "installlab", "browsertrail", "browsermuseum", "controlpanel", "installer", "appjavafx", "word", "excel", "slides", "texteditor"].includes(appId));
+    record.toolbar.classList.toggle("is-hidden", ["settings", "taskmanager", "missions", "exercises", "vpn", "vpnlab", "installlab", "browsertrail", "digitallife", "browsermuseum", "controlpanel", "installer", "appjavafx", "word", "excel", "slides", "texteditor"].includes(appId));
     record.settingsSearch.classList.toggle("is-hidden", appId !== "settings" && appId !== "taskmanager");
     element.classList.toggle("taskmanager-window", appId === "taskmanager");
     element.classList.toggle("missions-window", appId === "missions");
@@ -1261,7 +1262,7 @@
     element.classList.toggle("vpn-window", appId === "vpn");
     element.classList.toggle("vpn-lab-window", appId === "vpnlab");
     element.classList.toggle("install-lab-window", appId === "installlab");
-    element.classList.toggle("browser-trail-window", appId === "browsertrail");
+    element.classList.toggle("browser-trail-window", appId === "browsertrail" || appId === "digitallife");
     element.classList.toggle("browser-museum-window", appId === "browsermuseum");
     element.classList.toggle("software-window", OSLab.softwareApps?.appIds?.has(appId));
     element.classList.toggle("texteditor-window", appId === "texteditor");
@@ -1281,7 +1282,7 @@
     positionWindow(record);
     wireWindow(record);
     renderApp(record);
-    if (["settings", "taskmanager", "missions", "exercises", "vpnlab", "installlab", "browsertrail", "browsermuseum"].includes(appId)) {
+    if (["settings", "taskmanager", "missions", "exercises", "vpnlab", "installlab", "browsertrail", "digitallife", "browsermuseum"].includes(appId)) {
       element.classList.add("is-maximized");
       record.maximizeIcon.src = "assets/icons/ui/restore.png";
       record.maximizeIcon.closest("button").setAttribute("aria-label", "Restaurar");
@@ -1294,7 +1295,7 @@
       icon: definition.icon,
       status: "Em execução",
       cpu: appId === "taskmanager" ? 0.3 : 0.1,
-      memory: ["google", "edge", "firefox", "brave", "opera"].includes(appId) ? 64.2 : ["missions", "exercises", "vpnlab", "installlab", "browsertrail", "browsermuseum"].includes(appId) ? 42.6 : ["word", "excel", "slides"].includes(appId) ? 78.4 : appId === "vpn" ? 34.8 : appId === "texteditor" ? 42 : 28.4,
+      memory: ["google", "edge", "firefox", "brave", "opera"].includes(appId) ? 64.2 : ["missions", "exercises", "vpnlab", "installlab", "browsertrail", "digitallife", "browsermuseum"].includes(appId) ? 42.6 : ["word", "excel", "slides"].includes(appId) ? 78.4 : appId === "vpn" ? 34.8 : appId === "texteditor" ? 42 : 28.4,
       missionId: options.missionId || null,
       efficient: appId === "google",
     });

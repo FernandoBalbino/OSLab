@@ -29,6 +29,12 @@ Laboratório virtual estático para alunos praticarem conceitos de Sistemas Oper
 - distribuição automática dos ícones da área de trabalho em novas colunas, sempre limitada à região acima da barra de tarefas;
 - persistência versionada do sistema e do progresso das missões no `localStorage`.
 
+## Minha Primeira Vida Digital
+
+A nova trilha tem 12 missões e oito serviços dentro do navegador virtual: Gmail, Outlook, Yahoo, Netflix, Spotify, Discord, YouTube e Drive. Contas locais, código de verificação Netflix no Gmail, planos e cartão de demonstração, perfis, favoritos e pasta persistentes. Players simulados e imagens locais disponíveis offline.
+
+Veja o [guia de uso e reinício](docs/minha-primeira-vida-digital.md), os [créditos](docs/digital-life-credits.md) e o [relatório de testes](qa-evidence/digital-life/report.md).
+
 ## Missões
 
 As 12 missões cobrem abertura de aplicativos, controle de janelas, criação/renomeação/movimentação/cópia/restauração/pesquisa de arquivos, personalização, volume, encerramento de aplicativo travado e organização integrada do computador.
