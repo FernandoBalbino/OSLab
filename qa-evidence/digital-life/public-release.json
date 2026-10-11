@@ -1,0 +1,1337 @@
+{
+  "date": "2026-10-11T18:38:47.235Z",
+  "url": "https://fernandobalbino.github.io/OSLab/",
+  "commit": "c8c0f4cbf24b668baa21b8d2f2d3f1a26d6707cf",
+  "cache": "oslab-offline-v24",
+  "newTrail": true,
+  "manifestStatus": 200,
+  "resourceCount": 265,
+  "failed": [],
+  "resources": [
+    {
+      "asset": "./styles.css",
+      "status": 200,
+      "bytes": 50211
+    },
+    {
+      "asset": "./css/exercises.css",
+      "status": 200,
+      "bytes": 15648
+    },
+    {
+      "asset": "./css/learning.css",
+      "status": 200,
+      "bytes": 22360
+    },
+    {
+      "asset": "./css/task-manager.css",
+      "status": 200,
+      "bytes": 6101
+    },
+    {
+      "asset": "./css/missions.css",
+      "status": 200,
+      "bytes": 16540
+    },
+    {
+      "asset": "./css/install-lab.css",
+      "status": 200,
+      "bytes": 1908
+    },
+    {
+      "asset": "./css/software-apps.css",
+      "status": 200,
+      "bytes": 29186
+    },
+    {
+      "asset": "./css/vpn.css",
+      "status": 200,
+      "bytes": 24556
+    },
+    {
+      "asset": "./css/browser.css",
+      "status": 200,
+      "bytes": 14865
+    },
+    {
+      "asset": "./js/pwa.js",
+      "status": 200,
+      "bytes": 3915
+    },
+    {
+      "asset": "./js/core/app-registry.js",
+      "status": 200,
+      "bytes": 4822
+    },
+    {
+      "asset": "./js/core/os-events.js",
+      "status": 200,
+      "bytes": 3612
+    },
+    {
+      "asset": "./script.js",
+      "status": 200,
+      "bytes": 107965
+    },
+    {
+      "asset": "./js/core/process-manager.js",
+      "status": 200,
+      "bytes": 9136
+    },
+    {
+      "asset": "./js/core/file-system.js",
+      "status": 200,
+      "bytes": 12411
+    },
+    {
+      "asset": "./js/core/network-manager.js",
+      "status": 200,
+      "bytes": 10032
+    },
+    {
+      "asset": "./js/core/system-state.js",
+      "status": 200,
+      "bytes": 3385
+    },
+    {
+      "asset": "./js/core/activity-coordinator.js",
+      "status": 200,
+      "bytes": 1131
+    },
+    {
+      "asset": "./js/install/software-state.js",
+      "status": 200,
+      "bytes": 11221
+    },
+    {
+      "asset": "./js/install/install-mission-storage.js",
+      "status": 200,
+      "bytes": 963
+    },
+    {
+      "asset": "./js/install/install-mission-engine.js",
+      "status": 200,
+      "bytes": 9681
+    },
+    {
+      "asset": "./js/missions/mission-catalog.js",
+      "status": 200,
+      "bytes": 25079
+    },
+    {
+      "asset": "./js/missions/mission-storage.js",
+      "status": 200,
+      "bytes": 1006
+    },
+    {
+      "asset": "./js/missions/mission-engine.js",
+      "status": 200,
+      "bytes": 9620
+    },
+    {
+      "asset": "./js/exercises/exercise-storage.js",
+      "status": 200,
+      "bytes": 1130
+    },
+    {
+      "asset": "./js/exercises/exercise-catalog.js",
+      "status": 200,
+      "bytes": 22138
+    },
+    {
+      "asset": "./js/exercises/exercise-engine.js",
+      "status": 200,
+      "bytes": 8558
+    },
+    {
+      "asset": "./js/install/install-mission-catalog.js",
+      "status": 200,
+      "bytes": 12261
+    },
+    {
+      "asset": "./js/vpn/vpn-mission-catalog.js",
+      "status": 200,
+      "bytes": 11804
+    },
+    {
+      "asset": "./js/vpn/vpn-lab-storage.js",
+      "status": 200,
+      "bytes": 914
+    },
+    {
+      "asset": "./js/vpn/vpn-state.js",
+      "status": 200,
+      "bytes": 5564
+    },
+    {
+      "asset": "./js/vpn/vpn-lab-engine.js",
+      "status": 200,
+      "bytes": 9944
+    },
+    {
+      "asset": "./js/browser/browser-state.js",
+      "status": 200,
+      "bytes": 4660
+    },
+    {
+      "asset": "./js/browser/browser-museum.js",
+      "status": 200,
+      "bytes": 2227
+    },
+    {
+      "asset": "./js/browser/browser-trail.js",
+      "status": 200,
+      "bytes": 11177
+    },
+    {
+      "asset": "./js/ui/system-ui.js",
+      "status": 200,
+      "bytes": 5935
+    },
+    {
+      "asset": "./js/ui/learning-path.js",
+      "status": 200,
+      "bytes": 4319
+    },
+    {
+      "asset": "./js/ui/assistant-robot.js",
+      "status": 200,
+      "bytes": 19176
+    },
+    {
+      "asset": "./js/apps/missions-app.js",
+      "status": 200,
+      "bytes": 9068
+    },
+    {
+      "asset": "./js/apps/install-lab-app.js",
+      "status": 200,
+      "bytes": 9963
+    },
+    {
+      "asset": "./js/apps/exercises-app.js",
+      "status": 200,
+      "bytes": 9280
+    },
+    {
+      "asset": "./js/apps/task-manager.js",
+      "status": 200,
+      "bytes": 12027
+    },
+    {
+      "asset": "./js/apps/terminal-app.js",
+      "status": 200,
+      "bytes": 2552
+    },
+    {
+      "asset": "./js/apps/browser-trails-app.js",
+      "status": 200,
+      "bytes": 10561
+    },
+    {
+      "asset": "./js/apps/software-apps.js",
+      "status": 200,
+      "bytes": 21263
+    },
+    {
+      "asset": "./js/apps/browser-app.js",
+      "status": 200,
+      "bytes": 63895
+    },
+    {
+      "asset": "./js/apps/vpn-app.js",
+      "status": 200,
+      "bytes": 8822
+    },
+    {
+      "asset": "./js/apps/vpn-lab-app.js",
+      "status": 200,
+      "bytes": 10944
+    },
+    {
+      "asset": "./js/apps/system-tools.js",
+      "status": 200,
+      "bytes": 7753
+    },
+    {
+      "asset": "./logow11.png",
+      "status": 200,
+      "bytes": 744
+    },
+    {
+      "asset": "./bg2.jpg",
+      "status": 200,
+      "bytes": 1033330
+    },
+    {
+      "asset": "./bg4.jpg",
+      "status": 200,
+      "bytes": 1011262
+    },
+    {
+      "asset": "./assets/icons/avatar.webp",
+      "status": 200,
+      "bytes": 3286
+    },
+    {
+      "asset": "./bg3.jpg",
+      "status": 200,
+      "bytes": 865390
+    },
+    {
+      "asset": "./bg6.jpg",
+      "status": 200,
+      "bytes": 1526385
+    },
+    {
+      "asset": "./assets/icons/computer.png",
+      "status": 200,
+      "bytes": 33873
+    },
+    {
+      "asset": "./assets/loader.gif",
+      "status": 200,
+      "bytes": 7503
+    },
+    {
+      "asset": "./assets/icons/explorer.png",
+      "status": 200,
+      "bytes": 2087
+    },
+    {
+      "asset": "./assets/icons/google.png",
+      "status": 200,
+      "bytes": 2350
+    },
+    {
+      "asset": "./assets/icons/chrome.png",
+      "status": 200,
+      "bytes": 37958
+    },
+    {
+      "asset": "./assets/browser/chrome.svg",
+      "status": 200,
+      "bytes": 2303
+    },
+    {
+      "asset": "./assets/browser/edge.png",
+      "status": 200,
+      "bytes": 2354
+    },
+    {
+      "asset": "./assets/browser/brave-icon.png",
+      "status": 200,
+      "bytes": 1103
+    },
+    {
+      "asset": "./bg5.jpg",
+      "status": 200,
+      "bytes": 3021899
+    },
+    {
+      "asset": "./assets/browser/opera.png",
+      "status": 200,
+      "bytes": 3418
+    },
+    {
+      "asset": "./assets/browser/brave.png",
+      "status": 200,
+      "bytes": 81931
+    },
+    {
+      "asset": "./assets/icons/recycle-bin.png",
+      "status": 200,
+      "bytes": 5329
+    },
+    {
+      "asset": "./assets/icons/notepad.png",
+      "status": 200,
+      "bytes": 1482
+    },
+    {
+      "asset": "./assets/icons/search.png",
+      "status": 200,
+      "bytes": 1156
+    },
+    {
+      "asset": "./assets/icons/settings.png",
+      "status": 200,
+      "bytes": 2815
+    },
+    {
+      "asset": "./assets/icons/start.png",
+      "status": 200,
+      "bytes": 2715
+    },
+    {
+      "asset": "./bg7.jpg",
+      "status": 200,
+      "bytes": 1783396
+    },
+    {
+      "asset": "./assets/browser/firefox.png",
+      "status": 200,
+      "bytes": 8050
+    },
+    {
+      "asset": "./assets/icons/taskmanager.png",
+      "status": 200,
+      "bytes": 2314
+    },
+    {
+      "asset": "./assets/icons/terminal.png",
+      "status": 200,
+      "bytes": 1036
+    },
+    {
+      "asset": "./assets/icons/pwa-192.png",
+      "status": 200,
+      "bytes": 1360
+    },
+    {
+      "asset": "./assets/icons/pwa-512.png",
+      "status": 200,
+      "bytes": 4846
+    },
+    {
+      "asset": "./assets/fonts/OFL-NunitoSans.txt",
+      "status": 200,
+      "bytes": 4393
+    },
+    {
+      "asset": "./assets/fonts/NunitoSans-Variable.ttf",
+      "status": 200,
+      "bytes": 571240
+    },
+    {
+      "asset": "./assets/learning/icons/LICENSE.txt",
+      "status": 200,
+      "bytes": 1078
+    },
+    {
+      "asset": "./assets/learning/icons/airplane.svg",
+      "status": 200,
+      "bytes": 1144
+    },
+    {
+      "asset": "./assets/learning/icons/apps.svg",
+      "status": 200,
+      "bytes": 889
+    },
+    {
+      "asset": "./assets/learning/icons/building.svg",
+      "status": 200,
+      "bytes": 1404
+    },
+    {
+      "asset": "./assets/learning/mascot/oslab-mascot-neutral.png",
+      "status": 200,
+      "bytes": 831153
+    },
+    {
+      "asset": "./assets/learning/icons/arrow_counterclockwise.svg",
+      "status": 200,
+      "bytes": 672
+    },
+    {
+      "asset": "./assets/learning/mascot/oslab-mascot-celebrate.png",
+      "status": 200,
+      "bytes": 578980
+    },
+    {
+      "asset": "./assets/learning/icons/arrow_left.svg",
+      "status": 200,
+      "bytes": 559
+    },
+    {
+      "asset": "./bg.png",
+      "status": 200,
+      "bytes": 5322900
+    },
+    {
+      "asset": "./assets/learning/icons/arrow_right.svg",
+      "status": 200,
+      "bytes": 529
+    },
+    {
+      "asset": "./assets/learning/icons/arrow_reset.svg",
+      "status": 200,
+      "bytes": 773
+    },
+    {
+      "asset": "./assets/learning/mascot/oslab-mascot-help.png",
+      "status": 200,
+      "bytes": 862228
+    },
+    {
+      "asset": "./assets/learning/icons/copy.svg",
+      "status": 200,
+      "bytes": 450
+    },
+    {
+      "asset": "./assets/learning/icons/checkmark_circle.svg",
+      "status": 200,
+      "bytes": 562
+    },
+    {
+      "asset": "./assets/learning/icons/data_histogram.svg",
+      "status": 200,
+      "bytes": 385
+    },
+    {
+      "asset": "./assets/learning/icons/dismiss.svg",
+      "status": 200,
+      "bytes": 724
+    },
+    {
+      "asset": "./assets/learning/icons/dismiss_circle.svg",
+      "status": 200,
+      "bytes": 1024
+    },
+    {
+      "asset": "./assets/learning/icons/folder_add.svg",
+      "status": 200,
+      "bytes": 1093
+    },
+    {
+      "asset": "./assets/learning/icons/folder_arrow_right.svg",
+      "status": 200,
+      "bytes": 1052
+    },
+    {
+      "asset": "./assets/learning/icons/folder_search.svg",
+      "status": 200,
+      "bytes": 1056
+    },
+    {
+      "asset": "./assets/learning/icons/globe_error.svg",
+      "status": 200,
+      "bytes": 2066
+    },
+    {
+      "asset": "./assets/learning/icons/globe_search.svg",
+      "status": 200,
+      "bytes": 2005
+    },
+    {
+      "asset": "./assets/learning/icons/hard_drive.svg",
+      "status": 200,
+      "bytes": 654
+    },
+    {
+      "asset": "./assets/learning/icons/lightbulb.svg",
+      "status": 200,
+      "bytes": 632
+    },
+    {
+      "asset": "./assets/learning/icons/list_bar.svg",
+      "status": 200,
+      "bytes": 794
+    },
+    {
+      "asset": "./assets/learning/icons/lock_closed.svg",
+      "status": 200,
+      "bytes": 575
+    },
+    {
+      "asset": "./assets/learning/icons/more_horizontal.svg",
+      "status": 200,
+      "bytes": 479
+    },
+    {
+      "asset": "./assets/learning/icons/paint_brush.svg",
+      "status": 200,
+      "bytes": 663
+    },
+    {
+      "asset": "./assets/learning/icons/panel_right.svg",
+      "status": 200,
+      "bytes": 373
+    },
+    {
+      "asset": "./assets/learning/icons/plug_connected.svg",
+      "status": 200,
+      "bytes": 1017
+    },
+    {
+      "asset": "./assets/learning/icons/play.svg",
+      "status": 200,
+      "bytes": 303
+    },
+    {
+      "asset": "./assets/learning/icons/ribbon.svg",
+      "status": 200,
+      "bytes": 490
+    },
+    {
+      "asset": "./assets/learning/icons/shield_checkmark.svg",
+      "status": 200,
+      "bytes": 1034
+    },
+    {
+      "asset": "./assets/learning/icons/rename.svg",
+      "status": 200,
+      "bytes": 887
+    },
+    {
+      "asset": "./assets/learning/icons/speaker_2.svg",
+      "status": 200,
+      "bytes": 1198
+    },
+    {
+      "asset": "./assets/learning/icons/timer.svg",
+      "status": 200,
+      "bytes": 926
+    },
+    {
+      "asset": "./assets/learning/icons/top_speed.svg",
+      "status": 200,
+      "bytes": 1850
+    },
+    {
+      "asset": "./assets/learning/icons/trophy.svg",
+      "status": 200,
+      "bytes": 1130
+    },
+    {
+      "asset": "./assets/learning/icons/target_arrow.svg",
+      "status": 200,
+      "bytes": 1831
+    },
+    {
+      "asset": "./assets/learning/icons/wifi_1.svg",
+      "status": 200,
+      "bytes": 1813
+    },
+    {
+      "asset": "./assets/learning/icons/window.svg",
+      "status": 200,
+      "bytes": 379
+    },
+    {
+      "asset": "./assets/learning/icons/window_wrench.svg",
+      "status": 200,
+      "bytes": 1307
+    },
+    {
+      "asset": "./assets/learning/icons/wrench.svg",
+      "status": 200,
+      "bytes": 846
+    },
+    {
+      "asset": "./assets/vpn/flags/LICENSE.txt",
+      "status": 200,
+      "bytes": 1087
+    },
+    {
+      "asset": "./assets/vpn/flags/us.svg",
+      "status": 200,
+      "bytes": 648
+    },
+    {
+      "asset": "./assets/vpn/flags/de.svg",
+      "status": 200,
+      "bytes": 221
+    },
+    {
+      "asset": "./assets/vpn/flags/br.svg",
+      "status": 200,
+      "bytes": 7140
+    },
+    {
+      "asset": "./assets/vpn/flags/jp.svg",
+      "status": 200,
+      "bytes": 470
+    },
+    {
+      "asset": "./assets/vpn/flags/gb.svg",
+      "status": 200,
+      "bytes": 504
+    },
+    {
+      "asset": "./assets/vpn/flags/ca.svg",
+      "status": 200,
+      "bytes": 625
+    },
+    {
+      "asset": "./assets/vpn/flags/fr.svg",
+      "status": 200,
+      "bytes": 241
+    },
+    {
+      "asset": "./assets/vpn/posters/CREDITS.md",
+      "status": 200,
+      "bytes": 1832
+    },
+    {
+      "asset": "./assets/vpn/posters/poster-01.jpg",
+      "status": 200,
+      "bytes": 34342
+    },
+    {
+      "asset": "./assets/vpn/posters/poster-02.jpg",
+      "status": 200,
+      "bytes": 24056
+    },
+    {
+      "asset": "./assets/vpn/posters/poster-03.jpg",
+      "status": 200,
+      "bytes": 14667
+    },
+    {
+      "asset": "./assets/vpn/posters/poster-04.jpg",
+      "status": 200,
+      "bytes": 10227
+    },
+    {
+      "asset": "./assets/vpn/posters/poster-05.jpg",
+      "status": 200,
+      "bytes": 6983
+    },
+    {
+      "asset": "./assets/vpn/posters/poster-06.jpg",
+      "status": 200,
+      "bytes": 33419
+    },
+    {
+      "asset": "./assets/vpn/posters/poster-07.jpg",
+      "status": 200,
+      "bytes": 5206
+    },
+    {
+      "asset": "./assets/vpn/posters/poster-08.jpg",
+      "status": 200,
+      "bytes": 32071
+    },
+    {
+      "asset": "./assets/vpn/posters/poster-09.jpg",
+      "status": 200,
+      "bytes": 27461
+    },
+    {
+      "asset": "./assets/vpn/posters/poster-12.jpg",
+      "status": 200,
+      "bytes": 15194
+    },
+    {
+      "asset": "./assets/vpn/posters/poster-11.jpg",
+      "status": 200,
+      "bytes": 21306
+    },
+    {
+      "asset": "./assets/vpn/posters/poster-13.jpg",
+      "status": 200,
+      "bytes": 10822
+    },
+    {
+      "asset": "./assets/vpn/posters/poster-14.jpg",
+      "status": 200,
+      "bytes": 22623
+    },
+    {
+      "asset": "./assets/vpn/posters/poster-15.jpg",
+      "status": 200,
+      "bytes": 30697
+    },
+    {
+      "asset": "./assets/vpn/posters/poster-10.jpg",
+      "status": 200,
+      "bytes": 17246
+    },
+    {
+      "asset": "./assets/vpn/posters/poster-16.jpg",
+      "status": 200,
+      "bytes": 19382
+    },
+    {
+      "asset": "./assets/vpn/posters/poster-17.jpg",
+      "status": 200,
+      "bytes": 18932
+    },
+    {
+      "asset": "./assets/vpn/posters/poster-19.jpg",
+      "status": 200,
+      "bytes": 20212
+    },
+    {
+      "asset": "./assets/vpn/posters/poster-18.jpg",
+      "status": 200,
+      "bytes": 50303
+    },
+    {
+      "asset": "./assets/vpn/posters/poster-20.jpg",
+      "status": 200,
+      "bytes": 15535
+    },
+    {
+      "asset": "./assets/icons/context/copy.png",
+      "status": 200,
+      "bytes": 3743
+    },
+    {
+      "asset": "./assets/icons/context/cut.png",
+      "status": 200,
+      "bytes": 3181
+    },
+    {
+      "asset": "./assets/icons/context/delete.png",
+      "status": 200,
+      "bytes": 4907
+    },
+    {
+      "asset": "./assets/icons/context/link.png",
+      "status": 200,
+      "bytes": 266
+    },
+    {
+      "asset": "./assets/icons/context/display.png",
+      "status": 200,
+      "bytes": 2072
+    },
+    {
+      "asset": "./assets/icons/context/more.png",
+      "status": 200,
+      "bytes": 1368
+    },
+    {
+      "asset": "./assets/icons/context/personalize.png",
+      "status": 200,
+      "bytes": 2125
+    },
+    {
+      "asset": "./assets/icons/context/new.png",
+      "status": 200,
+      "bytes": 1940
+    },
+    {
+      "asset": "./assets/icons/context/refresh.png",
+      "status": 200,
+      "bytes": 2556
+    },
+    {
+      "asset": "./assets/icons/context/rename.png",
+      "status": 200,
+      "bytes": 4345
+    },
+    {
+      "asset": "./assets/icons/context/restore-item.png",
+      "status": 200,
+      "bytes": 2646
+    },
+    {
+      "asset": "./assets/icons/context/sort.png",
+      "status": 200,
+      "bytes": 2808
+    },
+    {
+      "asset": "./assets/icons/context/view.png",
+      "status": 200,
+      "bytes": 626
+    },
+    {
+      "asset": "./assets/icons/settings-rows/apps.png",
+      "status": 200,
+      "bytes": 162
+    },
+    {
+      "asset": "./assets/icons/settings-rows/calendar.png",
+      "status": 200,
+      "bytes": 2422
+    },
+    {
+      "asset": "./assets/icons/settings-rows/colors.png",
+      "status": 200,
+      "bytes": 1492
+    },
+    {
+      "asset": "./assets/icons/settings-rows/camera.png",
+      "status": 200,
+      "bytes": 3423
+    },
+    {
+      "asset": "./assets/icons/settings-rows/devices.png",
+      "status": 200,
+      "bytes": 1147
+    },
+    {
+      "asset": "./assets/icons/settings-rows/ethernet.png",
+      "status": 200,
+      "bytes": 137
+    },
+    {
+      "asset": "./assets/icons/settings-rows/focus.png",
+      "status": 200,
+      "bytes": 2433
+    },
+    {
+      "asset": "./assets/icons/settings-rows/keyboard.png",
+      "status": 200,
+      "bytes": 1018
+    },
+    {
+      "asset": "./assets/icons/settings-rows/lock.png",
+      "status": 200,
+      "bytes": 330
+    },
+    {
+      "asset": "./assets/icons/settings-rows/multitasking.png",
+      "status": 200,
+      "bytes": 484
+    },
+    {
+      "asset": "./assets/icons/settings-rows/maps.png",
+      "status": 200,
+      "bytes": 2581
+    },
+    {
+      "asset": "./assets/icons/settings-rows/mobile.png",
+      "status": 200,
+      "bytes": 2797
+    },
+    {
+      "asset": "./assets/icons/settings-rows/nearshare.png",
+      "status": 200,
+      "bytes": 672
+    },
+    {
+      "asset": "./assets/icons/settings-rows/location.png",
+      "status": 200,
+      "bytes": 697
+    },
+    {
+      "asset": "./assets/icons/settings-rows/personalize.png",
+      "status": 200,
+      "bytes": 2125
+    },
+    {
+      "asset": "./assets/icons/settings-rows/storage.png",
+      "status": 200,
+      "bytes": 1473
+    },
+    {
+      "asset": "./assets/icons/settings-rows/sound.png",
+      "status": 200,
+      "bytes": 1180
+    },
+    {
+      "asset": "./assets/icons/settings-rows/themes.png",
+      "status": 200,
+      "bytes": 2424
+    },
+    {
+      "asset": "./assets/icons/settings-rows/troubleshoot.png",
+      "status": 200,
+      "bytes": 232
+    },
+    {
+      "asset": "./assets/icons/settings-rows/usb.png",
+      "status": 200,
+      "bytes": 275
+    },
+    {
+      "asset": "./assets/icons/settings-rows/video.png",
+      "status": 200,
+      "bytes": 3508
+    },
+    {
+      "asset": "./assets/icons/settings-rows/voice.png",
+      "status": 200,
+      "bytes": 1827
+    },
+    {
+      "asset": "./assets/icons/settings-rows/vpn.png",
+      "status": 200,
+      "bytes": 581
+    },
+    {
+      "asset": "./assets/icons/taskmanager/more.png",
+      "status": 200,
+      "bytes": 1368
+    },
+    {
+      "asset": "./assets/icons/taskmanager/performance.png",
+      "status": 200,
+      "bytes": 1870
+    },
+    {
+      "asset": "./assets/icons/taskmanager/processes.png",
+      "status": 200,
+      "bytes": 162
+    },
+    {
+      "asset": "./assets/icons/taskmanager/run.png",
+      "status": 200,
+      "bytes": 1940
+    },
+    {
+      "asset": "./assets/icons/taskmanager/details.png",
+      "status": 200,
+      "bytes": 390
+    },
+    {
+      "asset": "./assets/icons/taskmanager/history.png",
+      "status": 200,
+      "bytes": 2422
+    },
+    {
+      "asset": "./assets/icons/taskmanager/services.png",
+      "status": 200,
+      "bytes": 1147
+    },
+    {
+      "asset": "./assets/icons/taskmanager/settings.png",
+      "status": 200,
+      "bytes": 354
+    },
+    {
+      "asset": "./assets/icons/taskmanager/startup.png",
+      "status": 200,
+      "bytes": 565
+    },
+    {
+      "asset": "./assets/icons/taskmanager/users.png",
+      "status": 200,
+      "bytes": 2668
+    },
+    {
+      "asset": "./assets/icons/ui/airplane.png",
+      "status": 200,
+      "bytes": 1255
+    },
+    {
+      "asset": "./assets/icons/ui/battery.png",
+      "status": 200,
+      "bytes": 1168
+    },
+    {
+      "asset": "./assets/icons/ui/audio.png",
+      "status": 200,
+      "bytes": 1180
+    },
+    {
+      "asset": "./assets/icons/ui/brightness.png",
+      "status": 200,
+      "bytes": 1492
+    },
+    {
+      "asset": "./assets/icons/ui/bluetooth.png",
+      "status": 200,
+      "bytes": 1192
+    },
+    {
+      "asset": "./assets/icons/ui/close.png",
+      "status": 200,
+      "bytes": 2244
+    },
+    {
+      "asset": "./assets/icons/ui/home.png",
+      "status": 200,
+      "bytes": 2715
+    },
+    {
+      "asset": "./assets/icons/ui/maximize.png",
+      "status": 200,
+      "bytes": 3925
+    },
+    {
+      "asset": "./assets/icons/ui/minimize.png",
+      "status": 200,
+      "bytes": 774
+    },
+    {
+      "asset": "./assets/icons/ui/moon.png",
+      "status": 200,
+      "bytes": 2433
+    },
+    {
+      "asset": "./assets/icons/ui/nightlight.png",
+      "status": 200,
+      "bytes": 760
+    },
+    {
+      "asset": "./assets/icons/ui/power.png",
+      "status": 200,
+      "bytes": 759
+    },
+    {
+      "asset": "./assets/icons/ui/refresh.png",
+      "status": 200,
+      "bytes": 2556
+    },
+    {
+      "asset": "./assets/icons/ui/restore.png",
+      "status": 200,
+      "bytes": 2902
+    },
+    {
+      "asset": "./assets/icons/ui/right.png",
+      "status": 200,
+      "bytes": 1158
+    },
+    {
+      "asset": "./assets/icons/ui/wifi.png",
+      "status": 200,
+      "bytes": 1386
+    },
+    {
+      "asset": "./assets/icons/win/disk.png",
+      "status": 200,
+      "bytes": 1473
+    },
+    {
+      "asset": "./assets/icons/win/documents.png",
+      "status": 200,
+      "bytes": 27677
+    },
+    {
+      "asset": "./assets/icons/win/desktop.png",
+      "status": 200,
+      "bytes": 27282
+    },
+    {
+      "asset": "./assets/icons/ui/left.png",
+      "status": 200,
+      "bytes": 1155
+    },
+    {
+      "asset": "./assets/icons/win/downloads.png",
+      "status": 200,
+      "bytes": 30315
+    },
+    {
+      "asset": "./assets/icons/win/folder.png",
+      "status": 200,
+      "bytes": 19536
+    },
+    {
+      "asset": "./assets/icons/win/pictures.png",
+      "status": 200,
+      "bytes": 30965
+    },
+    {
+      "asset": "./assets/settings/Accessibility.webp",
+      "status": 200,
+      "bytes": 2170
+    },
+    {
+      "asset": "./assets/settings/Bluetooth-devices.webp",
+      "status": 200,
+      "bytes": 1658
+    },
+    {
+      "asset": "./assets/settings/Accounts.webp",
+      "status": 200,
+      "bytes": 1738
+    },
+    {
+      "asset": "./assets/settings/Gaming.webp",
+      "status": 200,
+      "bytes": 2094
+    },
+    {
+      "asset": "./assets/settings/Network-internet.webp",
+      "status": 200,
+      "bytes": 1404
+    },
+    {
+      "asset": "./assets/settings/Personalisation.webp",
+      "status": 200,
+      "bytes": 1812
+    },
+    {
+      "asset": "./assets/settings/Privacy-security.webp",
+      "status": 200,
+      "bytes": 1410
+    },
+    {
+      "asset": "./assets/settings/Apps.webp",
+      "status": 200,
+      "bytes": 2330
+    },
+    {
+      "asset": "./assets/settings/System.webp",
+      "status": 200,
+      "bytes": 1676
+    },
+    {
+      "asset": "./assets/settings/Time-language.webp",
+      "status": 200,
+      "bytes": 2752
+    },
+    {
+      "asset": "./assets/settings/Windows-Update.webp",
+      "status": 200,
+      "bytes": 2382
+    },
+    {
+      "asset": "./assets/programs/install-lab.svg",
+      "status": 200,
+      "bytes": 403
+    },
+    {
+      "asset": "./assets/programs/control-panel.png",
+      "status": 200,
+      "bytes": 38249
+    },
+    {
+      "asset": "./assets/programs/installer.svg",
+      "status": 200,
+      "bytes": 273
+    },
+    {
+      "asset": "./assets/programs/appjavafx.svg",
+      "status": 200,
+      "bytes": 541
+    },
+    {
+      "asset": "./assets/programs/word.svg",
+      "status": 200,
+      "bytes": 350
+    },
+    {
+      "asset": "./assets/programs/excel.svg",
+      "status": 200,
+      "bytes": 443
+    },
+    {
+      "asset": "./assets/programs/slides.svg",
+      "status": 200,
+      "bytes": 369
+    },
+    {
+      "asset": "./assets/programs/office.svg",
+      "status": 200,
+      "bytes": 468
+    },
+    {
+      "asset": "./js/digital/digital-content.js",
+      "status": 200,
+      "bytes": 2412
+    },
+    {
+      "asset": "./js/digital/digital-life.js",
+      "status": 200,
+      "bytes": 11923
+    },
+    {
+      "asset": "./js/digital/digital-life-trail.js",
+      "status": 200,
+      "bytes": 7830
+    },
+    {
+      "asset": "./js/apps/digital-life-app.js",
+      "status": 200,
+      "bytes": 7387
+    },
+    {
+      "asset": "./css/digital-life.css",
+      "status": 200,
+      "bytes": 26964
+    },
+    {
+      "asset": "./js/digital/digital-sites.js",
+      "status": 200,
+      "bytes": 41452
+    },
+    {
+      "asset": "./assets/digital/gmail/imgLogo.png",
+      "status": 200,
+      "bytes": 1571
+    },
+    {
+      "asset": "./assets/digital/gmail/Roboto-LICENSE.txt",
+      "status": 200,
+      "bytes": 4512
+    },
+    {
+      "asset": "./assets/digital/gmail/roboto.woff2",
+      "status": 200,
+      "bytes": 21884
+    },
+    {
+      "asset": "./assets/digital/netflix/profile.png",
+      "status": 200,
+      "bytes": 36458
+    },
+    {
+      "asset": "./assets/digital/photo-credits.json",
+      "status": 200,
+      "bytes": 4321
+    },
+    {
+      "asset": "./assets/digital/photos/11034190.jpg",
+      "status": 200,
+      "bytes": 42153
+    },
+    {
+      "asset": "./assets/digital/photos/13037919.jpg",
+      "status": 200,
+      "bytes": 102954
+    },
+    {
+      "asset": "./assets/digital/photos/1658583.jpg",
+      "status": 200,
+      "bytes": 88628
+    },
+    {
+      "asset": "./assets/digital/photos/1677338.jpg",
+      "status": 200,
+      "bytes": 73392
+    },
+    {
+      "asset": "./assets/digital/photos/18353682.jpg",
+      "status": 200,
+      "bytes": 70496
+    },
+    {
+      "asset": "./assets/digital/photos/2212861.jpg",
+      "status": 200,
+      "bytes": 139897
+    },
+    {
+      "asset": "./assets/digital/photos/3049304.jpg",
+      "status": 200,
+      "bytes": 172775
+    },
+    {
+      "asset": "./assets/digital/photos/325188.jpg",
+      "status": 200,
+      "bytes": 118975
+    },
+    {
+      "asset": "./assets/digital/photos/3747486.jpg",
+      "status": 200,
+      "bytes": 82872
+    },
+    {
+      "asset": "./assets/digital/photos/450035.jpg",
+      "status": 200,
+      "bytes": 63636
+    },
+    {
+      "asset": "./assets/digital/photos/4560543.jpg",
+      "status": 200,
+      "bytes": 99653
+    },
+    {
+      "asset": "./assets/digital/gmail/roboto-bold.woff2",
+      "status": 200,
+      "bytes": 22240
+    },
+    {
+      "asset": "./assets/digital/photos/940381.jpg",
+      "status": 200,
+      "bytes": 137758
+    },
+    {
+      "asset": "assets/digital/youtube/mark.svg",
+      "status": 200,
+      "bytes": 911
+    },
+    {
+      "asset": "assets/digital/youtube/wordmark.svg",
+      "status": 200,
+      "bytes": 4811
+    }
+  ]
+}

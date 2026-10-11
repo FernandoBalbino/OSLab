@@ -47,4 +47,8 @@ Formulário/perfis Netflix e barra lateral/cabeçalho YouTube extraídos, com ca
 
 ## Publicação
 
-A validação da URL pública e dos recursos será registrada em public-release.json após a conclusão do build de GitHub Pages.
+GitHub Pages publicou o commit de aplicação `c8c0f4c` com sucesso. URL: https://fernandobalbino.github.io/OSLab/. Todos os **265 recursos do manifesto retornaram HTTP 200**; o Service Worker público contém `oslab-offline-v24`.
+
+O atalho `index.html?app=digitallife` abriu a trilha após o login e a atualização normal do cache anterior. Netflix abriu pelo primeiro resultado da pesquisa; YouTube exibiu imagens locais e seu player avançou até 22 segundos, depois pausou. O documento sinalizou cache offline pronto e o console ficou sem erros ou avisos na conferência pública. O teste de indisponibilidade de servidor foi local; não foi aplicado bloqueio de rede à origem pública.
+
+Evidências: [recursos públicos](public-release.json), [interface pública](public-ui.json), [trilha publicada](public-trail.png), [Netflix publicada](public-netflix.png), [player publicado](public-youtube-player.png).
