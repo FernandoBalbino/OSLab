@@ -5,6 +5,7 @@
   let root = null;
   let collapsed = false;
   let previousKind = null;
+  let previousDigitalMission = null;
 
   function safe(value) { return OSLab.ui.escapeHtml(value); }
   function icon(name) { return OSLab.learningPath.icon(name); }
@@ -134,7 +135,9 @@
       place();
       return;
     }
-    if (view?.kind === "digital-life" && previousKind !== "digital-life") collapsed = true;
+    const digitalMission = view?.kind === "digital-life" ? OSLab.digitalLifeTrail.getProgress().active?.id : null;
+    if (digitalMission && (previousKind !== "digital-life" || digitalMission !== previousDigitalMission)) collapsed = true;
+    previousDigitalMission = digitalMission;
     previousKind = view?.kind || null;
     document.body.classList.toggle("has-learning-assistant", Boolean(view));
     if (!view) { root.className = "learning-assistant is-hidden"; root.innerHTML = ""; place(); return; }

@@ -19,7 +19,7 @@
     vpn: { title: "VPN", icon: "assets/learning/icons/shield_checkmark.svg", address: "VPN do OSLab", task: "vpn", pinned: true },
     vpnlab: { title: "Laboratório VPN", icon: "assets/learning/icons/globe_search.svg", address: "Trilha de VPN", task: "vpnlab", pinned: true },
     installlab: { title: "Instalação de Programas", shortTitle: "Instalação", icon: "assets/programs/install-lab.svg", address: "Instalação e Desinstalação", task: "installlab", pinned: true },
-    digitallife: { title: "Minha Primeira Vida Digital", shortTitle: "Vida Digital", icon: "assets/learning/icons/globe_search.svg", address: "Minha Primeira Vida Digital", task: "digitallife", pinned: true },
+    digitallife: { title: "Minha Primeira Vida Digital", shortTitle: "Vida Digital", icon: "assets/digital/trail-icon.png", address: "Minha Primeira Vida Digital", task: "digitallife", pinned: true },
     browsertrail: { title: "Navegadores e Internet", icon: "assets/learning/icons/globe_search.svg", address: "Navegadores e Internet", task: "browsertrail", pinned: true },
     browsermuseum: { title: "Conhecendo os Navegadores", shortTitle: "Navegadores", icon: "assets/learning/icons/apps.svg", address: "Conhecendo os Navegadores", task: "browsermuseum", pinned: true },
     controlpanel: { title: "Painel de Controle", icon: "assets/programs/control-panel.png", address: "Painel de Controle", task: "controlpanel", pinned: true },

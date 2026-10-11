@@ -4,11 +4,11 @@ Trilha de 12 missões sequenciais no navegador virtual do OSLab. HTML, CSS e Jav
 
 ## Começar e retomar
 
-1. Abra o OSLab e entre no perfil Aluno com a senha de demonstração `alunos2026`.
+1. Abra o OSLab e entre no perfil Aluno com a senha `alunos2026`.
 2. Abra **Minha Primeira Vida Digital** na Área de Trabalho, no Menu Iniciar ou na pesquisa. O atalho do manifesto também abre a trilha após o login.
 3. Selecione a primeira missão disponível e clique em **Iniciar missão**. As próximas são liberadas em ordem.
-4. Pratique no Google Chrome virtual. Pesquise o serviço e abra o resultado local; todas as páginas exibem “Simulação educacional — OSLab”.
-5. Use o assistente para acompanhar o próximo objetivo, abrir a trilha, pausar ou consultar uma dica opcional.
+4. Pratique no Google Chrome virtual. Pesquise o serviço e abra o resultado local; os oito serviços ficam disponíveis nos endereços internos da trilha.
+5. O assistente mostra o passo a passo completo no topo do navegador, sem cobrir as páginas. Você pode recolhê-lo, abrir a trilha ou pausar.
 
 A sessão é local por navegador e dispositivo. Reabrir a trilha permite retomar a tentativa. Trocar de atividade suspende a validação desta trilha. Conclusões e contas continuam salvas. Os quatro retornos exigem um login realizado depois do início da missão.
 
@@ -48,7 +48,7 @@ Os endereços são digitados dentro do navegador virtual, não no navegador real
 
 Somente a missão 04 envia uma mensagem para o Gmail criado na missão 01. Seu assunto é **Código de verificação da Netflix** e o corpo contém somente seis dígitos. Leia a mensagem, selecione o texto ou clique em **Copiar código** e volte à aba Netflix para colar. A etapa e o endereço são preservados entre abas. O código não expira durante o cadastro, não é duplicado por novos cliques e é consumido após confirmação. A mensagem inicial continua na caixa. O login da missão 11 não envia código.
 
-Escolha um plano fictício e clique em **Usar cartão de demonstração**. Os campos são somente leitura; a confirmação mostra a animação e informa que não existe cobrança. A missão termina após entrar no perfil.
+Escolha um plano fictício e clique em **Preencher cartão**. Os campos são somente leitura; a confirmação mostra a animação e informa que não existe cobrança. A missão termina após entrar no perfil.
 
 Netflix tem 20 títulos e YouTube tem 12 vídeos fictícios. Pesquisa, categorias, detalhes e controles de reprodução funcionam localmente. Os players mostram início, pausa e progresso simulados. Spotify tem seis músicas fictícias e favoritos persistentes.
 
@@ -60,7 +60,7 @@ Abra a trilha e clique em **Novo aluno**. Revise a confirmação e confirme para
 
 Use nomes, datas, endereços e senhas fictícios. Formulários são processados no OSLab e não enviam dados a Google, Netflix ou outros serviços. A chave versionada é `oslab.digital-life.v1`. Senhas de treinamento usam PBKDF2-SHA256 com salt individual e 120.000 iterações; não são guardadas em texto puro. Eventos, URLs e rascunhos persistentes excluem senhas. Campos sensíveis permanecem somente em memória enquanto a janela está aberta; após recarregar é necessário digitá-los novamente.
 
-Após a primeira abertura online e instalação do cache, o OSLab, as telas e imagens podem ser recarregados offline. A versão desta entrega é `oslab-offline-v24`.
+Após a primeira abertura online e instalação do cache, o OSLab, as telas e imagens podem ser recarregados offline. A versão desta entrega é `oslab-offline-v31`.
 
 ## Desenvolvimento e testes
 
@@ -74,3 +74,9 @@ node --test tests/digital-life.test.mjs
 Interfaces: `OSLab.digitalLife` centraliza dados e contas; `OSLab.digitalSites` resolve rotas, telas e rascunhos por aba; `OSLab.digitalLifeTrail` valida objetivos e progresso pelo barramento e pelo coordenador de atividades.
 
 Veja [créditos](digital-life-credits.md) e [relatório de verificação](../qa-evidence/digital-life/report.md).
+
+### Aparência e instruções atualizadas
+
+As instruções completas aparecem ao iniciar cada missão. O assistente permanece pequeno e flutuante, como antes. Clique no robô para abrir as instruções completas e use o botão de recolher para minimizá-lo novamente. Todos os serviços acompanham o espaço disponível ao maximizar/restaurar a janela. Os botões de sair e favoritar têm ícones e fundo visível; os favoritos ficam em **Sua Biblioteca → Favoritos**.
+
+A Netflix abre com mosaico local, idioma, **Entrar** e formulário **Email → Vamos lá**. Na missão 04, esse formulário envia somente um código ao Gmail e abre a confirmação. O cadastro, os planos e o cartão seguem o layout claro da referência, com wordmark oficial e imagem dos aparelhos. Senha, confirmação, perfil, favoritos e progresso mantêm as mesmas regras da trilha.

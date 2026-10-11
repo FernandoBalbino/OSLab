@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'oslab-offline-v24';
+const CACHE_VERSION = 'oslab-offline-v31';
 const CACHE_PREFIX = 'oslab-offline-';
 
 const CORE_FILES = [

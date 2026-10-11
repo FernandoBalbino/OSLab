@@ -1,0 +1,257 @@
+{
+  "serverStopped": true,
+  "reloaded": true,
+  "progressPreserved": "12/12",
+  "services": [
+    {
+      "failedImages": [],
+      "horizontalOverflow": false,
+      "pendingLazyImages": [
+        {
+          "lazy": false,
+          "src": "assets/digital/ui/menu.svg"
+        },
+        {
+          "lazy": false,
+          "src": "assets/digital/gmail/imgLogo.png"
+        },
+        {
+          "lazy": false,
+          "src": "assets/digital/ui/search.svg"
+        },
+        {
+          "lazy": false,
+          "src": "assets/digital/ui/logout.svg"
+        },
+        {
+          "lazy": false,
+          "src": "assets/digital/ui/compose.svg"
+        },
+        {
+          "lazy": false,
+          "src": "assets/digital/ui/inbox.svg"
+        },
+        {
+          "lazy": false,
+          "src": "assets/digital/ui/refresh.svg"
+        },
+        {
+          "lazy": false,
+          "src": "assets/digital/ui/star.svg"
+        },
+        {
+          "lazy": false,
+          "src": "assets/digital/ui/star.svg"
+        }
+      ],
+      "service": "gmail"
+    },
+    {
+      "failedImages": [],
+      "horizontalOverflow": false,
+      "pendingLazyImages": [],
+      "service": "outlook"
+    },
+    {
+      "failedImages": [],
+      "horizontalOverflow": false,
+      "pendingLazyImages": [],
+      "service": "yahoo"
+    },
+    {
+      "failedImages": [],
+      "horizontalOverflow": false,
+      "pendingLazyImages": [
+        {
+          "lazy": false,
+          "src": "assets/digital/brands/spotify-white.png"
+        },
+        {
+          "lazy": false,
+          "src": "assets/digital/ui/home.svg"
+        },
+        {
+          "lazy": false,
+          "src": "assets/digital/ui/heart.svg"
+        },
+        {
+          "lazy": true,
+          "src": "assets/digital/photos/940381.jpg"
+        },
+        {
+          "lazy": false,
+          "src": "assets/digital/ui/heart.svg"
+        },
+        {
+          "lazy": true,
+          "src": "assets/digital/photos/1658583.jpg"
+        },
+        {
+          "lazy": false,
+          "src": "assets/digital/ui/heart.svg"
+        },
+        {
+          "lazy": true,
+          "src": "assets/digital/photos/1677338.jpg"
+        },
+        {
+          "lazy": false,
+          "src": "assets/digital/ui/heart.svg"
+        },
+        {
+          "lazy": true,
+          "src": "assets/digital/photos/2212861.jpg"
+        },
+        {
+          "lazy": false,
+          "src": "assets/digital/ui/heart.svg"
+        },
+        {
+          "lazy": true,
+          "src": "assets/digital/photos/3049304.jpg"
+        },
+        {
+          "lazy": false,
+          "src": "assets/digital/ui/heart.svg"
+        },
+        {
+          "lazy": true,
+          "src": "assets/digital/photos/13037919.jpg"
+        },
+        {
+          "lazy": false,
+          "src": "assets/digital/ui/heart.svg"
+        }
+      ],
+      "service": "spotify"
+    },
+    {
+      "failedImages": [],
+      "horizontalOverflow": false,
+      "pendingLazyImages": [
+        {
+          "lazy": false,
+          "src": "assets/digital/brands/discord-white.svg"
+        }
+      ],
+      "service": "discord"
+    },
+    {
+      "failedImages": [],
+      "horizontalOverflow": false,
+      "pendingLazyImages": [
+        {
+          "lazy": false,
+          "src": "assets/digital/ui/menu.svg"
+        },
+        {
+          "lazy": false,
+          "src": "assets/digital/youtube/wordmark.svg"
+        },
+        {
+          "lazy": false,
+          "src": "assets/digital/ui/search.svg"
+        },
+        {
+          "lazy": false,
+          "src": "assets/digital/ui/home.svg"
+        },
+        {
+          "lazy": false,
+          "src": "assets/digital/ui/technology.svg"
+        },
+        {
+          "lazy": false,
+          "src": "assets/digital/ui/nature.svg"
+        },
+        {
+          "lazy": false,
+          "src": "assets/digital/ui/learn.svg"
+        },
+        {
+          "lazy": true,
+          "src": "assets/digital/photos/450035.jpg"
+        },
+        {
+          "lazy": true,
+          "src": "assets/digital/photos/940381.jpg"
+        },
+        {
+          "lazy": true,
+          "src": "assets/digital/photos/3747486.jpg"
+        },
+        {
+          "lazy": true,
+          "src": "assets/digital/photos/450035.jpg"
+        },
+        {
+          "lazy": true,
+          "src": "assets/digital/photos/3747486.jpg"
+        },
+        {
+          "lazy": true,
+          "src": "assets/digital/photos/1658583.jpg"
+        },
+        {
+          "lazy": true,
+          "src": "assets/digital/photos/450035.jpg"
+        },
+        {
+          "lazy": true,
+          "src": "assets/digital/photos/4560543.jpg"
+        },
+        {
+          "lazy": true,
+          "src": "assets/digital/photos/11034190.jpg"
+        },
+        {
+          "lazy": true,
+          "src": "assets/digital/photos/3747486.jpg"
+        },
+        {
+          "lazy": true,
+          "src": "assets/digital/photos/2212861.jpg"
+        }
+      ],
+      "service": "youtube"
+    },
+    {
+      "failedImages": [],
+      "horizontalOverflow": false,
+      "pendingLazyImages": [
+        {
+          "lazy": false,
+          "src": "assets/digital/ui/plus.svg"
+        },
+        {
+          "lazy": false,
+          "src": "assets/digital/ui/folder.svg"
+        },
+        {
+          "lazy": false,
+          "src": "assets/digital/ui/folder.svg"
+        }
+      ],
+      "service": "drive"
+    },
+    {
+      "failedImages": [],
+      "horizontalOverflow": false,
+      "pendingLazyImages": [
+        {
+          "lazy": false,
+          "src": "assets/digital/netflix/wordmark.svg"
+        },
+        {
+          "lazy": false,
+          "src": "assets/digital/ui/language.svg"
+        },
+        {
+          "lazy": false,
+          "src": "assets/digital/ui/chevron.svg"
+        }
+      ],
+      "service": "netflix"
+    }
+  ]
+}

@@ -1,101 +1,40 @@
-# Design QA — Trilhas de Missões e Exercícios
+# Netflix — Design QA
 
-## Artefatos
+final result: passed
 
-- Referência visual: `C:\Users\Pichau\AppData\Local\Temp\codex-clipboard-727e8369-9257-490a-88ee-1d71a4d1e9b8.png` (`6480 × 3600`).
-- Implementação principal: `qa/learning-exercises-final-default.png` (`1936 × 1048`).
-- Trilha de Missões: `qa/learning-missions-final-default.png` (`1936 × 1048`).
-- Comparação lado a lado: `qa/learning-path-comparison.png` (`1960 × 620`).
-- Viewports complementares: `qa/learning-exercises-1366x768-final.png`, `qa/learning-exercises-1024x640-final.png` e `qa/learning-exercises-restored-final.png`.
-- Laboratório VPN: `qa/vpn-lab-final.png`, `qa/vpn-app-final.png`, `qa/vpn-app-1024x640.png` e `qa/vpn-app-restored.png`.
+Comparação visual conjunta: [netflix-comparison-final.jpg](qa-evidence/digital-life/improvements/netflix-comparison-final.jpg). Artefato reproduzível: [netflix-comparison.html](qa-evidence/digital-life/improvements/netflix-comparison.html).
 
-## Referência e intenção
+## Referências e normalização
 
-- A referência do Duolingo foi usada para navegação, percurso em zigue-zague, leitura dos estados e sensação de avanço; não como cópia de marca.
-- A implementação mantém a identidade azul do OSLab/Windows 11, separa Missões e Exercícios e usa mascote, textos e assets próprios.
-- `qa/learning-path-comparison.png` reúne a fonte e a implementação na mesma imagem de comparação, como gate visual final.
+Fontes visuais: `qa-evidence/digital-life/improvements/netflix-reference.png` (1910×1027), `netflix-account-reference.png` (1902×932) e imagem dos aparelhos fornecida pelo usuário, salva em `assets/digital/netflix/devices.png`.
 
-## Viewport e normalização
+Implementação: `netflix-entry-release.jpg` e `netflix-account-release.jpg`. Viewport CSS 1910×1043, site de entrada 1910×907. A captura do navegador produziu 1662×1043 pixels e recortou a borda direita; a comparação aplica o mesmo recorte à fonte, removendo 120 pixels de Chrome da referência e 88 pixels da implementação. Não há comparação de diferenças causadas pela moldura nativa. Escala dos recortes idêntica, sem reamostragem de arquivos. O enquadramento focado usa a mesma região de título/textos/formulário em ambas as imagens.
 
-- Comparação principal: captura do navegador interno em `1936 × 1048` CSS px e pixels, exibida integralmente no lado direito da composição.
-- A fonte de `6480 × 3600` foi reduzida integralmente para o lado esquerdo. A diferença de produto é intencional: a fonte é um painel promocional; o alvo é um aplicativo educacional em um desktop simulado.
-- Verificações adicionais por métricas DOM: `1366 × 768`, `1024 × 640` e janela restaurada de `860 × 580`.
-- O recurso de captura com viewport sobrescrito do navegador interno desenhou a página em escala reduzida no canto da imagem; por isso, os screenshots menores são apoio visual e as medidas CSS/overflow foram lidas diretamente do DOM. A captura principal não apresenta esse artefato.
+Estado: Netflix sem sessão na entrada; cadastro por email no padrão claro. A referência de cadastro usa um link; o produto conserva o código exclusivo da missão 04 e a criação de senha, conforme solicitado anteriormente.
 
-## Evidência de tela completa
+## Iterações
 
-- Em `1936 × 1048`, a trilha usa três áreas sem sobreposição: percurso, detalhes e assistente acoplado.
-- Em `1366 × 768`, as colunas mediram `686 px / 350 px / 330 px`; não houve overflow horizontal nem título truncado.
-- Em `1024 × 640`, o layout mediu `664 px / 360 px`, com detalhes e assistente dividindo duas linhas de `216 px`; não houve overflow horizontal nem título truncado.
-- Na janela restaurada de `860 × 580`, a trilha, o painel de detalhes e o assistente passam para uma coluna rolável, funcionando como painel inferior.
+1. Conferência inicial: composição/tipografia e imagens corretas, mas enquadramento e ritmo do preço/formulário pediam ajuste. O painel grande de instruções também foi rejeitado pelo usuário.
+2. Ajustes: espaçamento do preço e convite, largura de 664 pixels do formulário, enquadramento do mosaico, fonte Netflix Sans local, reset da rolagem ao navegar e retorno do assistente pequeno/flutuante.
+3. Comparação final conjunta, incluindo recorte focado: nenhum problema P0/P1/P2 em aberto.
 
-## Evidência focada
+## Superfícies verificadas
 
-- Nós grandes de `84 px` diferenciam disponível, em andamento, concluído e bloqueado; os bloqueados estão desabilitados de verdade.
-- Cabeçalhos de unidade agrupam Sistema/Rede e as quatro áreas de Missões, preservando o percurso vertical em zigue-zague.
-- O painel lateral mostra estado, título, categoria, dificuldade, objetivo, checklist e ações de iniciar, continuar ou refazer.
-- O assistente usa o mascote raster correto, é recolhível, mantém a ação Dica e é acoplado à trilha quando ela está em foco; quando a trilha é minimizada, volta ao desktop acima da barra de tarefas.
-- Dicas de exercícios aparecem apenas no assistente. Dicas de missão permanecem acessíveis nos detalhes e no assistente, sempre após ação explícita do aluno.
+- Tipografia: Netflix Sans oficial; título de 64 pixels no viewport de referência, peso 900, mesma quebra de linhas; preço de 20 pixels e convite de 16. Cadastro com título de 32 pixels, peso 700.
+- Espaçamento/layout: wordmark de 150 pixels, cabeçalho centralizado, título e formulário centralizados; campos/botão de 56 pixels; cadastro em coluna de 475 pixels com cabeçalho separado e rodapé.
+- Cores: fundo escuro com sobreposição no mosaico, texto branco e ação vermelha; cadastro cinza claro conforme a captura e texto preto. Foco visível nos controles.
+- Imagens: mosaico e wordmark oficiais locais, fontes locais e aparelhos fornecidos. Nenhum logotipo foi substituído por emoji. Ícones de idioma/chevron em SVG local da biblioteca Fluent.
+- Conteúdo: texto da entrada conforme a referência. Cadastro adapta Enviar link para Enviar código e inclui os aparelhos, preservando a atividade pelo Gmail.
+- Responsividade: conferida nas quatro combinações 1366×768/1024×640 e maximizado/restaurado; sem transbordamento horizontal. Páginas longas têm rolagem vertical.
 
-## Superfícies de fidelidade
+## Refinamentos não bloqueantes
 
-- Tipografia: Nunito Sans local somente nas superfícies educacionais; Segoe UI preservada no sistema simulado. Hierarquia amigável, títulos sem truncamento e microtexto legível.
-- Espaçamento e layout: cabeçalho, progresso, unidades, nós, painel de detalhes e assistente têm trilhas claras; alvos interativos têm ao menos `44 px` nas ações principais e `84 px` nos nós.
-- Cores e tokens: azul OSLab como primária, verde para conclusão, amarelo para dica e cinza para bloqueio; contraste e foco visível em amarelo de `3 px`.
-- Imagens e ícones: três mascotes raster próprios, ícones específicos do Microsoft Fluent UI System Icons e nenhuma coruja, emoji ou ícone genérico repetido.
-- Conteúdo: português com acentos, objetivos reais do simulador e dicas em 4–6 passos concretos com abertura, clique, execução e conferência.
-- Estados: entrada, seleção, pulso do atual, conclusão, dica revelada, recolhimento, desbloqueio sequencial e redução de movimento estão definidos.
-
-## Interações verificadas
-
-- Login e abertura de Missões e Exercícios.
-- Início da missão 1, dica sob demanda, conclusão, medalha e desbloqueio somente da missão 2.
-- Troca de uma missão ativa para um exercício pelo coordenador compartilhado.
-- Início do exercício 1, fase inicial `Investigando`, dica com cinco passos e reabertura sem duplicação.
-- Recolher e expandir o assistente; abrir a trilha novamente e acoplar o assistente sem cobrir o conteúdo.
-- Seleção por teclado com `Enter`, foco preservado e outline visível.
-- Bloqueios reais, ausência de overflow horizontal e ausência de títulos truncados nos três tamanhos.
-- Console do navegador: nenhum erro ou aviso.
-- `prefers-reduced-motion` presente no CSS.
-- Suíte automatizada: `17/17` verificações aprovadas, incluindo engines, legado, VPN, assets e precache `oslab-offline-v6`.
-
-## QA complementar — Laboratório VPN
-
-- Os sete fluxos foram executados no navegador do OSLab: Netflix Brasil/EUA, portal da Empresa OS e chamado #1542, comparação de IP Brasil/Alemanha, Wi-Fi público do aeroporto, bloqueio bancário Japão/Brasil, latência Japão/Brasil com OS Meet e allowlist da Administração da Escola.
-- A troca de VPN somente afeta sites depois de atualizar ou navegar novamente, tornando a relação causa e efeito explícita para o aluno.
-- O indicador global exibiu servidor, IP e latência; o aviso de rede pública apareceu ao conectar em `Aeroporto_Free_WiFi`.
-- O painel do professor abriu pelo aplicativo, iniciou diretamente uma missão bloqueada e permitiu marcar conclusões para testar a revisão final.
-- A revisão de três perguntas foi concluída e apresentou a síntese pedagógica com o mascote celebrando.
-- Em `1366 × 768` e `1024 × 640`, aplicativo, trilha, navegador e taskbar permaneceram utilizáveis. Na janela restaurada, as colunas do aplicativo VPN passam a uma única coluna por container query.
-- Durante o QA foram corrigidos dois problemas P2: a busca regional da Netflix agora é reavaliada após atualizar, e um novo teste de velocidade é liberado após a troca de servidor. Não restaram problemas P0–P2.
-
-## Histórico de comparação
-
-1. Primeira passagem:
-   - [P1] O assistente flutuante cobria parte do painel lateral ao abrir outra trilha durante uma atividade.
-   - [P1] O assistente oculto ainda reservava uma terceira coluna vazia quando nenhuma atividade estava em andamento.
-   - [P2] A dica de Exercícios aparecia simultaneamente no painel e no assistente.
-   - [P2] Em `1024 × 640`, o painel de detalhes recebia somente `133 px` de altura.
-   - [P2] Minimizar a trilha logo após iniciar um exercício mudava a fase para `Continue investigando` antes de qualquer ação do aluno.
-2. Correções:
-   - O assistente passou a ser acoplado como terceira área da trilha em telas largas e como área inferior responsiva em larguras menores.
-   - A coluna do assistente passou a existir somente quando ele está visível; a trilha inativa volta a usar percurso e detalhes em duas áreas.
-   - A dica de Exercícios passou a ser apresentada apenas pelo assistente.
-   - O cabeçalho compacto e a divisão equilibrada de linhas deram `216 px` para detalhes e `216 px` para o assistente em `1024 × 640`.
-   - O motor passou a considerar somente eventos reais do aluno ao avançar de `Investigando` para uma investigação parcial.
-3. Passagem final:
-   - `qa/learning-path-comparison.png` e as capturas complementares não mostram diferenças acionáveis P0, P1 ou P2.
+P3: há pequenas diferenças de recorte do mosaico e de antialiasing entre a captura enviada e o navegador de teste. O ativo é o mesmo mosaico oficial; não se declara identidade de pixels. A borda direita não capturada contém apenas parte do fundo, sem controles.
 
 ## Checklist final
 
-- [x] Percursos em zigue-zague e unidades claramente agrupadas.
-- [x] Estados semânticos e progressão sequencial real.
-- [x] Detalhes completos e títulos sem truncamento.
-- [x] Dicas detalhadas somente após clique e penalização única nas Missões.
-- [x] Assistente com mascote próprio, recolhível e sem sobreposição.
-- [x] Ícones específicos, fonte local, créditos e precache atualizados.
-- [x] Responsividade em 1366×768, 1024×640 e janela restaurada.
-- [x] Teclado, foco visível e redução de movimento.
-- [x] Sem erros no console e suíte automatizada aprovada.
-
-final result: passed
+- [x] Entrada e cadastro comparados no mesmo artefato.
+- [x] Tipografia, layout, cores, imagens e texto conferidos.
+- [x] Verificação Gmail, cadastro, planos, cartão e perfil testados.
+- [x] Assistente pequeno e minimizável restaurado.
+- [x] Testes, layouts e recarregamento offline aprovados.

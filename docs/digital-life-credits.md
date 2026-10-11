@@ -35,3 +35,22 @@ Cada página abaixo foi consultada em 11/10/2026 e identificava o recurso como g
 | 3747486.jpg | Polina Zimmerman | [Foto 3747486](https://www.pexels.com/photo/photo-of-computers-near-window-3747486/) |
 
 Metadados e links de download em [photo-credits.json](../assets/digital/photo-credits.json). Mapeamento dos títulos em [digital-content.js](../js/digital/digital-content.js). Todas as fotografias, fontes e marcas utilizadas pela nova trilha estão no manifesto de cache.
+
+## Marcas e ícones locais (11/10/2026)
+
+- Spotify: símbolos branco e verde do [kit oficial](https://newsroom.spotify.com/media-kit/logo-and-brand-assets/).
+- Discord: Clyde branco e Blurple da [página oficial de marcas](https://discord.com/branding).
+- Google, Gmail e Drive: arquivos oficiais de branding servidos pelo Google em `www.gstatic.com/images/branding/product/2x/`.
+- Outlook: SVG oficial do CDN Office/Fabric da Microsoft.
+- Yahoo: ícone e marca da [página corporativa oficial](https://www.yahooinc.com/).
+- Netflix: ícone oficial do CDN Netflix `assets.nflxext.com`.
+- YouTube: SVGs locais extraídos do kit Figma fornecido, preservados.
+- Controles de interface: [Fluent System Icons](https://github.com/microsoft/fluentui-system-icons), Microsoft, licença MIT incluída em `assets/digital/ui/LICENSE`.
+
+As URLs exatas dos arquivos baixados estão em [sources.json](../assets/digital/brands/sources.json). As marcas mantêm a titularidade dos respectivos proprietários.
+
+Ícone exclusivo da trilha: imagem gerada com a ferramenta imagegen integrada. Arquivo `assets/digital/trail-icon.png`, fundo transparente. [Prompt final e método](digital-life-icon-prompt.md).
+
+## Netflix — novas referências de entrada e cadastro
+
+A tela inicial segue a captura fornecida em 11/10/2026. Mosaico, wordmark e fontes Netflix Sans foram obtidos da página oficial https://www.netflix.com/br/ e salvos localmente para uso offline. URLs individuais e data de coleta: `assets/digital/netflix/landing-sources.json`. A imagem dos aparelhos (`devices.png`) foi fornecida pelo usuário. O cadastro conserva a verificação por código no Gmail, embora a referência visual use um link de inscrição.

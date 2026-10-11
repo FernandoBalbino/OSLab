@@ -1,0 +1,1064 @@
+[
+  {
+    "label": "Netflix cadastro",
+    "content": [
+      1351,
+      632
+    ],
+    "documentWidth": 1366,
+    "failedImages": [],
+    "horizontalOverflow": false,
+    "logout": [],
+    "maximized": true,
+    "service": "netflix",
+    "simulationCopy": false,
+    "site": [
+      1351,
+      1098
+    ],
+    "viewport": [
+      1366,
+      768
+    ]
+  },
+  {
+    "label": "Netflix cadastro",
+    "content": [
+      1183,
+      570
+    ],
+    "documentWidth": 1366,
+    "failedImages": [],
+    "horizontalOverflow": false,
+    "logout": [],
+    "maximized": false,
+    "service": "netflix",
+    "simulationCopy": false,
+    "site": [
+      1183,
+      1087
+    ],
+    "viewport": [
+      1366,
+      768
+    ]
+  },
+  {
+    "label": "Netflix cadastro",
+    "content": [
+      1009,
+      504
+    ],
+    "documentWidth": 1024,
+    "failedImages": [],
+    "horizontalOverflow": false,
+    "logout": [],
+    "maximized": true,
+    "service": "netflix",
+    "simulationCopy": false,
+    "site": [
+      1009,
+      1075
+    ],
+    "viewport": [
+      1024,
+      640
+    ]
+  },
+  {
+    "label": "Netflix cadastro",
+    "content": [
+      905,
+      460
+    ],
+    "documentWidth": 1024,
+    "failedImages": [],
+    "horizontalOverflow": false,
+    "logout": [],
+    "maximized": false,
+    "service": "netflix",
+    "simulationCopy": false,
+    "site": [
+      905,
+      1067
+    ],
+    "viewport": [
+      1024,
+      640
+    ]
+  },
+  {
+    "label": "Gmail caixa de entrada",
+    "content": [
+      1366,
+      632
+    ],
+    "documentWidth": 1366,
+    "failedImages": [],
+    "horizontalOverflow": false,
+    "logout": [
+      {
+        "background": "rgb(232, 237, 243)",
+        "label": "Sair"
+      }
+    ],
+    "maximized": true,
+    "service": "gmail",
+    "simulationCopy": false,
+    "site": [
+      1366,
+      632
+    ],
+    "viewport": [
+      1366,
+      768
+    ]
+  },
+  {
+    "label": "Gmail caixa de entrada",
+    "content": [
+      1198,
+      570
+    ],
+    "documentWidth": 1366,
+    "failedImages": [],
+    "horizontalOverflow": false,
+    "logout": [
+      {
+        "background": "rgb(232, 237, 243)",
+        "label": "Sair"
+      }
+    ],
+    "maximized": false,
+    "service": "gmail",
+    "simulationCopy": false,
+    "site": [
+      1198,
+      570
+    ],
+    "viewport": [
+      1366,
+      768
+    ]
+  },
+  {
+    "label": "Gmail caixa de entrada",
+    "content": [
+      1024,
+      504
+    ],
+    "documentWidth": 1024,
+    "failedImages": [],
+    "horizontalOverflow": false,
+    "logout": [
+      {
+        "background": "rgb(232, 237, 243)",
+        "label": "Sair"
+      }
+    ],
+    "maximized": true,
+    "service": "gmail",
+    "simulationCopy": false,
+    "site": [
+      1024,
+      504
+    ],
+    "viewport": [
+      1024,
+      640
+    ]
+  },
+  {
+    "label": "Gmail caixa de entrada",
+    "content": [
+      920,
+      460
+    ],
+    "documentWidth": 1024,
+    "failedImages": [],
+    "horizontalOverflow": false,
+    "logout": [
+      {
+        "background": "rgb(232, 237, 243)",
+        "label": "Sair"
+      }
+    ],
+    "maximized": false,
+    "service": "gmail",
+    "simulationCopy": false,
+    "site": [
+      920,
+      460
+    ],
+    "viewport": [
+      1024,
+      640
+    ]
+  },
+  {
+    "label": "Netflix catálogo",
+    "content": [
+      1351,
+      632
+    ],
+    "documentWidth": 1366,
+    "failedImages": [],
+    "horizontalOverflow": false,
+    "logout": [
+      {
+        "background": "rgb(229, 9, 20)",
+        "label": "Sair"
+      }
+    ],
+    "maximized": true,
+    "service": "netflix",
+    "simulationCopy": false,
+    "site": [
+      1351,
+      1868
+    ],
+    "viewport": [
+      1366,
+      768
+    ]
+  },
+  {
+    "label": "Netflix catálogo",
+    "content": [
+      1183,
+      570
+    ],
+    "documentWidth": 1366,
+    "failedImages": [],
+    "horizontalOverflow": false,
+    "logout": [
+      {
+        "background": "rgb(229, 9, 20)",
+        "label": "Sair"
+      }
+    ],
+    "maximized": false,
+    "service": "netflix",
+    "simulationCopy": false,
+    "site": [
+      1183,
+      1759
+    ],
+    "viewport": [
+      1366,
+      768
+    ]
+  },
+  {
+    "label": "Netflix catálogo",
+    "content": [
+      1009,
+      504
+    ],
+    "documentWidth": 1024,
+    "failedImages": [],
+    "horizontalOverflow": false,
+    "logout": [
+      {
+        "background": "rgb(229, 9, 20)",
+        "label": "Sair"
+      }
+    ],
+    "maximized": true,
+    "service": "netflix",
+    "simulationCopy": false,
+    "site": [
+      1009,
+      1646
+    ],
+    "viewport": [
+      1024,
+      640
+    ]
+  },
+  {
+    "label": "Netflix catálogo",
+    "content": [
+      905,
+      460
+    ],
+    "documentWidth": 1024,
+    "failedImages": [],
+    "horizontalOverflow": false,
+    "logout": [
+      {
+        "background": "rgb(229, 9, 20)",
+        "label": "Sair"
+      }
+    ],
+    "maximized": false,
+    "service": "netflix",
+    "simulationCopy": false,
+    "site": [
+      905,
+      1579
+    ],
+    "viewport": [
+      1024,
+      640
+    ]
+  },
+  {
+    "label": "Spotify favoritos",
+    "content": [
+      1351,
+      632
+    ],
+    "documentWidth": 1366,
+    "failedImages": [],
+    "horizontalOverflow": false,
+    "logout": [
+      {
+        "background": "rgb(255, 255, 255)",
+        "label": "Sair"
+      }
+    ],
+    "maximized": true,
+    "service": "spotify",
+    "simulationCopy": false,
+    "site": [
+      1351,
+      699
+    ],
+    "viewport": [
+      1366,
+      768
+    ]
+  },
+  {
+    "label": "Spotify favoritos",
+    "content": [
+      1183,
+      570
+    ],
+    "documentWidth": 1366,
+    "failedImages": [],
+    "horizontalOverflow": false,
+    "logout": [
+      {
+        "background": "rgb(255, 255, 255)",
+        "label": "Sair"
+      }
+    ],
+    "maximized": false,
+    "service": "spotify",
+    "simulationCopy": false,
+    "site": [
+      1183,
+      643
+    ],
+    "viewport": [
+      1366,
+      768
+    ]
+  },
+  {
+    "label": "Spotify favoritos",
+    "content": [
+      1009,
+      504
+    ],
+    "documentWidth": 1024,
+    "failedImages": [],
+    "horizontalOverflow": false,
+    "logout": [
+      {
+        "background": "rgb(255, 255, 255)",
+        "label": "Sair"
+      }
+    ],
+    "maximized": true,
+    "service": "spotify",
+    "simulationCopy": false,
+    "site": [
+      1009,
+      591
+    ],
+    "viewport": [
+      1024,
+      640
+    ]
+  },
+  {
+    "label": "Spotify favoritos",
+    "content": [
+      905,
+      460
+    ],
+    "documentWidth": 1024,
+    "failedImages": [],
+    "horizontalOverflow": false,
+    "logout": [
+      {
+        "background": "rgb(255, 255, 255)",
+        "label": "Sair"
+      }
+    ],
+    "maximized": false,
+    "service": "spotify",
+    "simulationCopy": false,
+    "site": [
+      905,
+      591
+    ],
+    "viewport": [
+      1024,
+      640
+    ]
+  },
+  {
+    "label": "Discord comunidade",
+    "content": [
+      1366,
+      632
+    ],
+    "documentWidth": 1366,
+    "failedImages": [],
+    "horizontalOverflow": false,
+    "logout": [
+      {
+        "background": "rgb(184, 49, 60)",
+        "label": "Sair"
+      }
+    ],
+    "maximized": true,
+    "service": "discord",
+    "simulationCopy": false,
+    "site": [
+      1366,
+      632
+    ],
+    "viewport": [
+      1366,
+      768
+    ]
+  },
+  {
+    "label": "Discord comunidade",
+    "content": [
+      1198,
+      570
+    ],
+    "documentWidth": 1366,
+    "failedImages": [],
+    "horizontalOverflow": false,
+    "logout": [
+      {
+        "background": "rgb(184, 49, 60)",
+        "label": "Sair"
+      }
+    ],
+    "maximized": false,
+    "service": "discord",
+    "simulationCopy": false,
+    "site": [
+      1198,
+      570
+    ],
+    "viewport": [
+      1366,
+      768
+    ]
+  },
+  {
+    "label": "Discord comunidade",
+    "content": [
+      1009,
+      504
+    ],
+    "documentWidth": 1024,
+    "failedImages": [],
+    "horizontalOverflow": false,
+    "logout": [
+      {
+        "background": "rgb(184, 49, 60)",
+        "label": "Sair"
+      }
+    ],
+    "maximized": true,
+    "service": "discord",
+    "simulationCopy": false,
+    "site": [
+      1009,
+      560
+    ],
+    "viewport": [
+      1024,
+      640
+    ]
+  },
+  {
+    "label": "Discord comunidade",
+    "content": [
+      905,
+      460
+    ],
+    "documentWidth": 1024,
+    "failedImages": [],
+    "horizontalOverflow": false,
+    "logout": [
+      {
+        "background": "rgb(184, 49, 60)",
+        "label": "Sair"
+      }
+    ],
+    "maximized": false,
+    "service": "discord",
+    "simulationCopy": false,
+    "site": [
+      905,
+      560
+    ],
+    "viewport": [
+      1024,
+      640
+    ]
+  },
+  {
+    "label": "YouTube início",
+    "content": [
+      1351,
+      632
+    ],
+    "documentWidth": 1366,
+    "failedImages": [],
+    "horizontalOverflow": false,
+    "logout": [
+      {
+        "background": "rgb(232, 237, 243)",
+        "label": "Sair da conta"
+      }
+    ],
+    "maximized": true,
+    "service": "youtube",
+    "simulationCopy": false,
+    "site": [
+      1351,
+      1301
+    ],
+    "viewport": [
+      1366,
+      768
+    ]
+  },
+  {
+    "label": "YouTube início",
+    "content": [
+      1183,
+      570
+    ],
+    "documentWidth": 1366,
+    "failedImages": [],
+    "horizontalOverflow": false,
+    "logout": [
+      {
+        "background": "rgb(232, 237, 243)",
+        "label": "Sair da conta"
+      }
+    ],
+    "maximized": false,
+    "service": "youtube",
+    "simulationCopy": false,
+    "site": [
+      1183,
+      1175
+    ],
+    "viewport": [
+      1366,
+      768
+    ]
+  },
+  {
+    "label": "YouTube início",
+    "content": [
+      1009,
+      504
+    ],
+    "documentWidth": 1024,
+    "failedImages": [],
+    "horizontalOverflow": false,
+    "logout": [
+      {
+        "background": "rgb(232, 237, 243)",
+        "label": "Sair da conta"
+      }
+    ],
+    "maximized": true,
+    "service": "youtube",
+    "simulationCopy": false,
+    "site": [
+      1009,
+      1045
+    ],
+    "viewport": [
+      1024,
+      640
+    ]
+  },
+  {
+    "label": "YouTube início",
+    "content": [
+      905,
+      460
+    ],
+    "documentWidth": 1024,
+    "failedImages": [],
+    "horizontalOverflow": false,
+    "logout": [
+      {
+        "background": "rgb(232, 237, 243)",
+        "label": "Sair da conta"
+      }
+    ],
+    "maximized": false,
+    "service": "youtube",
+    "simulationCopy": false,
+    "site": [
+      905,
+      1029
+    ],
+    "viewport": [
+      1024,
+      640
+    ]
+  },
+  {
+    "label": "Drive pasta criada",
+    "content": [
+      1366,
+      632
+    ],
+    "documentWidth": 1366,
+    "failedImages": [],
+    "horizontalOverflow": false,
+    "logout": [
+      {
+        "background": "rgb(232, 237, 243)",
+        "label": "Sair"
+      }
+    ],
+    "maximized": true,
+    "service": "drive",
+    "simulationCopy": false,
+    "site": [
+      1366,
+      632
+    ],
+    "viewport": [
+      1366,
+      768
+    ]
+  },
+  {
+    "label": "Drive pasta criada",
+    "content": [
+      1183,
+      570
+    ],
+    "documentWidth": 1366,
+    "failedImages": [],
+    "horizontalOverflow": false,
+    "logout": [
+      {
+        "background": "rgb(232, 237, 243)",
+        "label": "Sair"
+      }
+    ],
+    "maximized": false,
+    "service": "drive",
+    "simulationCopy": false,
+    "site": [
+      1183,
+      602
+    ],
+    "viewport": [
+      1366,
+      768
+    ]
+  },
+  {
+    "label": "Drive pasta criada",
+    "content": [
+      1009,
+      504
+    ],
+    "documentWidth": 1024,
+    "failedImages": [],
+    "horizontalOverflow": false,
+    "logout": [
+      {
+        "background": "rgb(232, 237, 243)",
+        "label": "Sair"
+      }
+    ],
+    "maximized": true,
+    "service": "drive",
+    "simulationCopy": false,
+    "site": [
+      1009,
+      602
+    ],
+    "viewport": [
+      1024,
+      640
+    ]
+  },
+  {
+    "label": "Drive pasta criada",
+    "content": [
+      905,
+      460
+    ],
+    "documentWidth": 1024,
+    "failedImages": [],
+    "horizontalOverflow": false,
+    "logout": [
+      {
+        "background": "rgb(232, 237, 243)",
+        "label": "Sair"
+      }
+    ],
+    "maximized": false,
+    "service": "drive",
+    "simulationCopy": false,
+    "site": [
+      905,
+      602
+    ],
+    "viewport": [
+      1024,
+      640
+    ]
+  },
+  {
+    "label": "Outlook caixa de entrada",
+    "content": [
+      1366,
+      632
+    ],
+    "documentWidth": 1366,
+    "failedImages": [],
+    "horizontalOverflow": false,
+    "logout": [
+      {
+        "background": "rgb(255, 255, 255)",
+        "label": "Sair"
+      }
+    ],
+    "maximized": true,
+    "service": "outlook",
+    "simulationCopy": false,
+    "site": [
+      1366,
+      632
+    ],
+    "viewport": [
+      1366,
+      768
+    ]
+  },
+  {
+    "label": "Outlook caixa de entrada",
+    "content": [
+      1198,
+      570
+    ],
+    "documentWidth": 1366,
+    "failedImages": [],
+    "horizontalOverflow": false,
+    "logout": [
+      {
+        "background": "rgb(255, 255, 255)",
+        "label": "Sair"
+      }
+    ],
+    "maximized": false,
+    "service": "outlook",
+    "simulationCopy": false,
+    "site": [
+      1198,
+      570
+    ],
+    "viewport": [
+      1366,
+      768
+    ]
+  },
+  {
+    "label": "Outlook caixa de entrada",
+    "content": [
+      1024,
+      504
+    ],
+    "documentWidth": 1024,
+    "failedImages": [],
+    "horizontalOverflow": false,
+    "logout": [
+      {
+        "background": "rgb(255, 255, 255)",
+        "label": "Sair"
+      }
+    ],
+    "maximized": true,
+    "service": "outlook",
+    "simulationCopy": false,
+    "site": [
+      1024,
+      504
+    ],
+    "viewport": [
+      1024,
+      640
+    ]
+  },
+  {
+    "label": "Outlook caixa de entrada",
+    "content": [
+      920,
+      460
+    ],
+    "documentWidth": 1024,
+    "failedImages": [],
+    "horizontalOverflow": false,
+    "logout": [
+      {
+        "background": "rgb(255, 255, 255)",
+        "label": "Sair"
+      }
+    ],
+    "maximized": false,
+    "service": "outlook",
+    "simulationCopy": false,
+    "site": [
+      920,
+      460
+    ],
+    "viewport": [
+      1024,
+      640
+    ]
+  },
+  {
+    "label": "Yahoo caixa de entrada",
+    "content": [
+      1366,
+      632
+    ],
+    "documentWidth": 1366,
+    "failedImages": [],
+    "horizontalOverflow": false,
+    "logout": [
+      {
+        "background": "rgb(255, 255, 255)",
+        "label": "Sair"
+      }
+    ],
+    "maximized": true,
+    "service": "yahoo",
+    "simulationCopy": false,
+    "site": [
+      1366,
+      632
+    ],
+    "viewport": [
+      1366,
+      768
+    ]
+  },
+  {
+    "label": "Yahoo caixa de entrada",
+    "content": [
+      1198,
+      570
+    ],
+    "documentWidth": 1366,
+    "failedImages": [],
+    "horizontalOverflow": false,
+    "logout": [
+      {
+        "background": "rgb(255, 255, 255)",
+        "label": "Sair"
+      }
+    ],
+    "maximized": false,
+    "service": "yahoo",
+    "simulationCopy": false,
+    "site": [
+      1198,
+      570
+    ],
+    "viewport": [
+      1366,
+      768
+    ]
+  },
+  {
+    "label": "Yahoo caixa de entrada",
+    "content": [
+      1024,
+      504
+    ],
+    "documentWidth": 1024,
+    "failedImages": [],
+    "horizontalOverflow": false,
+    "logout": [
+      {
+        "background": "rgb(255, 255, 255)",
+        "label": "Sair"
+      }
+    ],
+    "maximized": true,
+    "service": "yahoo",
+    "simulationCopy": false,
+    "site": [
+      1024,
+      504
+    ],
+    "viewport": [
+      1024,
+      640
+    ]
+  },
+  {
+    "label": "Yahoo caixa de entrada",
+    "content": [
+      920,
+      460
+    ],
+    "documentWidth": 1024,
+    "failedImages": [],
+    "horizontalOverflow": false,
+    "logout": [
+      {
+        "background": "rgb(255, 255, 255)",
+        "label": "Sair"
+      }
+    ],
+    "maximized": false,
+    "service": "yahoo",
+    "simulationCopy": false,
+    "site": [
+      920,
+      460
+    ],
+    "viewport": [
+      1024,
+      640
+    ]
+  },
+  {
+    "label": "Netflix entrada final",
+    "content": [
+      1351,
+      632
+    ],
+    "documentWidth": 1366,
+    "failedImages": [],
+    "horizontalOverflow": false,
+    "logout": [],
+    "maximized": true,
+    "service": "netflix",
+    "simulationCopy": false,
+    "site": [
+      1351,
+      651
+    ],
+    "viewport": [
+      1366,
+      768
+    ]
+  },
+  {
+    "label": "Netflix entrada final",
+    "content": [
+      1183,
+      570
+    ],
+    "documentWidth": 1366,
+    "failedImages": [],
+    "horizontalOverflow": false,
+    "logout": [],
+    "maximized": false,
+    "service": "netflix",
+    "simulationCopy": false,
+    "site": [
+      1183,
+      619
+    ],
+    "viewport": [
+      1366,
+      768
+    ]
+  },
+  {
+    "label": "Netflix entrada final",
+    "content": [
+      1009,
+      504
+    ],
+    "documentWidth": 1024,
+    "failedImages": [],
+    "horizontalOverflow": false,
+    "logout": [],
+    "maximized": true,
+    "service": "netflix",
+    "simulationCopy": false,
+    "site": [
+      1009,
+      585
+    ],
+    "viewport": [
+      1024,
+      640
+    ]
+  },
+  {
+    "label": "Netflix entrada final",
+    "content": [
+      905,
+      460
+    ],
+    "documentWidth": 1024,
+    "failedImages": [],
+    "horizontalOverflow": false,
+    "logout": [],
+    "maximized": false,
+    "service": "netflix",
+    "simulationCopy": false,
+    "site": [
+      905,
+      562
+    ],
+    "viewport": [
+      1024,
+      640
+    ]
+  },
+  {
+    "label": "Netflix referência 1910",
+    "content": [
+      1910,
+      907
+    ],
+    "documentWidth": 1910,
+    "failedImages": [],
+    "horizontalOverflow": false,
+    "logout": [],
+    "maximized": true,
+    "service": "netflix",
+    "simulationCopy": false,
+    "site": [
+      1910,
+      907
+    ],
+    "viewport": [
+      1910,
+      1043
+    ]
+  }
+]

@@ -18,7 +18,7 @@
   function session(service) { const s = identity(service); if (!state.sessions[s] || state.sessions[s] !== owner(s)?.email) return null; const result = clone(owner(s)); delete result.credentials; return result; }
   function profileData(data) {
     const name = String(data.name || '').trim();
-    if (!name || name.length > 60) fail('Informe um nome fictício de até 60 caracteres.');
+    if (!name || name.length > 60) fail('Informe um nome de até 60 caracteres.');
     const day = Number(data.day), month = Number(data.month), year = Number(data.year);
     const date = new Date(Date.UTC(year, month - 1, day));
     if (year < 1900 || year > new Date().getFullYear() || date.getUTCFullYear() !== year || date.getUTCMonth() !== month - 1 || date.getUTCDate() !== day) fail('Informe uma data de nascimento válida.');
@@ -34,7 +34,7 @@
     return result;
   }
   function validatePassword(password, confirmation) {
-    if (typeof password !== 'string' || password.length < 8 || password.length > 128 || !/[a-zA-Z]/.test(password) || !/\d/.test(password)) fail('Use uma senha de treinamento com 8 a 128 caracteres, letras e números.');
+    if (typeof password !== 'string' || password.length < 8 || password.length > 128 || !/[a-zA-Z]/.test(password) || !/\d/.test(password)) fail('Use uma senha com 8 a 128 caracteres, letras e números.');
     if (password !== confirmation) fail('As senhas não coincidem. Digite novamente.');
   }
   const hex = bytes => Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('');
@@ -43,7 +43,9 @@
     const bits = await global.crypto.subtle.deriveBits({ name: 'PBKDF2', salt: Uint8Array.from(salt.match(/../g), b => parseInt(b, 16)), iterations: 120000, hash: 'SHA-256' }, material, 256);
     return hex(new Uint8Array(bits));
   }
-  const welcome = 'Parabéns! Você concluiu a criação da sua primeira conta de e-mail nesta simulação. Agora poderá utilizá-la para aprender a acessar outras plataformas digitais.';
+  const welcome = 'Sua conta de e-mail foi criada com sucesso! Sua caixa de entrada está pronta. Use seu novo endereço para receber mensagens e acessar seus serviços favoritos.';
+  // Update welcome copy for existing students without changing message IDs or read state.
+  Object.values(state.messages).flat().filter(message => message.kind === 'welcome').forEach(message => { message.body = welcome; message.from = 'Equipe de boas-vindas'; });
   async function register(service, data) {
     const s = identity(service), epoch = generation;
     if (!services.includes(s)) fail('Serviço inválido.');
@@ -51,7 +53,7 @@
     const target = address(s, data.email), profile = profileData(data);
     validatePassword(data.password, data.confirmation);
     if (s === 'google' && data.use !== 'personal') fail('Escolha Para uso pessoal.');
-    if (s === 'yahoo' && !data.phoneConfirmed) fail('Conclua a confirmação fictícia.');
+    if (s === 'yahoo' && !data.phoneConfirmed) fail('Conclua a confirmação.');
     if (s === 'netflix' && !state.codes[target]?.verified) fail('Leia a mensagem no Gmail e verifique o código antes de criar a senha.');
     locks.add(s);
     try {
@@ -59,7 +61,7 @@
       if (epoch !== generation) fail('A sessão foi reiniciada.');
       state.accounts[s] = { email: target, profile, credentials: { salt, hash, algorithm: 'PBKDF2-SHA256', iterations: 120000 }, createdAt: Date.now(), data: {} };
       state.sessions[s] = target;
-      if (['google', 'outlook', 'yahoo'].includes(s)) state.messages[s] = [{ id: s + '-welcome', from: 'OSLab — Treinamento', to: target, subject: 'Sua conta foi criada com sucesso!', body: welcome, read: false, kind: 'welcome' }];
+      if (['google', 'outlook', 'yahoo'].includes(s)) state.messages[s] = [{ id: s + '-welcome', from: 'Equipe de boas-vindas', to: target, subject: 'Sua conta foi criada com sucesso!', body: welcome, read: false, kind: 'welcome' }];
       notify('registered', { service: s, email: target });
       return session(s);
     } finally { if (epoch === generation) locks.delete(s); }
@@ -69,7 +71,7 @@
     if (!account || account.email !== email(value)) fail('Não encontramos essa conta. Confira o endereço criado nesta trilha.');
     const hash = await derive(String(password || ''), account.credentials.salt);
     if (epoch !== generation) fail('A sessão foi reiniciada.');
-    if (hash !== account.credentials.hash) fail('Senha incorreta. Use a senha de treinamento desta plataforma.');
+    if (hash !== account.credentials.hash) fail('Senha incorreta. Use a senha desta plataforma.');
     state.sessions[s] = account.email;
     state.serial++;
     notify('login', { service: s, email: account.email, serial: state.serial });
@@ -116,7 +118,7 @@
     if (service === 'netflix') {
       if (name === 'plan') { if (!['Básico', 'Padrão', 'Premium'].includes(value)) fail('Selecione um plano.'); data.plan = value; }
       else if (name === 'payment') { if (!data.plan) fail('Escolha um plano primeiro.'); data.payment = 'demonstration'; }
-      else if (name === 'profile') { if (!data.payment) fail('Adicione o cartão de demonstração.'); if (!data.profile) { const label = String(value || '').trim(); if (!label || label.length > 30) fail('Informe um nome para o perfil.'); data.profile = label; } data.entered = true; }
+      else if (name === 'profile') { if (!data.payment) fail('Adicione o cartão.'); if (!data.profile) { const label = String(value || '').trim(); if (!label || label.length > 30) fail('Informe um nome para o perfil.'); data.profile = label; } data.entered = true; }
       else fail('Ação inválida.');
     } else if (service === 'spotify' && name === 'favorite') { if (!O.digitalContent.songs.some(s => s.id === value)) fail('Música não encontrada.'); data.favorites = [...new Set([...(data.favorites || []), value])]; }
     else if (service === 'spotify' && name === 'open-favorite') { if (!data.favorites?.includes(value)) fail('Escolha um item da sua biblioteca.'); }
