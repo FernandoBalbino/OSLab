@@ -386,7 +386,7 @@
 @container (max-width:900px){.dl-mail-layout{grid-template-columns:210px 1fr}.dl-mail-layout>aside{padding-right:8px}.dl-site .dl-player{height:clamp(225px,calc(var(--dl-viewport-height,640px)*.60),500px)}}
 @container (max-width:620px){.dl-mail-layout{grid-template-columns:1fr}.dl-site [data-digital-action=logout]{min-height:40px;padding:8px 12px}.dl-site .dl-player-controls button{font-size:11px;padding:6px}.dl-player-controls output{min-width:55px}.dl-site .dl-player-controls .dl-icon{width:16px;height:16px}.dl-spotify .dl-favorite{width:100%}.dl-mail>header [data-digital-action=logout]{margin-left:auto}}
 
-.dl-netflix-watch{width:100%}.dl-netflix-setup{width:100%}.dl-trail-page .learning-app-mark{background:transparent;box-shadow:none}.dl-trail-page .learning-app-mark img{filter:none;width:64px;height:64px}.dl-google-search .result-favicon{background:transparent}.dl-site .dl-brand-icon[src$="yahoo-icon.png"]{border-radius:8px}
+.dl-netflix-watch{width:100%}.dl-netflix-setup{width:100%}.dl-trail-page .learning-app-mark{background:transparent;box-shadow:none}.dl-trail-page .learning-app-mark img{filter:none;width:64px;height:64px}.dl-google-search .result-favicon{width:28px;height:28px;flex:0 0 28px;overflow:hidden;background:transparent}.dl-google-search .result-favicon .dl-brand-icon{width:20px;height:20px;max-width:20px;max-height:20px;object-fit:contain;flex:0 0 20px}.dl-site .dl-brand-icon[src$="yahoo-icon.png"],.dl-google-search .dl-brand-icon[src$="yahoo-icon.png"]{border-radius:6px}
 
 /* Netflix: referências de entrada e cadastro fornecidas em 11/10/2026. */
 .dl-netflix{font-family:NetflixSans,Arial,sans-serif;--accent:#ff0a18}

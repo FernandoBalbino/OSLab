@@ -6,6 +6,7 @@
   let collapsed = false;
   let previousKind = null;
   let previousDigitalMission = null;
+  let previousUsersMission = null;
 
   function safe(value) { return OSLab.ui.escapeHtml(value); }
   function icon(name) { return OSLab.learningPath.icon(name); }
@@ -20,7 +21,7 @@
     return root;
   }
   function place() {
-    const focusedLayout = document.querySelector(".missions-window.is-focused .learning-layout, .exercises-window.is-focused .learning-layout, .vpn-lab-window.is-focused .learning-layout, .install-lab-window.is-focused .learning-layout, .browser-trail-window.is-focused .learning-layout");
+    const focusedLayout = document.querySelector(".missions-window.is-focused .learning-layout, .exercises-window.is-focused .learning-layout, .vpn-lab-window.is-focused .learning-layout, .install-lab-window.is-focused .learning-layout, .browser-trail-window.is-focused .learning-layout, .userspermissions-window.is-focused .learning-layout");
     const host = focusedLayout || document.querySelector("#desktop");
     if (host && root.parentElement !== host) host.appendChild(root);
     root.classList.toggle("is-docked", Boolean(focusedLayout));
@@ -105,6 +106,28 @@
         : `<button type="button" data-assistant-action="install-lab-hint"><img src="${icon("lightbulb")}" alt="" />${hint ? "Reabrir dica" : "Dica"}</button><button type="button" data-assistant-action="install-lab-tool"><img src="${icon(mission.order === 12 ? "apps" : "globe_search")}" alt="" />${mission.order === 12 ? "Painel de Controle" : "Navegador"}</button><button type="button" data-assistant-action="install-lab-open"><img src="${icon("target_arrow")}" alt="" />Trilha</button><button type="button" data-assistant-action="install-lab-exit"><img src="${icon("dismiss")}" alt="" />Sair</button>`,
     };
   }
+  function renderUsersPermissions(progress) {
+    const active = progress.active;
+    const mission = OSLab.userMissionCatalog.find((entry) => entry.id === active.id);
+    if (!mission || active.suspended) return null;
+    const completed = active.phase === "completed";
+    const hasNext = mission.order < OSLab.userMissionCatalog.length;
+    const nextObjective = mission.objectives.find((objective) => !active.checklist?.[objective.id]);
+    const hint = active.lastHint || null;
+    return {
+      kind: "users-permissions",
+      mascot: completed ? "celebrate" : hint ? "help" : "neutral",
+      eyebrow: completed ? "Missão concluída" : `Usuários e Permissões · Missão ${mission.order}`,
+      title: mission.title,
+      message: completed ? mission.success : mission.instruction,
+      body: completed
+        ? `<div class="assistant-result"><span><strong>Aprendizado</strong>${safe(mission.success)}</span></div>`
+        : `${nextObjective ? `<p class="users-assistant-next"><strong>Próximo objetivo:</strong> ${safe(nextObjective.label)}</p>` : ""}${objectiveMarkup(mission, active)}${hintMarkup(hint, "Dica da missão")}`,
+      actions: completed
+        ? `<button type="button" data-assistant-action="users-open"><img src="${icon("arrow_left")}" alt="" />Ver trilha</button><button type="button" data-assistant-action="users-repeat"><img src="${icon("arrow_reset")}" alt="" />Refazer</button><button class="is-primary" type="button" data-assistant-action="users-next"><img src="${icon(hasNext ? "arrow_right" : "target_arrow")}" alt="" />${hasNext ? "Próxima missão" : "Ver conclusão"}</button>`
+        : `<button type="button" data-assistant-action="users-hint"><img src="${icon("lightbulb")}" alt="" />${active.hintsUsed ? "Próxima dica" : "Dica"}</button><button type="button" data-assistant-action="users-tool"><img src="${icon("apps")}" alt="" />Abrir ferramenta</button><button type="button" data-assistant-action="users-open"><img src="${icon("target_arrow")}" alt="" />Trilha</button>`,
+    };
+  }
   function renderBrowserTrail(progress) {
     const active = progress.active;
     const mission = OSLab.browserTrail.catalog.find((item) => item.id === active.id);
@@ -127,7 +150,8 @@
     const vpnLabProgress = OSLab.vpnLab?.getProgress?.();
     const installLabProgress = OSLab.installLab?.getProgress?.();
     const browserTrailProgress = OSLab.browserTrail?.getProgress?.();
-    const view = OSLab.digitalLifeApp?.assistantView() || (browserTrailProgress?.active ? renderBrowserTrail(browserTrailProgress) : installLabProgress?.active ? renderInstallLab(installLabProgress) : vpnLabProgress?.active ? renderVpnLab(vpnLabProgress) : exerciseSession ? renderExercise(exerciseSession) : missionProgress?.active ? renderMission(missionProgress) : null);
+    const usersProgress = OSLab.userMissions?.getProgress?.();
+    const view = OSLab.digitalLifeApp?.assistantView() || (usersProgress?.active && !usersProgress.active.suspended ? renderUsersPermissions(usersProgress) : browserTrailProgress?.active ? renderBrowserTrail(browserTrailProgress) : installLabProgress?.active ? renderInstallLab(installLabProgress) : vpnLabProgress?.active ? renderVpnLab(vpnLabProgress) : exerciseSession ? renderExercise(exerciseSession) : missionProgress?.active ? renderMission(missionProgress) : null);
     if (view?.kind === "browser-trail" && (document.querySelector(".browser-museum-window.is-focused:not(.is-minimized)") || OSLab.browserMuseum?.getSelected?.())) {
       document.body.classList.remove("has-learning-assistant");
       root.className = "learning-assistant is-hidden";
@@ -137,7 +161,10 @@
     }
     const digitalMission = view?.kind === "digital-life" ? OSLab.digitalLifeTrail.getProgress().active?.id : null;
     if (digitalMission && (previousKind !== "digital-life" || digitalMission !== previousDigitalMission)) collapsed = true;
+    const usersMission = view?.kind === "users-permissions" ? usersProgress.active?.id : null;
+    if (usersMission && (previousKind !== "users-permissions" || usersMission !== previousUsersMission)) collapsed = false;
     previousDigitalMission = digitalMission;
+    previousUsersMission = usersMission;
     previousKind = view?.kind || null;
     document.body.classList.toggle("has-learning-assistant", Boolean(view));
     if (!view) { root.className = "learning-assistant is-hidden"; root.innerHTML = ""; place(); return; }
@@ -182,6 +209,14 @@
     if (action === "install-lab-return") OSLab.installLab.finish("return");
     if (action === "install-lab-repeat") OSLab.installLab.finish("repeat");
     if (action === "install-lab-next") OSLab.installLab.finish("next");
+    if (action === "users-hint") { OSLab.userMissions.useHint(); collapsed = false; render(); }
+    if (action === "users-tool") {
+      const mission = OSLab.userMissionCatalog.find((entry) => entry.id === OSLab.userMissions.getProgress().active?.id);
+      if (mission?.tool) OSLab.shell.openApp(mission.tool, mission.tool === "settings" ? { settingsView: "accounts" } : {});
+    }
+    if (action === "users-open") OSLab.shell.openApp("userspermissions");
+    if (action === "users-repeat") OSLab.userMissions.finish("repeat");
+    if (action === "users-next") OSLab.userMissions.finish("next");
     if (action === "browser-trail-browser") { const record = OSLab.shell.openApp("google"); if (record && OSLab.browserTrail?.getProgress?.().active?.id === "browser-6") OSLab.browserApp.openGoogle(record); }
     if (action === "browser-trail-open") OSLab.shell.openApp("browsertrail");
     if (action === "browser-trail-exit" && await OSLab.ui.confirm({ title: "Sair da missão?", message: "Esta tentativa será encerrada.", confirmLabel: "Sair" })) OSLab.browserTrail.exit();
@@ -197,6 +232,7 @@
   OSLab.vpnLab?.subscribe?.(render);
   OSLab.installLab?.subscribe?.(render);
   OSLab.browserTrail?.subscribe?.(render);
+  OSLab.userMissions?.subscribe?.(render);
   ["app:opened", "app:closed", "window:minimized", "window:maximized", "window:restored"].forEach((type) => OSLab.events?.subscribe?.(type, () => window.requestAnimationFrame(render)));
   OSLab.assistantRobot = { render, expand() { collapsed = false; render(); }, collapse() { collapsed = true; render(); } };
 })(window);

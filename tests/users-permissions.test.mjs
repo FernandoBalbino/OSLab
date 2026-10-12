@@ -7,9 +7,30 @@ import { fileURLToPath } from "node:url";
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const values = new Map();
 const emitted = [];
+const eventListeners = new Map();
+const openedApps = [];
 const OSLab = {
-  events: { emit(type, detail = {}, source = "test") { emitted.push({ type, detail, source }); return { type, detail, source }; } },
-  shell: { refreshPrograms() {}, closeApp() {} },
+  events: {
+    emit(type, detail = {}, source = "test") {
+      const envelope = { type, detail, source };
+      emitted.push(envelope);
+      (eventListeners.get(type) || []).forEach((listener) => listener(envelope));
+      (eventListeners.get("oslab:event") || []).forEach((listener) => listener(envelope));
+      return envelope;
+    },
+    subscribe(type, listener) {
+      if (!eventListeners.has(type)) eventListeners.set(type, new Set());
+      eventListeners.get(type).add(listener);
+      return () => eventListeners.get(type)?.delete(listener);
+    },
+  },
+  shell: {
+    refreshPrograms() {}, closeApp() {},
+    openApp(id, options = {}) { openedApps.push({ id, options }); return { appId: id }; },
+  },
+  activityCoordinator: { claim() {}, release() {}, register() {} },
+  assistantRobot: { expand() {}, render() {} },
+  ui: { notify() {} },
 };
 const window = {
   OSLab,
@@ -71,8 +92,27 @@ OSLab.userMissionCatalog.forEach((mission) => {
   assert.ok(mission.instruction && mission.goal && mission.success);
 });
 
+load("js/users/user-mission-storage.js");
+load("js/users/user-mission-engine.js");
+assert.equal(OSLab.userMissions.start("users-1").ok, true);
+const blockedAdvance = OSLab.userMissions.finish("next");
+assert.equal(blockedAdvance.ok, false, "não deve avançar antes de concluir");
+assert.equal(blockedAdvance.reason, "not-completed");
+OSLab.events.emit("settings:other-users-opened", {}, "test");
+OSLab.events.emit("account:created", { userId: "user-regression", role: "standard" }, "test");
+const firstMission = OSLab.userMissions.getProgress();
+assert.equal(firstMission.active.id, "users-1");
+assert.equal(firstMission.active.phase, "completed");
+assert.equal(OSLab.userMissions.getMissions().find((mission) => mission.id === "users-2").status, "available");
+assert.equal(OSLab.userMissions.finish("next").ok, true);
+const secondMission = OSLab.userMissions.getProgress();
+assert.equal(secondMission.active.id, "users-2");
+assert.equal(secondMission.active.phase, "practice");
+assert.equal(JSON.parse(values.get("oslab.users.missions.v1")).version, 1, "o formato persistido continua na versão 1");
+assert.ok(openedApps.some((entry) => entry.id === "settings" && entry.options.settingsView === "accounts"));
+
 assert.ok(emitted.some((event) => event.type === "account:created"));
 assert.ok(emitted.some((event) => event.type === "file:permission-changed"));
 assert.ok(emitted.some((event) => event.type === "install:completed" && event.detail.scope === "user"));
 
-console.log("OK  7 missões, contas locais, isolamento, ACLs, escopos de instalação e senhas sem texto puro");
+console.log("OK  7 missões, progressão real, contas locais, isolamento, ACLs, escopos e senhas sem texto puro");

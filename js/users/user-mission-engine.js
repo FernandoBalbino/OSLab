@@ -19,9 +19,12 @@
     const mission = getMissions().find((entry) => entry.id === id);
     if (!mission || mission.status === "locked") return { ok: false, reason: "locked" };
     O.activityCoordinator?.claim?.("users-permissions");
-    progress.active = { id, checklist: {}, facts: {}, hintsUsed: 0, mistakes: 0, startedAt: Date.now(), phase: "practice", suspended: false };
+    const resume = progress.active?.id === id && progress.active.suspended && progress.active.phase !== "completed";
+    if (resume) progress.active.suspended = false;
+    else progress.active = { id, checklist: {}, facts: {}, hintsUsed: 0, mistakes: 0, startedAt: Date.now(), phase: "practice", suspended: false };
     progress.lastMissionId = id;
     publish("started");
+    O.assistantRobot?.expand?.();
     if (mission.tool) O.shell?.openApp?.(mission.tool, mission.tool === "settings" ? { settingsView: "accounts" } : {});
     return { ok: true };
   }
@@ -56,6 +59,23 @@
     active.lastHint = { title: `Dica ${index + 1}`, intro: mission.hints[index], steps: mission.hints.slice(0, index + 1), check: mission.objectives.find((item) => !active.checklist[item.id])?.label || mission.success };
     publish("hint");
     return clone(active.lastHint);
+  }
+  function finish(action = "return") {
+    const active = progress.active;
+    const mission = catalog.find((entry) => entry.id === active?.id);
+    if (!active || !mission) return { ok: false, reason: "no-active-mission" };
+    if (action === "next" && active.phase !== "completed") return { ok: false, reason: "not-completed" };
+    const missionId = mission.id;
+    progress.active = null;
+    O.activityCoordinator?.release?.("users-permissions");
+    publish("finished");
+    if (action === "repeat") return start(missionId);
+    if (action === "next") {
+      const next = catalog.find((entry) => entry.order === mission.order + 1);
+      if (next) return start(next.id);
+    }
+    O.shell?.openApp?.("userspermissions");
+    return { ok: true };
   }
   function evaluateFinal() {
     if (progress.active?.id !== "users-7") return;
@@ -94,5 +114,5 @@
   function reset() { progress = O.userMissionStorage.reset(); O.activityCoordinator?.release?.("users-permissions"); publish("reset"); }
   function stop() { if (progress.active) { progress.active.suspended = true; publish("suspended"); } O.activityCoordinator?.release?.("users-permissions"); }
   O.activityCoordinator?.register?.("users-permissions", { isActive: () => Boolean(progress.active && !progress.active.suspended), stop });
-  O.userMissions = { catalog, getMissions, getProgress: () => clone(progress), start, complete, mark, mistake, useHint, evaluateFinal, reset, stop, subscribe(fn) { listeners.add(fn); return () => listeners.delete(fn); } };
+  O.userMissions = { catalog, getMissions, getProgress: () => clone(progress), start, finish, complete, mark, mistake, useHint, evaluateFinal, reset, stop, subscribe(fn) { listeners.add(fn); return () => listeners.delete(fn); } };
 })(window);

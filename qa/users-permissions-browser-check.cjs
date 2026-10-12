@@ -24,8 +24,13 @@ let activeBrowser = null;
   await page.locator("#oslab-window-userspermissions").waitFor({ timeout: 5000 });
   await page.screenshot({ path: path.join(evidence, "02-trilha-1366x768.png") });
 
-  await page.evaluate(() => window.OSLab.shell.openApp("settings", { settingsView: "accounts" }));
+  await page.locator("#oslab-window-userspermissions [data-users-action='start']").click();
+  const assistant = page.locator(".learning-assistant.is-users-permissions:not(.is-hidden)");
+  await assistant.waitFor({ timeout: 5000 });
+  const assistantStartText = await assistant.innerText();
+  if (!assistantStartText.includes("Uma conta para cada pessoa") || !assistantStartText.includes("Abra Configurações") || !assistantStartText.includes("Abrir Outros usuários")) throw new Error("O assistente não mostrou o resumo completo da missão 1.");
   await page.locator("#oslab-window-settings [data-account-action='other-users']").click();
+  await page.waitForFunction(() => window.OSLab.userMissions.getProgress().active?.checklist?.["opened-accounts"] === true);
   await page.locator("#oslab-window-settings [data-account-action='add']").click();
   await page.locator("#oslab-window-settings [data-account-action='no-signin']").click();
   await page.locator("#oslab-window-settings [data-account-action='local-account']").click();
@@ -37,7 +42,14 @@ let activeBrowser = null;
   await page.screenshot({ path: path.join(evidence, "03-uac-1366x768.png") });
   await page.locator(".uac-root:not(.is-hidden) [data-uac='yes']").click();
   await page.locator("#oslab-window-settings .account-card", { hasText: "Ana Laboratório" }).waitFor();
-  await page.screenshot({ path: path.join(evidence, "04-outros-usuarios-1366x768.png") });
+  await page.locator(".learning-assistant [data-assistant-action='users-next']").waitFor({ timeout: 5000 });
+  const firstProgress = await page.evaluate(() => ({ progress: window.OSLab.userMissions.getProgress(), next: window.OSLab.userMissions.getMissions().find((mission) => mission.id === "users-2") }));
+  if (firstProgress.progress.active?.phase !== "completed" || firstProgress.next?.status !== "available") throw new Error("A missão 1 não concluiu ou não liberou a missão 2.");
+  await page.screenshot({ path: path.join(evidence, "04-assistente-conclusao-1366x768.png") });
+  await page.locator(".learning-assistant [data-assistant-action='users-next']").click();
+  await page.waitForFunction(() => window.OSLab.userMissions.getProgress().active?.id === "users-2" && window.OSLab.userMissions.getProgress().active?.phase === "practice");
+  await page.locator(".learning-assistant", { hasText: "Seu espaço, do seu jeito" }).waitFor({ timeout: 5000 });
+  await page.screenshot({ path: path.join(evidence, "05-assistente-missao-2-1366x768.png") });
 
   await page.locator("#start-button").click();
   await page.locator("#start-profile-button").click();
@@ -49,17 +61,43 @@ let activeBrowser = null;
   await page.locator("#desktop:not(.is-hidden)").waitFor({ timeout: 7000 });
   const current = await page.evaluate(() => window.OSLab.users.getCurrent());
   if (current.displayName !== "Ana Laboratório" || current.role !== "standard") throw new Error("A troca para a conta padrão não foi preservada.");
+
+  await page.evaluate(() => window.OSLab.shell.openApp("google"));
+  const faviconSearches = ["Criar Gmail", "Criar Outlook", "Criar Yahoo", "Criar Netflix", "Criar Spotify", "Criar Discord", "Criar YouTube", "Criar Google Drive"];
+  const faviconMeasurements = [];
+  for (const query of faviconSearches) {
+    const address = page.locator("#oslab-window-google [name='address']");
+    await address.fill(query);
+    await address.press("Enter");
+    const logo = page.locator("#oslab-window-google .dl-google-search .result-favicon .dl-brand-icon").first();
+    await logo.waitFor({ timeout: 5000 });
+    await logo.evaluate((image) => image.complete && image.naturalWidth > 0 ? true : new Promise((resolve, reject) => { image.addEventListener("load", () => resolve(true), { once: true }); image.addEventListener("error", () => reject(new Error(`Falha ao carregar ${image.getAttribute("src")}`)), { once: true }); }));
+    faviconMeasurements.push(await logo.evaluate((image) => {
+      const imageRect = image.getBoundingClientRect();
+      const wrapperRect = image.parentElement.getBoundingClientRect();
+      const imageStyle = getComputedStyle(image);
+      const wrapperStyle = getComputedStyle(image.parentElement);
+      return { src: image.getAttribute("src"), naturalWidth: image.naturalWidth, imageWidth: imageRect.width, imageHeight: imageRect.height, cssImageWidth: parseFloat(imageStyle.width), cssImageHeight: parseFloat(imageStyle.height), wrapperWidth: wrapperRect.width, wrapperHeight: wrapperRect.height, cssWrapperWidth: parseFloat(wrapperStyle.width), cssWrapperHeight: parseFloat(wrapperStyle.height), offsetX: Math.abs((imageRect.left + imageRect.width / 2) - (wrapperRect.left + wrapperRect.width / 2)), offsetY: Math.abs((imageRect.top + imageRect.height / 2) - (wrapperRect.top + wrapperRect.height / 2)) };
+    }));
+  }
+  for (const measurement of faviconMeasurements) {
+    if (!measurement.naturalWidth || measurement.cssImageWidth > 20 || measurement.cssImageHeight > 20 || measurement.cssWrapperWidth !== 28 || measurement.cssWrapperHeight !== 28 || measurement.offsetX > 1.5 || measurement.offsetY > 1.5) throw new Error(`Favicon fora do padrão: ${JSON.stringify(measurement)}`);
+  }
+  await page.screenshot({ path: path.join(evidence, "06-resultados-favicons-1366x768.png") });
   await page.evaluate(() => window.OSLab.shell.openApp("explorer"));
   await page.locator("#oslab-window-explorer [data-folder='root-public']").first().click();
   await page.locator("#oslab-window-explorer [data-file-action='new-text']").click();
-  await page.keyboard.press("Enter");
+  const renameInput = page.locator("#oslab-window-explorer .file-rename-input");
+  await renameInput.waitFor({ timeout: 5000 });
+  await renameInput.press("Enter");
+  await page.locator("#oslab-window-explorer [data-file-item].is-selected").waitFor({ timeout: 5000 });
   await page.locator("#oslab-window-explorer [data-file-action='properties']").click();
   await page.locator(".security-dialog input[value='modify']").check();
-  await page.screenshot({ path: path.join(evidence, "05-permissoes-1366x768.png") });
+  await page.screenshot({ path: path.join(evidence, "07-permissoes-1366x768.png") });
   await page.locator(".security-dialog [data-security-save]").click();
   const publicPermission = await page.evaluate(() => window.OSLab.fileSystem.list(window.OSLab.fileSystem.roots.public)[0]?.permission);
   if (publicPermission !== "modify") throw new Error("A permissão Modificação não foi persistida no item público.");
-  await page.screenshot({ path: path.join(evidence, "06-perfil-publica-1366x768.png") });
+  await page.screenshot({ path: path.join(evidence, "08-perfil-publica-1366x768.png") });
 
   const desktopOverflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
   if (desktopOverflow) throw new Error("Há rolagem horizontal no viewport 1366x768.");
@@ -75,7 +113,7 @@ let activeBrowser = null;
   const mobile = await context.newPage();
   await mobile.setViewportSize({ width: 390, height: 844 });
   await mobile.goto(base, { waitUntil: "networkidle" });
-  await mobile.screenshot({ path: path.join(evidence, "07-login-390x844.png") });
+  await mobile.screenshot({ path: path.join(evidence, "09-login-390x844.png") });
   const mobileOverflow = await mobile.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
   if (mobileOverflow) throw new Error("Há rolagem horizontal no viewport 390x844.");
 
@@ -89,8 +127,8 @@ let activeBrowser = null;
   await page.locator("#oslab-window-userspermissions").waitFor({ timeout: 7000 });
   const offlineIconLoaded = await page.locator("#oslab-window-userspermissions img[src='assets/users-permissions/trail-icon.png']").first().evaluate((image) => image.complete && image.naturalWidth > 0);
   if (!offlineIconLoaded) throw new Error("A imagem da trilha não foi recuperada pelo cache offline.");
-  await page.screenshot({ path: path.join(evidence, "08-trilha-offline-1366x768.png") });
+  await page.screenshot({ path: path.join(evidence, "10-trilha-offline-1366x768.png") });
   await context.setOffline(false);
   await browser.close(); activeBrowser = null;
-  console.log("OK  login, trilha, criação local, UAC, troca de usuário, pasta Pública, viewports e recarga offline");
+  console.log("OK  progressão, assistente, 8 favicons, login, UAC, pasta Pública, viewports e recarga offline");
 })().catch(async (error) => { console.error(error.stack || error); await activeBrowser?.close().catch(() => {}); process.exitCode = 1; });
