@@ -302,3 +302,12 @@
   .is-hint-target, .browser-download-button.has-active > span, .uninstall-progress i::after { animation: none; }
   .fake-product-site * { scroll-behavior: auto; }
 }
+.installer-scope { display: grid; gap: 9px; margin: 16px 0; }
+.installer-scope label { display: grid; grid-template-columns: 20px 1fr; align-items: center; gap: 10px; border: 1px solid #d2dae4; border-radius: 9px; padding: 11px 13px; background: #fff; }
+.installer-scope strong, .installer-scope small { display: block; }
+.installer-scope small { margin-top: 2px; color: #657386; }
+.app-preference { display: flex; max-width: 620px; margin: 18px auto; align-items: center; justify-content: space-between; gap: 16px; border: 1px solid rgba(255,255,255,.34); border-radius: 12px; padding: 13px 16px; background: rgba(255,255,255,.15); }
+.app-preference strong, .app-preference small { display: block; }
+.app-preference select { min-width: 120px; height: 36px; border: 1px solid #95a4b7; border-radius: 6px; padding: 0 8px; }
+.appjavafx-mock[data-java-theme="violeta"] .java-hero { background: linear-gradient(135deg, #5030a8, #7b5bd6); }
+.appjavafx-mock[data-java-theme="verde"] .java-hero { background: linear-gradient(135deg, #0b6b54, #19a278); }

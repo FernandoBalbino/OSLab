@@ -6,7 +6,6 @@
   window.addEventListener("error", (event) => runtimeErrors.push(event.message || "Erro de execução"));
   window.addEventListener("unhandledrejection", (event) => runtimeErrors.push(String(event.reason || "Promessa rejeitada")));
 
-  const PASSWORD = "alunos2026";
   const WELCOME_DELAY = 850;
   const STORAGE_KEY = "oslab-state-v1";
   const LEGACY_WALLPAPER_STORAGE_KEY = "oslab-wallpaper";
@@ -22,6 +21,9 @@
   const passwordRow = $(".password-row");
   const welcomeState = $("#welcome-state");
   const fullscreenLoginButton = $("#fullscreen-login-button");
+  const loginUserList = $("#login-user-list");
+  const loginUserName = $("#login-user-name");
+  const loginAvatar = $("#login-avatar");
 
   const windowLayer = $("#window-layer");
   const windowTemplate = $("#window-template");
@@ -34,6 +36,8 @@
   const quickPanel = $("#quick-panel");
   const calendarPanel = $("#calendar-panel");
   const powerMenu = $("#power-menu");
+  const profileMenu = $("#profile-menu");
+  const startProfileButton = $("#start-profile-button");
   const contextMenu = $("#context-menu");
   const itemContextMenu = $("#item-context-menu");
   const taskbarContextMenu = $("#taskbar-context-menu");
@@ -54,6 +58,7 @@
     { id: "root-documents", name: "Documentos", icon: "assets/icons/win/documents.png" },
     { id: "root-downloads", name: "Downloads", icon: "assets/icons/win/downloads.png" },
     { id: "root-pictures", name: "Imagens", icon: "assets/icons/win/pictures.png" },
+    { id: "root-public", name: "Pública", icon: "assets/icons/win/folder.png" },
   ];
 
   const wallpapers = [
@@ -265,6 +270,7 @@
 
   function saveState() {
     if (persistenceSuspended) return;
+    OSLab.users?.captureSystemState?.(state, OSLab.users.getCurrent()?.id || OSLab.users.getSelected()?.id, true);
     try {
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
       window.localStorage.removeItem(LEGACY_WALLPAPER_STORAGE_KEY);
@@ -274,6 +280,15 @@
   }
 
   OSLab.fileSystem.bind(state, saveState);
+  OSLab.users.bindSystemState(state, () => {
+    OSLab.fileSystem.bind(state, saveState);
+    currentWallpaperId = state.wallpaperId || "1";
+    applyWallpaper(currentWallpaperId, false);
+    fileClipboard = null;
+    renderDesktopFolders();
+    renderInstalledStartApps();
+    updateIdentityUI();
+  });
   OSLab.network.bind(state.quickSettings, saveState);
 
   let currentWallpaperId = state.wallpaperId;
@@ -490,8 +505,33 @@
     loginScreen.classList.add("is-hidden");
     desktop.classList.remove("is-hidden");
     document.title = "OSLab — Área de Trabalho";
+    updateIdentityUI();
+    applyWallpaper(state.wallpaperId || "1", false);
+    renderDesktopFolders();
+    renderInstalledStartApps();
     updateClock();
-    if (!missionsResumed) { missionsResumed = true; OSLab.missions.resumeAfterBoot(); if (new URLSearchParams(window.location.search).get("app") === "digitallife") openApp("digitallife"); }
+    if (!missionsResumed) {
+      missionsResumed = true;
+      OSLab.missions.resumeAfterBoot();
+      const requestedApp = new URLSearchParams(window.location.search).get("app");
+      if (requestedApp && appDefinitions[requestedApp]) openApp(requestedApp);
+    }
+  }
+
+  function renderLoginUsers() {
+    const selected = OSLab.users.getSelected();
+    loginUserName.textContent = selected.displayName;
+    loginAvatar.src = selected.avatar;
+    loginAvatar.alt = `Perfil de ${selected.displayName}`;
+    loginUserList.innerHTML = OSLab.users.list().map((account) => `<button type="button" class="${account.id === selected.id ? "is-selected" : ""}" data-login-user="${escapeHtml(account.id)}"><img src="${escapeHtml(account.avatar)}" alt="" /><span><strong>${escapeHtml(account.displayName)}</strong><small>${account.role === "administrator" ? "Administrador" : "Usuário padrão"}</small></span></button>`).join("");
+  }
+
+  function updateIdentityUI() {
+    const current = OSLab.users.getCurrent() || OSLab.users.getSelected();
+    $("#start-profile-name").textContent = current.displayName;
+    $("#start-profile-avatar").src = current.avatar;
+    profileMenu.innerHTML = `<button type="button" data-profile-action="lock"><img src="${escapeHtml(current.avatar)}" alt="" /><span><strong>${escapeHtml(current.displayName)}</strong><small>Bloquear sessão</small></span></button><i></i>${OSLab.users.list().filter((account) => account.id !== current.id).map((account) => `<button type="button" data-profile-user="${escapeHtml(account.id)}"><img src="${escapeHtml(account.avatar)}" alt="" /><span>Trocar para ${escapeHtml(account.displayName)}</span></button>`).join("")}<button type="button" data-profile-action="signout"><img src="assets/icons/ui/power.png" alt="" /><span>Sair</span></button>`;
+    $$(".settings-profile").forEach((profile) => { const image = $("img", profile); const name = $("strong", profile); const subtitle = $("small", profile); if (image) image.src = current.avatar; if (name) name.textContent = current.displayName; if (subtitle) subtitle.textContent = current.role === "administrator" ? "Administrador · Conta local" : "Usuário padrão · Conta local"; });
   }
 
   function resetLogin() {
@@ -502,11 +542,15 @@
     fullscreenLoginButton.classList.remove("is-hidden");
     loginMessage.classList.remove("is-hidden", "is-error");
     loginMessage.textContent = "Digite sua senha para entrar.";
+    renderLoginUsers();
   }
 
   function lockSession() {
     closeFlyouts();
     desktop.classList.add("is-hidden");
+    const current = OSLab.users.getCurrent();
+    if (current) OSLab.users.selectUser(current.id);
+    OSLab.users.lock();
     resetLogin();
     loginScreen.classList.remove("is-hidden");
     document.title = "Entrar — OSLab";
@@ -514,10 +558,32 @@
     OSLab.events.emit("computer:locked", {}, "session");
   }
 
-  loginForm.addEventListener("submit", (event) => {
+  function signOutSession(nextUserId = null) {
+    closeFlyouts();
+    Array.from(windows.values()).forEach((record) => closeWindow(record, { force: true, sessionSwitch: true }));
+    fileClipboard = null;
+    OSLab.users.signOut();
+    if (nextUserId) OSLab.users.selectUser(nextUserId);
+    desktop.classList.add("is-hidden");
+    resetLogin();
+    loginScreen.classList.remove("is-hidden");
+    document.title = "Entrar — OSLab";
+    window.setTimeout(() => passwordInput.focus(), 80);
+  }
+
+  loginUserList.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-login-user]");
+    if (!button) return;
+    OSLab.users.selectUser(button.dataset.loginUser);
+    resetLogin();
+    passwordInput.focus();
+  });
+
+  loginForm.addEventListener("submit", async (event) => {
     event.preventDefault();
 
-    if (passwordInput.value !== PASSWORD) {
+    const result = await OSLab.users.authenticate(OSLab.users.getSelected().id, passwordInput.value);
+    if (!result.ok) {
       loginMessage.textContent = "Senha incorreta. Tente novamente.";
       loginMessage.classList.add("is-error");
       passwordInput.select();
@@ -575,6 +641,7 @@
   function renderComputer(record) {
     const disk = OSLab.systemState.getStorage();
     const diskPercent = Math.round(disk.usedBytes / disk.totalBytes * 100);
+    const currentUser = OSLab.users.getCurrent() || OSLab.users.getSelected();
     record.previousExplorerView = "computer";
     record.address.textContent = "Este Computador";
     record.content.innerHTML = `
@@ -593,6 +660,10 @@
                 <small>${OSLab.systemTools.formatBytes(disk.freeBytes)} livres de ${OSLab.systemTools.formatBytes(disk.totalBytes)}</small>
               </div>
             </div>
+          </div>
+          <div class="drive-section">
+            <h2>Usuários (C:\\Users)</h2>
+            <div class="user-homes">${OSLab.users.list().map((account) => `<button type="button" class="user-home-tile" data-user-home="${escapeHtml(account.id)}"><img src="assets/icons/win/folder.png" alt="" /><span><strong>${escapeHtml(account.username)}</strong><small>${account.id === currentUser.id ? "Seu perfil" : "Pasta pessoal protegida"}</small></span></button>`).join("")}</div>
           </div>
         </section>
       </div>`;
@@ -626,11 +697,13 @@
         <section class="file-browser" data-current-folder="${folderId}">
           <div class="explorer-file-toolbar">
             <button type="button" data-file-action="new-folder"><img src="assets/icons/context/new.png" alt="" /><span>Novo</span></button>
+            <button type="button" data-file-action="new-text"><img src="assets/icons/notepad.png" alt="" /><span>Documento</span></button>
             <button type="button" data-file-action="cut" ${record.explorerSelection ? "" : "disabled"}><img src="assets/icons/context/cut.png" alt="" /><span>Recortar</span></button>
             <button type="button" data-file-action="copy" ${record.explorerSelection ? "" : "disabled"}><img src="assets/icons/context/copy.png" alt="" /><span>Copiar</span></button>
             <button type="button" data-file-action="paste" ${fileClipboard ? "" : "disabled"}><img src="assets/icons/context/restore-item.png" alt="" /><span>Colar</span></button>
             <button type="button" data-file-action="rename" ${record.explorerSelection ? "" : "disabled"}><img src="assets/icons/context/rename.png" alt="" /><span>Renomear</span></button>
             <button type="button" data-file-action="delete" ${record.explorerSelection ? "" : "disabled"}><img src="assets/icons/context/delete.png" alt="" /><span>Excluir</span></button>
+            <button type="button" data-file-action="properties" ${record.explorerSelection ? "" : "disabled"}><img src="assets/icons/settings.png" alt="" /><span>Propriedades</span></button>
             <label><img src="assets/icons/search.png" alt="" /><input type="search" data-explorer-search placeholder="Pesquisar em ${escapeHtml(folder.name)}" aria-label="Pesquisar arquivos" /></label>
           </div>
           <div class="file-list-head"><span>Nome</span><span>Tipo</span><span>Tamanho</span></div>
@@ -678,10 +751,11 @@
     record.previousExplorerView = file.parentId;
     record.address.textContent = `${OSLab.fileSystem.pathLabel(file.parentId)}  ›  ${file.name}`;
     const editable = file.mime === "text/plain" || file.name.toLocaleLowerCase("pt-BR").endsWith(".txt");
+    const canModifyFile = OSLab.fileSystem.canModify(file);
     record.content.innerHTML = editable ? `
       <section class="text-file-view">
-        <header><img src="assets/icons/notepad.png" alt="" /><strong>${escapeHtml(file.name)}</strong><span>Salvo automaticamente</span></header>
-        <textarea data-text-file="${file.id}" aria-label="Conteúdo de ${escapeHtml(file.name)}" placeholder="Comece a digitar...">${escapeHtml(file.content || "")}</textarea>
+        <header><img src="assets/icons/notepad.png" alt="" /><strong>${escapeHtml(file.name)}</strong><span>${canModifyFile ? "Salvo automaticamente" : "Somente leitura"}</span></header>
+        <textarea data-text-file="${file.id}" aria-label="Conteúdo de ${escapeHtml(file.name)}" placeholder="Comece a digitar..." ${canModifyFile ? "" : "readonly"}>${escapeHtml(file.content || "")}</textarea>
       </section>` : `<section class="generic-file-view"><img src="${OSLab.icons.file(file)}" alt="" /><h2>${escapeHtml(file.name)}</h2><p>${escapeHtml(file.mime || "Arquivo")}</p><span>Visualização educacional do OSLab</span></section>`;
   }
 
@@ -829,12 +903,13 @@
 
   function renderTerminal(record) {
     if (OSLab.terminalApp) { OSLab.terminalApp.render(record); return; }
+    const username = OSLab.users.getCurrent()?.username || "Aluno";
     record.address.textContent = "Terminal";
     record.content.innerHTML = `
       <section class="terminal-page" aria-label="Terminal do OSLab">
         <p>Microsoft Windows [versão 11.0.26100.4652]</p>
         <p>(c) OSLab. Todos os direitos reservados.</p>
-        <p class="terminal-prompt">C:\\Users\\Aluno&gt;<span aria-hidden="true"></span></p>
+        <p class="terminal-prompt">C:\\Users\\${escapeHtml(username)}&gt;<span aria-hidden="true"></span></p>
       </section>`;
   }
 
@@ -883,12 +958,13 @@
   }
 
   function settingsShellMarkup(active, mainContent) {
+    const current = OSLab.users.getCurrent() || OSLab.users.getSelected();
     return `
       <div class="settings-shell">
         <aside class="settings-sidebar" aria-label="Categorias das Configurações">
           <div class="settings-profile">
-            <img src="assets/icons/avatar.webp" alt="Perfil do aluno" />
-            <span><strong>Aluno</strong><small>Conta local</small></span>
+            <img src="${escapeHtml(current.avatar)}" alt="Perfil de ${escapeHtml(current.displayName)}" />
+            <span><strong>${escapeHtml(current.displayName)}</strong><small>${current.role === "administrator" ? "Administrador" : "Usuário padrão"} · Conta local</small></span>
           </div>
           <nav class="settings-nav">${settingsNavMarkup(active)}</nav>
         </aside>
@@ -1111,6 +1187,27 @@
       </article>`;
   }
 
+  function settingsAccountsMarkup(record, pageId) {
+    const current = OSLab.users.getCurrent() || OSLab.users.getSelected();
+    if (pageId === "accounts") {
+      return `<header class="settings-page-heading"><h1>Contas</h1><p>Gerencie seu perfil, entrada e outros usuários.</p></header>
+        <section class="accounts-hero"><img src="${escapeHtml(current.avatar)}" alt="" /><div><h2>${escapeHtml(current.displayName)}</h2><p>${escapeHtml(current.username)} · ${current.role === "administrator" ? "Administrador" : "Usuário padrão"} · Conta local</p></div></section>
+        <article class="settings-card detailed-settings-card">
+          <button type="button" class="settings-row detailed-settings-row" data-account-action="edit-profile"><img src="assets/settings/Accounts.webp" alt="" /><span><strong>Suas informações</strong><small>Nome exibido e imagem do perfil</small></span><img class="settings-chevron" src="assets/icons/ui/right.png" alt="" /></button>
+          <button type="button" class="settings-row detailed-settings-row" data-settings-toggle><img src="assets/icons/settings-rows/lock.png" alt="" /><span><strong>Opções de entrada</strong><small>Senha local simulada e bloqueio de sessão</small></span><img class="settings-chevron" src="assets/icons/ui/right.png" alt="" /></button>
+          <button type="button" class="settings-row detailed-settings-row" data-account-action="other-users"><img src="assets/learning/icons/apps.svg" alt="" /><span><strong>Outros usuários</strong><small>Adicione contas e altere tipos de conta</small></span><img class="settings-chevron" src="assets/icons/ui/right.png" alt="" /></button>
+        </article>
+        ${record.editingProfile ? `<form class="add-user-panel" data-profile-form><h2>Suas informações</h2><p>Personalize o nome mostrado neste perfil.</p><label>Nome exibido<input name="displayName" maxlength="48" value="${escapeHtml(current.displayName)}" required /></label><p class="account-error" data-account-error></p><footer><button class="win-button" type="button" data-account-action="cancel-profile">Cancelar</button><button class="win-button is-primary" type="submit">Salvar</button></footer></form>` : ""}`;
+    }
+    const others = OSLab.users.list().filter((account) => account.id !== current.id);
+    const flow = Number(record.addUserStep) || 0;
+    const addPanel = !flow ? "" : flow === 1 ? `<section class="add-user-panel"><h2>Como esta pessoa entrará?</h2><p>Este laboratório funciona sem internet e não solicita uma conta real.</p><footer><button class="win-button" type="button" data-account-action="cancel-add">Cancelar</button><button class="win-button is-primary" type="button" data-account-action="no-signin">Não tenho as informações de entrada desta pessoa</button></footer></section>` : flow === 2 ? `<section class="add-user-panel"><h2>Criar conta</h2><p>Escolha uma conta local fictícia para praticar neste dispositivo.</p><footer><button class="win-button" type="button" data-account-action="cancel-add">Cancelar</button><button class="win-button is-primary" type="button" data-account-action="local-account">Adicionar um usuário sem uma conta Microsoft</button></footer></section>` : `<form class="add-user-panel" data-local-account-form><h2>Criar um usuário para este computador</h2><p>Use apenas dados fictícios. A senha nunca sai deste navegador.</p><label>Nome de usuário<input name="displayName" maxlength="48" required autocomplete="off" /></label><label>Senha simulada<input name="password" type="password" minlength="4" required autocomplete="new-password" /></label><label>Confirmar senha<input name="confirmPassword" type="password" minlength="4" required autocomplete="new-password" /></label><p class="account-error" data-account-error role="status"></p><footer><button class="win-button" type="button" data-account-action="cancel-add">Cancelar</button><button class="win-button is-primary" type="submit">Avançar</button></footer></form>`;
+    return `<header class="settings-page-heading with-back"><button type="button" data-settings-back="accounts" aria-label="Voltar para Contas"><img src="assets/icons/ui/left.png" alt="" /></button><div><small>Contas</small><h1>Outros usuários</h1><p>Permita que outras pessoas usem este computador com arquivos e configurações próprios.</p></div></header>
+      <article class="settings-card generic-settings-card"><div class="settings-row generic-settings-row"><img src="assets/settings/Accounts.webp" alt="" /><span><strong>Adicionar outro usuário</strong><small>Crie uma conta local fictícia neste computador</small></span><button class="win-button" type="button" data-account-action="add">Adicionar conta</button></div></article>
+      ${addPanel}
+      <section class="accounts-list" aria-label="Contas neste computador">${others.map((account) => `<article class="account-card"><button type="button" data-account-expand="${escapeHtml(account.id)}" aria-expanded="${record.expandedAccountId === account.id}"><img src="${escapeHtml(account.avatar)}" alt="" /><span><strong>${escapeHtml(account.displayName)}</strong><small>${account.role === "administrator" ? "Administrador" : "Usuário padrão"} · Conta local</small></span><img class="settings-chevron" src="assets/icons/ui/right.png" alt="" /></button>${record.expandedAccountId === account.id ? `<div class="account-card-actions"><label>Tipo de conta <select data-account-role="${escapeHtml(account.id)}"><option value="standard" ${account.role === "standard" ? "selected" : ""}>Usuário padrão</option><option value="administrator" ${account.role === "administrator" ? "selected" : ""}>Administrador</option></select></label><button class="win-button" type="button" data-account-change="${escapeHtml(account.id)}">Alterar tipo de conta</button></div>` : ""}</article>`).join("") || `<article class="settings-card"><div class="settings-row"><span><strong>Nenhum outro usuário</strong><small>Adicione uma conta local para começar.</small></span></div></article>`}</section>`;
+  }
+
   function settingsGenericMarkup(section) {
     return `
       <header class="settings-page-heading with-back">
@@ -1137,12 +1234,14 @@
   function renderSettings(record, pageId = record.settingsView || state.lastSettingsPage || "home") {
     const isBackground = pageId === "background";
     const isStorage = pageId === "storage";
+    const isOtherUsers = pageId === "other-users";
     const section = isBackground
       ? settingsSections.find((item) => item.id === "personalization")
       : isStorage ? settingsSections.find((item) => item.id === "system")
+      : isOtherUsers ? settingsSections.find((item) => item.id === "accounts")
       : settingsSections.find((item) => item.id === pageId) || settingsSections[0];
-    record.settingsView = isBackground ? "background" : isStorage ? "storage" : section.id;
-    record.address.textContent = isBackground ? "Plano de fundo" : isStorage ? "Armazenamento" : section.name;
+    record.settingsView = isBackground ? "background" : isStorage ? "storage" : isOtherUsers ? "other-users" : section.id;
+    record.address.textContent = isBackground ? "Plano de fundo" : isStorage ? "Armazenamento" : isOtherUsers ? "Outros usuários" : section.name;
     state.lastSettingsPage = record.settingsView;
     saveState();
 
@@ -1154,6 +1253,7 @@
     else if (section.id === "network") mainContent = settingsNetworkMarkup();
     else if (section.id === "personalization") mainContent = settingsPersonalizationOverviewMarkup();
     else if (section.id === "apps") mainContent = settingsAppsMarkup();
+    else if (section.id === "accounts") mainContent = settingsAccountsMarkup(record, isOtherUsers ? "other-users" : "accounts");
     else if (section.id === "time") mainContent = settingsTimeMarkup();
     else if (section.id !== "home") mainContent = settingsGenericMarkup(section);
 
@@ -1177,6 +1277,7 @@
     if (record.appId === "vpnlab") OSLab.vpnLabApp.render(record);
     if (record.appId === "installlab") OSLab.installLabApp.render(record);
     if (record.appId === "digitallife") OSLab.digitalLifeApp.render(record);
+    if (record.appId === "userspermissions") OSLab.usersPermissionsApp.render(record);
     if (record.appId === "browsertrail") OSLab.browserTrailsApp.renderTrail(record);
     if (record.appId === "browsermuseum") OSLab.browserTrailsApp.renderMuseum(record);
     if (OSLab.softwareApps?.appIds?.has(record.appId)) OSLab.softwareApps.render(record);
@@ -1241,7 +1342,7 @@
       resizeHandle: $("[data-window-role='resize']", element),
       maximizeIcon: $("[data-window-role='maximize-icon']", element),
       settingsSearch: $("[data-window-role='settings-search']", element),
-      settingsView: appId === "settings" ? state.lastSettingsPage : "home",
+      settingsView: appId === "settings" ? (options.settingsView || state.lastSettingsPage) : "home",
       previousExplorerView: appId === "computer" ? "computer" : appId === "recycle" ? "recycle" : "home",
     };
 
@@ -1254,7 +1355,7 @@
     record.address.textContent = definition.address;
     record.toolbar.classList.toggle("browser-toolbar", ["google", "edge", "firefox", "brave", "opera"].includes(appId));
     element.classList.toggle("settings-window", appId === "settings");
-    record.toolbar.classList.toggle("is-hidden", ["settings", "taskmanager", "missions", "exercises", "vpn", "vpnlab", "installlab", "browsertrail", "digitallife", "browsermuseum", "controlpanel", "installer", "appjavafx", "word", "excel", "slides", "texteditor"].includes(appId));
+    record.toolbar.classList.toggle("is-hidden", ["settings", "taskmanager", "missions", "exercises", "vpn", "vpnlab", "installlab", "browsertrail", "digitallife", "userspermissions", "browsermuseum", "controlpanel", "installer", "appjavafx", "word", "excel", "slides", "texteditor"].includes(appId));
     record.settingsSearch.classList.toggle("is-hidden", appId !== "settings" && appId !== "taskmanager");
     element.classList.toggle("taskmanager-window", appId === "taskmanager");
     element.classList.toggle("missions-window", appId === "missions");
@@ -1263,6 +1364,7 @@
     element.classList.toggle("vpn-lab-window", appId === "vpnlab");
     element.classList.toggle("install-lab-window", appId === "installlab");
     element.classList.toggle("browser-trail-window", appId === "browsertrail" || appId === "digitallife");
+    element.classList.toggle("userspermissions-window", appId === "userspermissions");
     element.classList.toggle("browser-museum-window", appId === "browsermuseum");
     element.classList.toggle("software-window", OSLab.softwareApps?.appIds?.has(appId));
     element.classList.toggle("texteditor-window", appId === "texteditor");
@@ -1282,7 +1384,7 @@
     positionWindow(record);
     wireWindow(record);
     renderApp(record);
-    if (["settings", "taskmanager", "missions", "exercises", "vpnlab", "installlab", "browsertrail", "digitallife", "browsermuseum"].includes(appId)) {
+    if (["settings", "taskmanager", "missions", "exercises", "vpnlab", "installlab", "browsertrail", "digitallife", "userspermissions", "browsermuseum"].includes(appId)) {
       element.classList.add("is-maximized");
       record.maximizeIcon.src = "assets/icons/ui/restore.png";
       record.maximizeIcon.closest("button").setAttribute("aria-label", "Restaurar");
@@ -1295,7 +1397,7 @@
       icon: definition.icon,
       status: "Em execução",
       cpu: appId === "taskmanager" ? 0.3 : 0.1,
-      memory: ["google", "edge", "firefox", "brave", "opera"].includes(appId) ? 64.2 : ["missions", "exercises", "vpnlab", "installlab", "browsertrail", "digitallife", "browsermuseum"].includes(appId) ? 42.6 : ["word", "excel", "slides"].includes(appId) ? 78.4 : appId === "vpn" ? 34.8 : appId === "texteditor" ? 42 : 28.4,
+      memory: ["google", "edge", "firefox", "brave", "opera"].includes(appId) ? 64.2 : ["missions", "exercises", "vpnlab", "installlab", "browsertrail", "digitallife", "userspermissions", "browsermuseum"].includes(appId) ? 42.6 : ["word", "excel", "slides"].includes(appId) ? 78.4 : appId === "vpn" ? 34.8 : appId === "texteditor" ? 42 : 28.4,
       missionId: options.missionId || null,
       efficient: appId === "google",
     });
@@ -1347,8 +1449,8 @@
     }
     record.element.remove();
     windows.delete(record.appId);
-    if (!options.fromProcessManager) OSLab.processManager.endByWindow(record.windowId, { reason: options.force ? "force-close" : "window-closed" });
-    OSLab.events.emit("app:closed", { appId: record.appId, windowId: record.windowId, force: Boolean(options.force) }, "windowManager");
+    if (!options.fromProcessManager) OSLab.processManager.endByWindow(record.windowId, { reason: options.sessionSwitch ? "session-switch" : options.force ? "force-close" : "window-closed" });
+    if (!options.sessionSwitch) OSLab.events.emit("app:closed", { appId: record.appId, windowId: record.windowId, force: Boolean(options.force) }, "windowManager");
     const remaining = Array.from(windows.values()).filter((item) => !item.element.classList.contains("is-minimized"));
     const next = remaining.sort((a, b) => Number(b.element.style.zIndex) - Number(a.element.style.zIndex))[0];
     if (next) focusWindow(next);
@@ -1539,6 +1641,10 @@
       const taskAction = event.target.closest("[data-task-action]")?.dataset.taskAction;
       const fileItem = event.target.closest("[data-file-item]");
       const fileAction = event.target.closest("[data-file-action]")?.dataset.fileAction;
+      const userHome = event.target.closest("[data-user-home]")?.dataset.userHome;
+      const accountAction = event.target.closest("[data-account-action]")?.dataset.accountAction;
+      const accountExpand = event.target.closest("[data-account-expand]")?.dataset.accountExpand;
+      const accountChange = event.target.closest("[data-account-change]")?.dataset.accountChange;
 
       if (settingsPage && record.appId === "settings") renderSettings(record, settingsPage.dataset.settingsPage);
       if (settingsBack && record.appId === "settings") renderSettings(record, settingsBack.dataset.settingsBack);
@@ -1546,6 +1652,28 @@
       if (settingsToggle && record.appId === "settings") {
         const toggle = $(".settings-switch", settingsToggle);
         if (toggle) toggle.classList.toggle("is-active");
+      }
+      if (record.appId === "settings" && accountAction) {
+        if (accountAction === "other-users") { record.addUserStep = 0; renderSettings(record, "other-users"); OSLab.events.emit("settings:other-users-opened", {}, "settings"); }
+        if (accountAction === "add") { record.addUserStep = 1; renderSettings(record, "other-users"); }
+        if (accountAction === "no-signin") { record.addUserStep = 2; renderSettings(record, "other-users"); }
+        if (accountAction === "local-account") { record.addUserStep = 3; renderSettings(record, "other-users"); window.setTimeout(() => $("[name='displayName']", record.content)?.focus(), 30); }
+        if (accountAction === "cancel-add") { record.addUserStep = 0; renderSettings(record, "other-users"); }
+        if (accountAction === "edit-profile") { record.editingProfile = true; renderSettings(record, "accounts"); }
+        if (accountAction === "cancel-profile") { record.editingProfile = false; renderSettings(record, "accounts"); }
+      }
+      if (record.appId === "settings" && accountExpand) { record.expandedAccountId = record.expandedAccountId === accountExpand ? null : accountExpand; renderSettings(record, "other-users"); }
+      if (record.appId === "settings" && accountChange) {
+        const select = $(`[data-account-role="${CSS.escape(accountChange)}"]`, record.content);
+        const target = OSLab.users.list().find((account) => account.id === accountChange);
+        if (select && target && select.value !== target.role) {
+          const elevation = await OSLab.ui.elevate({ action: "change-account-type", actionLabel: `Alterar ${target.displayName} para ${select.value === "administrator" ? "Administrador" : "Usuário padrão"}` });
+          if (elevation.ok) {
+            const changed = OSLab.users.setRole(accountChange, select.value);
+            if (!changed.ok) OSLab.ui.notify("Não foi possível alterar", changed.reason === "last-admin" ? "O computador precisa manter pelo menos um administrador." : "A conta não está disponível.", "warning");
+            renderSettings(record, "other-users");
+          }
+        }
       }
       if (stateToggle && record.appId === "settings") {
         const key = stateToggle.dataset.stateToggle;
@@ -1559,6 +1687,13 @@
       if (explorerView?.dataset.explorerView === "home") renderExplorerHome(record);
       if (explorerView?.dataset.explorerView === "computer") renderComputer(record);
       if (explorerView?.dataset.explorerView === "recycle") renderRecycleBin(record);
+      if (userHome && ["computer", "explorer"].includes(record.appId)) {
+        const target = OSLab.users.list().find((account) => account.id === userHome);
+        const current = OSLab.users.getCurrent();
+        OSLab.events.emit("file:other-home-opened", { targetUserId: userHome, actorUserId: current?.id || null }, "explorer");
+        if (target && current?.id === target.id) renderFolder(record, OSLab.fileSystem.roots.documents);
+        else if (target) { OSLab.events.emit("file:access-denied", { targetUserId: userHome, path: `C:\\Users\\${target.username}`, operation: "open" }, "explorer"); OSLab.ui.notify("Acesso negado", `A pasta pessoal de ${target.displayName} pertence a outro usuário.`, "warning", 5600); }
+      }
       if (recycleItem) {
         record.recycleSelection = recycleItem.dataset.recycleItem;
         renderRecycleBin(record);
@@ -1581,7 +1716,7 @@
       if (fileItem && record.appId === "explorer") {
         record.explorerSelection = fileItem.dataset.fileItem;
         $$('[data-file-item]', record.content).forEach((row) => row.classList.toggle("is-selected", row === fileItem));
-        $$('[data-file-action="cut"], [data-file-action="copy"], [data-file-action="rename"], [data-file-action="delete"]', record.content).forEach((button) => { button.disabled = false; });
+        $$('[data-file-action="cut"], [data-file-action="copy"], [data-file-action="rename"], [data-file-action="delete"], [data-file-action="properties"]', record.content).forEach((button) => { button.disabled = false; });
         const selectedFile = OSLab.fileSystem.get(record.explorerSelection);
         OSLab.events.emit("file:selected", { fileId: selectedFile?.id, name: selectedFile?.name, parentFolderId: selectedFile?.parentId }, "explorer");
       }
@@ -1591,6 +1726,10 @@
           const folder = OSLab.fileSystem.create({ parentId: record.currentFolderId, kind: "folder", name: "Nova pasta" });
           record.explorerSelection = folder.id; renderFolder(record, record.currentFolderId); window.setTimeout(() => beginExplorerRename(record, folder.id), 30);
         }
+        if (fileAction === "new-text") {
+          const file = OSLab.fileSystem.create({ parentId: record.currentFolderId, kind: "file", name: "Novo Documento de Texto.txt", mime: "text/plain", content: "" });
+          if (file) { record.explorerSelection = file.id; renderFolder(record, record.currentFolderId); window.setTimeout(() => beginExplorerRename(record, file.id), 30); }
+        }
         if ((fileAction === "cut" || fileAction === "copy") && selectedFile) { fileClipboard = { itemId: selectedFile.id, mode: fileAction }; renderFolder(record, record.currentFolderId); OSLab.ui.notify(fileAction === "cut" ? "Item recortado" : "Item copiado", selectedFile.name, "info"); }
         if (fileAction === "paste" && fileClipboard) {
           if (fileClipboard.mode === "cut") OSLab.fileSystem.move(fileClipboard.itemId, record.currentFolderId); else OSLab.fileSystem.copy(fileClipboard.itemId, record.currentFolderId);
@@ -1598,6 +1737,13 @@
         }
         if (fileAction === "rename" && selectedFile) beginExplorerRename(record, selectedFile.id);
         if (fileAction === "delete" && selectedFile) { OSLab.fileSystem.delete(selectedFile.id); record.explorerSelection = null; renderFolder(record, record.currentFolderId); renderDesktopFolders(); }
+        if (fileAction === "properties" && selectedFile) {
+          if (!OSLab.fileSystem.isPublicItem(selectedFile)) OSLab.ui.notify("Pasta pessoal protegida", "Somente o usuário deste perfil pode acessar este item.", "info");
+          else {
+            const permission = await OSLab.ui.choosePermission(selectedFile);
+            if (permission) { const result = OSLab.fileSystem.setPermission(selectedFile.id, permission); if (!result.ok) OSLab.ui.notify("Permissão não alterada", "Somente o proprietário ou um administrador pode alterar a segurança deste item.", "warning"); renderFolder(record, record.currentFolderId); }
+          }
+        }
       }
       if (processRow && record.appId === "taskmanager" && !OSLab.taskManagerApp) {
         record.selectedProcessId = processRow.dataset.processId;
@@ -1681,7 +1827,42 @@
       });
     }
 
-    content.addEventListener("submit", (event) => {
+    content.addEventListener("submit", async (event) => {
+      const localAccountForm = event.target.closest("[data-local-account-form]");
+      if (localAccountForm) {
+        event.preventDefault();
+        const data = new FormData(localAccountForm);
+        const displayName = String(data.get("displayName") || "").trim();
+        const password = String(data.get("password") || "");
+        const confirmation = String(data.get("confirmPassword") || "");
+        const error = $("[data-account-error]", localAccountForm);
+        if (password !== confirmation) { error.textContent = "As senhas simuladas não coincidem."; return; }
+        const elevation = await OSLab.ui.elevate({ action: "create-local-account", actionLabel: `Criar a conta local ${displayName || "sem nome"}` });
+        if (!elevation.ok) return;
+        const result = await OSLab.users.createAccount({ displayName, password, role: "standard" });
+        if (!result.ok) {
+          const messages = { "name-required": "Informe um nome para a conta.", "weak-password": "Use pelo menos quatro caracteres.", duplicate: "Já existe uma conta com esse nome." };
+          error.textContent = messages[result.reason] || "Não foi possível criar a conta.";
+          OSLab.events.emit("account:create-rejected", { reason: result.reason }, "settings");
+          return;
+        }
+        record.addUserStep = 0;
+        record.expandedAccountId = result.account.id;
+        renderSettings(record, "other-users");
+        OSLab.ui.notify("Conta criada", `${result.account.displayName} pode entrar neste computador.`, "success");
+        return;
+      }
+      const profileForm = event.target.closest("[data-profile-form]");
+      if (profileForm) {
+        event.preventDefault();
+        const displayName = String(new FormData(profileForm).get("displayName") || "").trim();
+        if (!displayName) { $("[data-account-error]", profileForm).textContent = "Informe um nome exibido."; return; }
+        OSLab.users.updateProfile({ displayName });
+        record.editingProfile = false;
+        updateIdentityUI();
+        renderSettings(record, "accounts");
+        return;
+      }
       const form = event.target.closest("[data-google-form]");
       if (!form) return;
       event.preventDefault();
@@ -1806,13 +1987,14 @@
   }
 
   function closeFlyouts(except = null) {
-    [startMenu, searchPanel, quickPanel, calendarPanel, powerMenu, contextMenu, itemContextMenu, taskbarContextMenu].forEach((panel) => {
+    [startMenu, searchPanel, quickPanel, calendarPanel, powerMenu, profileMenu, contextMenu, itemContextMenu, taskbarContextMenu].forEach((panel) => {
       if (panel !== except) panel.classList.add("is-hidden");
     });
     startButton.setAttribute("aria-expanded", String(!startMenu.classList.contains("is-hidden")));
     searchButton.setAttribute("aria-expanded", String(!searchPanel.classList.contains("is-hidden")));
     quickSettingsButton.setAttribute("aria-expanded", String(!quickPanel.classList.contains("is-hidden")));
     clockButton.setAttribute("aria-expanded", String(!calendarPanel.classList.contains("is-hidden")));
+    startProfileButton.setAttribute("aria-expanded", String(!profileMenu.classList.contains("is-hidden")));
   }
 
   function toggleFlyout(panel, trigger) {
@@ -1850,6 +2032,20 @@
     powerMenu.classList.toggle("is-hidden");
   });
 
+  startProfileButton.addEventListener("click", (event) => {
+    event.stopPropagation();
+    toggleFlyout(profileMenu, startProfileButton);
+  });
+
+  profileMenu.addEventListener("click", (event) => {
+    event.stopPropagation();
+    const action = event.target.closest("[data-profile-action]")?.dataset.profileAction;
+    const nextUserId = event.target.closest("[data-profile-user]")?.dataset.profileUser;
+    if (action === "lock") lockSession();
+    if (action === "signout") signOutSession();
+    if (nextUserId) signOutSession(nextUserId);
+  });
+
   powerMenu.addEventListener("click", (event) => {
     const action = event.target.closest("[data-power-action]")?.dataset.powerAction;
     if (action === "restart") {
@@ -1857,6 +2053,7 @@
       else window.location.reload();
     }
     if (action === "lock") lockSession();
+    if (action === "signout") signOutSession();
   });
 
   $("#show-desktop-button").addEventListener("click", () => {
@@ -1939,8 +2136,9 @@
     if (action === "rename") window.setTimeout(() => beginItemRename(item.id), 20);
     if (action === "delete") moveDesktopItemToRecycle(item.id);
     if (action === "terminal") openApp("terminal");
+    if (action === "properties") OSLab.ui.notify("Propriedades", "Este item pertence à pasta pessoal do usuário conectado.", "info");
     if (action === "copy-path" && navigator.clipboard?.writeText) {
-      void navigator.clipboard.writeText(`C:\\Users\\Aluno\\Desktop\\${item.name}`).catch(() => {});
+      void navigator.clipboard.writeText(`C:\\Users\\${OSLab.users.getCurrent()?.username || "Aluno"}\\Desktop\\${item.name}`).catch(() => {});
     }
     itemContextMenu.classList.add("is-hidden");
   });
@@ -2145,6 +2343,8 @@
 
   document.title = "Entrar — OSLab";
   OSLab.apps.synchronizeStaticEntries(document);
+  renderLoginUsers();
+  updateIdentityUI();
   applyWallpaper(currentWallpaperId, false);
   renderDesktopFolders();
   renderInstalledStartApps();

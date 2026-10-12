@@ -31,6 +31,13 @@ O OSLab não é afiliado à Microsoft. A interface é uma simulação educaciona
 - Uso no OSLab: estados neutro, oferecendo ajuda e celebrando no assistente educacional.
 - Observação: o mascote não reutiliza personagens, marcas ou assets do Duolingo.
 
+## Ícone da trilha de Usuários e Permissões
+
+- Arquivo: `assets/users-permissions/trail-icon.png`
+- Origem: imagem original gerada para o OSLab com a ferramenta de geração de imagens da OpenAI em 12/10/2026.
+- Uso no OSLab: atalho, Menu Iniciar e cabeçalho da trilha Gerenciamento de Usuários e Permissões.
+- Composição solicitada: perfis de usuários, pasta compartilhada e escudo de permissões em linguagem visual inspirada no Fluent Design, sem texto, marcas ou logotipos de terceiros.
+
 ## Flag Icons
 
 - Projeto original: https://github.com/lipis/flag-icons

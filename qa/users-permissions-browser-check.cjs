@@ -1,0 +1,83 @@
+const { chromium } = require("playwright");
+const fs = require("node:fs");
+const path = require("node:path");
+let activeBrowser = null;
+
+(async () => {
+  const base = process.env.OSLAB_URL || "http://127.0.0.1:4381/index.html?app=userspermissions";
+  const evidence = path.resolve(__dirname, "..", "qa-evidence", "users-permissions");
+  fs.mkdirSync(evidence, { recursive: true });
+  const browser = activeBrowser = await chromium.launch({ headless: true, executablePath: process.env.OSLAB_BROWSER || "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe", args: ["--disable-gpu", "--disable-dev-shm-usage", "--no-sandbox"] });
+  const context = await browser.newContext({ viewport: { width: 1366, height: 768 } });
+  const page = await context.newPage();
+  const errors = [];
+  page.on("pageerror", (error) => errors.push(error.message));
+  page.on("console", (message) => { if (message.type() === "error") errors.push(message.text()); });
+  await page.goto(base, { waitUntil: "networkidle" });
+  await page.evaluate(() => localStorage.clear());
+  await page.reload({ waitUntil: "networkidle" });
+  await page.screenshot({ path: path.join(evidence, "01-login-1366x768.png") });
+  if (await page.locator("#login-user-list [data-login-user]").count() !== 1) throw new Error("O perfil legado não apareceu no login.");
+  await page.locator("#password").fill("alunos2026");
+  await page.locator("#login-form").press("Enter");
+  await page.locator("#desktop:not(.is-hidden)").waitFor({ timeout: 7000 });
+  await page.locator("#oslab-window-userspermissions").waitFor({ timeout: 5000 });
+  await page.screenshot({ path: path.join(evidence, "02-trilha-1366x768.png") });
+
+  await page.evaluate(() => window.OSLab.shell.openApp("settings", { settingsView: "accounts" }));
+  await page.locator("#oslab-window-settings [data-account-action='other-users']").click();
+  await page.locator("#oslab-window-settings [data-account-action='add']").click();
+  await page.locator("#oslab-window-settings [data-account-action='no-signin']").click();
+  await page.locator("#oslab-window-settings [data-account-action='local-account']").click();
+  await page.locator("#oslab-window-settings [name='displayName']").fill("Ana Laboratório");
+  await page.locator("#oslab-window-settings [name='password']").fill("ana2026");
+  await page.locator("#oslab-window-settings [name='confirmPassword']").fill("ana2026");
+  await page.locator("#oslab-window-settings [data-local-account-form] button[type='submit']").click();
+  await page.locator(".uac-root:not(.is-hidden)").waitFor();
+  await page.screenshot({ path: path.join(evidence, "03-uac-1366x768.png") });
+  await page.locator(".uac-root:not(.is-hidden) [data-uac='yes']").click();
+  await page.locator("#oslab-window-settings .account-card", { hasText: "Ana Laboratório" }).waitFor();
+  await page.screenshot({ path: path.join(evidence, "04-outros-usuarios-1366x768.png") });
+
+  await page.locator("#start-button").click();
+  await page.locator("#start-profile-button").click();
+  await page.locator("#profile-menu [data-profile-action='signout']").click();
+  await page.locator("#login-user-list", { hasText: "Ana Laboratório" }).waitFor();
+  await page.locator("#login-user-list [data-login-user]", { hasText: "Ana Laboratório" }).click();
+  await page.locator("#password").fill("ana2026");
+  await page.locator("#login-form").press("Enter");
+  await page.locator("#desktop:not(.is-hidden)").waitFor({ timeout: 7000 });
+  const current = await page.evaluate(() => window.OSLab.users.getCurrent());
+  if (current.displayName !== "Ana Laboratório" || current.role !== "standard") throw new Error("A troca para a conta padrão não foi preservada.");
+  await page.evaluate(() => window.OSLab.shell.openApp("explorer"));
+  await page.locator("#oslab-window-explorer [data-folder='root-public']").first().click();
+  await page.locator("#oslab-window-explorer [data-file-action='new-text']").click();
+  await page.keyboard.press("Enter");
+  await page.locator("#oslab-window-explorer [data-file-action='properties']").click();
+  await page.locator(".security-dialog input[value='modify']").check();
+  await page.screenshot({ path: path.join(evidence, "05-permissoes-1366x768.png") });
+  await page.locator(".security-dialog [data-security-save]").click();
+  const publicPermission = await page.evaluate(() => window.OSLab.fileSystem.list(window.OSLab.fileSystem.roots.public)[0]?.permission);
+  if (publicPermission !== "modify") throw new Error("A permissão Modificação não foi persistida no item público.");
+  await page.screenshot({ path: path.join(evidence, "06-perfil-publica-1366x768.png") });
+
+  const desktopOverflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
+  if (desktopOverflow) throw new Error("Há rolagem horizontal no viewport 1366x768.");
+  if (errors.length) throw new Error(`Erros de execução: ${errors.join(" | ")}`);
+
+  await page.reload({ waitUntil: "networkidle" });
+  await page.locator("#password").fill("ana2026");
+  await page.locator("#login-form").press("Enter");
+  await page.locator("#desktop:not(.is-hidden)").waitFor({ timeout: 7000 });
+  const persisted = await page.evaluate(() => window.OSLab.fileSystem.list(window.OSLab.fileSystem.roots.public).some((item) => item.permission === "modify"));
+  if (!persisted) throw new Error("O documento público não sobreviveu ao recarregamento.");
+
+  const mobile = await context.newPage();
+  await mobile.setViewportSize({ width: 390, height: 844 });
+  await mobile.goto(base, { waitUntil: "networkidle" });
+  await mobile.screenshot({ path: path.join(evidence, "07-login-390x844.png") });
+  const mobileOverflow = await mobile.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
+  if (mobileOverflow) throw new Error("Há rolagem horizontal no viewport 390x844.");
+  await browser.close(); activeBrowser = null;
+  console.log("OK  login, trilha, criação local, UAC, troca de usuário, pasta Pública e viewports");
+})().catch(async (error) => { console.error(error.stack || error); await activeBrowser?.close().catch(() => {}); process.exitCode = 1; });

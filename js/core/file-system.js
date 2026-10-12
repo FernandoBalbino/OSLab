@@ -7,12 +7,14 @@
     documents: "root-documents",
     downloads: "root-downloads",
     pictures: "root-pictures",
+    public: "root-public",
   });
   const ROOT_LABELS = {
     [ROOTS.desktop]: "Área de Trabalho",
     [ROOTS.documents]: "Documentos",
     [ROOTS.downloads]: "Downloads",
     [ROOTS.pictures]: "Imagens",
+    [ROOTS.public]: "Pública",
   };
 
   let state = null;
@@ -40,6 +42,36 @@
     return store().find((item) => item.id === id) || null;
   }
 
+  function actorId() {
+    return OSLab.users?.getCurrent?.()?.id || OSLab.users?.getSelected?.()?.id || "user-aluno";
+  }
+
+  function isPublicItem(item) {
+    if (!item) return false;
+    if (item.parentId === ROOTS.public) return true;
+    let parent = get(item.parentId);
+    while (parent) { if (parent.parentId === ROOTS.public) return true; parent = get(parent.parentId); }
+    return false;
+  }
+
+  function canRead(item) {
+    if (!item || !isPublicItem(item)) return true;
+    if (item.ownerId === actorId() || OSLab.users?.isAdministrator?.()) return true;
+    return ["read", "modify"].includes(item.permission || "read");
+  }
+
+  function canModify(item) {
+    if (!item || !isPublicItem(item)) return true;
+    if (item.ownerId === actorId() || OSLab.users?.isAdministrator?.()) return true;
+    return (item.permission || "read") === "modify";
+  }
+
+  function deny(item, operation) {
+    OSLab.events.emit("file:access-denied", { fileId: item?.id || null, name: item?.name || "item", operation, actorUserId: actorId() }, "fileSystem");
+    OSLab.events.emit("file:write-denied", { fileId: item?.id || null, operation, actorUserId: actorId() }, "fileSystem");
+    return null;
+  }
+
   function descendants(id) {
     const result = [];
     const visit = (parentId) => {
@@ -53,7 +85,7 @@
   }
 
   function list(parentId, options = {}) {
-    return store().filter((item) => item.parentId === parentId && (options.trashed ? Boolean(item.trashedAt) : !item.trashedAt));
+    return store().filter((item) => item.parentId === parentId && canRead(item) && (options.trashed ? Boolean(item.trashedAt) : !item.trashedAt));
   }
 
   function uniqueName(parentId, requested, excludeId = null) {
@@ -92,7 +124,7 @@
     const existing = Array.isArray(oldState.fileSystem?.items) ? oldState.fileSystem.items : [];
     if (existing.length) {
       oldState.fileSystem.version = 1;
-      oldState.fileSystem.items = existing.map((item) => ({ ...item, sizeBytes: inferredSize(item) }));
+      oldState.fileSystem.items = existing.map((item) => ({ ...item, ownerId: item.ownerId || "user-aluno", permission: item.permission || (isPublicItem(item) ? "read" : "private"), sizeBytes: inferredSize(item) }));
       return;
     }
     const items = [];
@@ -136,6 +168,8 @@
       trashRootId: null,
       trashedAt: null,
       originalParentId: null,
+      ownerId: input.ownerId || actorId(),
+      permission: input.permission || (parentId === ROOTS.public || isPublicItem(get(parentId)) ? "read" : "private"),
     };
     store().push(item);
     commit();
@@ -146,6 +180,7 @@
   function rename(id, requestedName) {
     const item = get(id);
     if (!item || item.trashedAt) return null;
+    if (!canModify(item)) return deny(item, "rename");
     const previousName = item.name;
     const nextName = uniqueName(item.parentId, requestedName, id);
     if (!nextName || nextName === previousName) return item;
@@ -159,6 +194,7 @@
     const item = get(id);
     const destination = get(parentId);
     if (!item || item.trashedAt || (parentId && !ROOT_LABELS[parentId] && destination?.kind !== "folder")) return null;
+    if (!canModify(item) || (destination && !canModify(destination))) return deny(item, "move");
     if (id === parentId || descendants(id).some((child) => child.id === parentId)) return null;
     const previousParentId = item.parentId;
     item.parentId = parentId;
@@ -170,7 +206,9 @@
 
   function copy(id, parentId, options = {}) {
     const source = get(id);
-    if (!source || source.trashedAt) return null;
+    if (!source || source.trashedAt || !canRead(source)) return deny(source, "copy");
+    const destination = get(parentId);
+    if (destination && !canModify(destination)) return deny(destination, "copy-destination");
     const clone = create({ ...source, id: null, parentId, name: uniqueName(parentId, source.name), sourceId: source.id, createdAt: Date.now(), missionId: options.missionId || source.missionId, createdByMission: Boolean(options.createdByMission || source.createdByMission) });
     if (source.kind === "folder") {
       list(source.id).forEach((child) => copy(child.id, clone.id, options));
@@ -182,6 +220,7 @@
   function remove(id) {
     const item = get(id);
     if (!item || item.trashedAt) return null;
+    if (!canModify(item)) return deny(item, "delete");
     const deletedAt = Date.now();
     const affected = [item, ...descendants(id)];
     affected.forEach((entry) => {
@@ -232,7 +271,7 @@
   function search(query, parentId = null) {
     const needle = normal(query);
     const allowed = parentId ? new Set([parentId, ...descendants(parentId).map((item) => item.id)]) : null;
-    return store().filter((item) => !item.trashedAt && item.kind === "file" && (!allowed || allowed.has(item.parentId)) && normal(item.name).includes(needle));
+    return store().filter((item) => !item.trashedAt && canRead(item) && item.kind === "file" && (!allowed || allowed.has(item.parentId)) && normal(item.name).includes(needle));
   }
 
   function pathIds(id) {
@@ -270,6 +309,17 @@
     return list(parentId).reduce((sum, item) => sum + bytesForItem(item.id), 0);
   }
 
+  function setPermission(id, permission) {
+    const item = get(id);
+    const next = ["none", "read", "modify"].includes(permission) ? permission : "read";
+    if (!item || !isPublicItem(item)) return { ok: false, reason: "not-public" };
+    if (item.ownerId !== actorId() && !OSLab.users?.isAdministrator?.()) return { ok: false, reason: "forbidden" };
+    item.permission = next;
+    commit();
+    OSLab.events.emit("file:permission-changed", { fileId: id, permission: next, ownerId: item.ownerId, actorUserId: actorId() }, "fileSystem");
+    return { ok: true, item: { ...item } };
+  }
+
   OSLab.fileSystem = {
     roots: ROOTS,
     labels: ROOT_LABELS,
@@ -301,6 +351,10 @@
     bytesForItem,
     usedBytes,
     folderBytes,
+    canRead,
+    canModify,
+    isPublicItem,
+    setPermission,
     find(parentId, name, kind = null) {
       return list(parentId).find((item) => normal(item.name) === normal(name) && (!kind || item.kind === kind)) || null;
     },

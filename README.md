@@ -33,6 +33,12 @@ Laboratório virtual estático para alunos praticarem conceitos de Sistemas Oper
 
 A nova trilha tem 12 missões e oito serviços dentro do navegador virtual: Gmail, Outlook, Yahoo, Netflix, Spotify, Discord, YouTube e Drive. Contas locais, código de verificação Netflix no Gmail, planos e cartão de demonstração, perfis, favoritos e pasta persistentes. Players simulados e imagens locais disponíveis offline.
 
+## Gerenciamento de Usuários e Permissões
+
+A trilha possui sete missões práticas no shell simulado do Windows 11: criar uma conta local, entrar e personalizar o perfil, comprovar a privacidade dos arquivos, comparar instalações por usuário e para todos, usar a elevação UAC, compartilhar documentos com permissões de leitura ou modificação e configurar um laboratório escolar. Todas as contas e senhas são fictícias. Os verificadores de senha, perfis, arquivos, preferências e dados individuais dos aplicativos permanecem apenas no armazenamento local do navegador.
+
+O perfil legado **Aluno** é migrado como administrador e mantém a senha didática já usada pelo OSLab. Cada novo usuário recebe Área de Trabalho, Documentos, Downloads, Imagens, atalhos e papel de parede próprios. A pasta **Pública** é compartilhada, enquanto operações administrativas usam uma autorização pontual que não transforma toda a sessão em administradora.
+
 Veja o [guia de uso e reinício](docs/minha-primeira-vida-digital.md), os [créditos](docs/digital-life-credits.md) e o [relatório de testes](qa-evidence/digital-life/report.md).
 
 ## Missões
@@ -128,6 +134,7 @@ Clique com o botão direito na barra de tarefas e escolha **Gerenciador de Taref
 - `js/exercises`: catálogo, máquina de estados e persistência dos exercícios;
 - `js/vpn`: estado global, catálogo, motor e persistência do laboratório VPN;
 - `js/install`: estado de software, catálogo, motor e persistência da trilha de instalação;
+- `js/users`: contas locais, perfis persistentes e motor da trilha de usuários e permissões;
 - `js/core/network-manager.js` e `js/core/system-state.js`: estado canônico de rede, armazenamento, desempenho e snapshots;
 - `js/ui`: notificações, confirmações, widget e modal de conclusão;
 - `script.js`: integração com o shell, as janelas e os aplicativos existentes;
@@ -161,7 +168,7 @@ O OSLab é uma PWA instalável. Após o primeiro acesso completo, o Service Work
 
 No Chrome ou Chromebook, use **Instalar para usar offline** na tela de login ou no menu Iniciar. O progresso das missões, dos exercícios e as preferências continuam salvos no `localStorage` do dispositivo. O navegador, o Terminal e todas as funções internas usam dados simulados locais e continuam disponíveis sem internet.
 
-O cache atual é `oslab-offline-v9`. Ao alterar recursos, incremente `CACHE_VERSION` em `service-worker.js`; versões antigas são excluídas automaticamente e o site oferece a atualização quando a nova versão está pronta.
+O cache atual é `oslab-offline-v32`. Ao alterar recursos, incremente `CACHE_VERSION` em `service-worker.js`; versões antigas são excluídas automaticamente e o site oferece a atualização quando a nova versão está pronta.
 
 ## Créditos
 

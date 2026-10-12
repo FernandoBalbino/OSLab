@@ -2,7 +2,7 @@
   "id": "./index.html",
   "name": "OSLab — Laboratório de Sistemas Operacionais",
   "short_name": "OSLab",
-  "description": "Laboratório virtual offline com missões de sistemas, navegador, instalação, VPN e Minha Primeira Vida Digital.",
+  "description": "Laboratório virtual offline com missões de sistemas, navegador, instalação, VPN, vida digital, usuários e permissões.",
   "lang": "pt-BR",
   "start_url": "./index.html",
   "scope": "./",
@@ -61,6 +61,11 @@
       "name": "Minha Primeira Vida Digital",
       "short_name": "Vida Digital",
       "url": "./index.html?app=digitallife"
+    },
+    {
+      "name": "Gerenciamento de Usuários e Permissões",
+      "short_name": "Usuários",
+      "url": "./index.html?app=userspermissions"
     }
   ]
 }

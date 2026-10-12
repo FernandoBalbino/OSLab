@@ -22,14 +22,15 @@
     <link rel="stylesheet" href="css/software-apps.css" />
     <link rel="stylesheet" href="css/browser.css" />
     <link rel="stylesheet" href="css/digital-life.css">
+    <link rel="stylesheet" href="css/users-permissions.css">
   </head>
   <body>
     <main id="oslab" class="oslab" data-state="login">
       <section id="login-screen" class="screen login-screen" aria-label="Entrar no OSLab">
         <div class="login-backdrop" aria-hidden="true"></div>
         <form id="login-form" class="login-card" autocomplete="off" onsubmit="return false">
-          <img class="login-avatar" src="assets/icons/avatar.webp" alt="Perfil do aluno" />
-          <h1>Aluno</h1>
+          <img id="login-avatar" class="login-avatar" src="assets/icons/avatar.webp" alt="Perfil selecionado" />
+          <h1 id="login-user-name">Aluno</h1>
           <label class="sr-only" for="password">Senha</label>
           <div class="password-row">
             <input
@@ -60,6 +61,8 @@
             <span>Bem-vindo</span>
           </div>
         </form>
+
+        <nav id="login-user-list" class="login-user-list" aria-label="Escolher usuário"></nav>
 
         <div class="login-system-icons" aria-label="Status do sistema">
           <img src="assets/icons/ui/wifi.png" alt="Rede conectada" />
@@ -111,6 +114,7 @@
             <span>Instalação de Programas</span>
           </button>
           <button class="desktop-shortcut" type="button" data-app="digitallife"><img src="assets/digital/trail-icon.png" alt=""><span>Minha Primeira Vida Digital</span></button>
+          <button class="desktop-shortcut" type="button" data-app="userspermissions"><img src="assets/users-permissions/trail-icon.png" alt=""><span>Usuários e Permissões</span></button>
           <button class="desktop-shortcut" type="button" data-app="browsertrail">
             <img src="assets/learning/icons/globe_search.svg" alt="" />
             <span>Navegadores e Internet</span>
@@ -214,6 +218,7 @@
               <span>Instalação</span>
             </button>
             <button type="button" data-app="digitallife"><img src="assets/digital/trail-icon.png" alt=""><span>Vida Digital</span></button>
+            <button type="button" data-app="userspermissions"><img src="assets/users-permissions/trail-icon.png" alt=""><span>Usuários e Permissões</span></button>
             <button type="button" data-app="browsertrail">
               <img src="assets/learning/icons/globe_search.svg" alt="" />
               <span>Navegadores e Internet</span>
@@ -228,9 +233,9 @@
             </button>
           </div>
           <footer class="start-footer">
-            <button type="button" class="profile-button">
-              <img src="assets/icons/avatar.webp" alt="" />
-              <span>Aluno</span>
+            <button id="start-profile-button" type="button" class="profile-button" aria-expanded="false">
+              <img id="start-profile-avatar" src="assets/icons/avatar.webp" alt="" />
+              <span id="start-profile-name">Aluno</span>
             </button>
             <button type="button" class="profile-button pwa-start-install" data-pwa-install>
               <img src="assets/icons/context/restore-item.png" alt="" />
@@ -241,6 +246,8 @@
             </button>
           </footer>
         </div>
+
+        <div id="profile-menu" class="profile-menu is-hidden" aria-label="Conta do usuário"></div>
 
         <div id="search-panel" class="search-panel flyout is-hidden" aria-label="Pesquisar">
           <label class="global-search">
@@ -313,6 +320,7 @@
         <div id="power-menu" class="power-menu is-hidden" aria-label="Opções de energia">
           <button type="button" data-power-action="restart">Reiniciar</button>
           <button type="button" data-power-action="lock">Bloquear</button>
+          <button type="button" data-power-action="signout">Sair</button>
         </div>
 
         <div id="context-menu" class="context-menu is-hidden" role="menu" aria-label="Menu da área de trabalho">
@@ -465,6 +473,7 @@
     <noscript>O OSLab precisa de JavaScript habilitado para funcionar.</noscript>
     <script defer src="js/core/os-events.js"></script>
     <script defer src="js/core/app-registry.js"></script>
+    <script defer src="js/users/user-state.js"></script>
     <script defer src="js/core/file-system.js"></script>
     <script defer src="js/core/process-manager.js"></script>
     <script defer src="js/core/network-manager.js"></script>
@@ -487,6 +496,9 @@
     <script defer src="js/digital/digital-content.js"></script>
     <script defer src="js/digital/digital-life.js"></script>
     <script defer src="js/digital/digital-life-trail.js"></script>
+    <script defer src="js/users/user-mission-catalog.js"></script>
+    <script defer src="js/users/user-mission-storage.js"></script>
+    <script defer src="js/users/user-mission-engine.js"></script>
     <script defer src="js/browser/browser-state.js"></script>
     <script defer src="js/browser/browser-trail.js"></script>
     <script defer src="js/browser/browser-museum.js"></script>
@@ -500,6 +512,7 @@
     <script defer src="js/apps/terminal-app.js"></script>
     <script defer src="js/digital/digital-sites.js"></script>
     <script defer src="js/apps/digital-life-app.js"></script>
+    <script defer src="js/apps/users-permissions-app.js"></script>
     <script defer src="js/apps/browser-app.js"></script>
     <script defer src="js/apps/browser-trails-app.js"></script>
     <script defer src="js/apps/software-apps.js"></script>

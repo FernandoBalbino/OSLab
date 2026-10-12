@@ -20,7 +20,7 @@
   });
 
   function blankProgram(program) {
-    return { ...program, installed: false, desktopShortcut: false, startMenuShortcut: false, installDate: null };
+    return { ...program, installed: false, desktopShortcut: false, startMenuShortcut: false, installDate: null, scope: null, ownerUserId: null, installations: { all: false, users: {} }, shortcutsByUser: {}, dataByUser: {} };
   }
 
   function defaults() {
@@ -45,6 +45,12 @@
       const base = defaults();
       Object.keys(programs).forEach((id) => {
         base.installedPrograms[id] = { ...base.installedPrograms[id], ...(parsed.installedPrograms?.[id] || {}) };
+        const saved = parsed.installedPrograms?.[id] || {};
+        base.installedPrograms[id].installations = saved.installations && typeof saved.installations === "object"
+          ? { all: Boolean(saved.installations.all), users: { ...(saved.installations.users || {}) } }
+          : { all: Boolean(saved.installed), users: {} };
+        base.installedPrograms[id].shortcutsByUser = { ...(saved.shortcutsByUser || {}) };
+        base.installedPrograms[id].dataByUser = { ...(saved.dataByUser || {}) };
       });
       base.downloads = parsed.downloads && typeof parsed.downloads === "object" ? parsed.downloads : {};
       base.openedPrograms = parsed.openedPrograms && typeof parsed.openedPrograms === "object" ? parsed.openedPrograms : {};
@@ -167,43 +173,80 @@
   function installBundle(installerId, options = {}) {
     const installer = installers[installerId];
     if (!installer) return { ok: false, reason: "missing" };
+    const userId = OSLab.users?.getCurrent?.()?.id || "user-aluno";
+    const scope = options.scope === "user" ? "user" : "all";
+    if (scope === "all" && OSLab.users && !OSLab.users.isAdministrator() && !options.elevated) return { ok: false, reason: "elevation-required" };
     const installDate = new Date().toLocaleDateString("pt-BR");
     installer.programIds.forEach((programId) => {
+      const previous = state.installedPrograms[programId];
+      const installations = { all: Boolean(previous.installations?.all), users: { ...(previous.installations?.users || {}) } };
+      if (scope === "all") installations.all = true;
+      else installations.users[userId] = true;
       state.installedPrograms[programId] = {
-        ...state.installedPrograms[programId],
+        ...previous,
         installed: true,
         desktopShortcut: programId === "appjavafx" ? Boolean(options.desktopShortcut) : false,
         startMenuShortcut: true,
         installDate,
+        scope,
+        ownerUserId: scope === "user" ? userId : null,
+        installations,
+        shortcutsByUser: { ...(previous.shortcutsByUser || {}), [userId]: { desktop: programId === "appjavafx" ? Boolean(options.desktopShortcut) : false, start: true } },
       };
     });
-    notify("installed", { installerId, programIds: [...installer.programIds], desktopShortcut: Boolean(options.desktopShortcut) });
-    OSLab.events.emit("install:completed", { installerId, programIds: [...installer.programIds], desktopShortcut: Boolean(options.desktopShortcut) }, "softwareState");
-    return { ok: true, programIds: [...installer.programIds] };
+    notify("installed", { installerId, programIds: [...installer.programIds], desktopShortcut: Boolean(options.desktopShortcut), scope, ownerId: scope === "user" ? userId : null });
+    OSLab.events.emit("install:completed", { installerId, programIds: [...installer.programIds], desktopShortcut: Boolean(options.desktopShortcut), scope, ownerId: scope === "user" ? userId : null }, "softwareState");
+    return { ok: true, programIds: [...installer.programIds], scope };
   }
 
   function markOpened(programId) {
-    const program = state.installedPrograms[programId];
+    const program = effectiveProgram(programId);
     if (!program?.installed) return false;
-    state.openedPrograms[programId] = new Date().toISOString();
+    const userId = OSLab.users?.getCurrent?.()?.id || "user-aluno";
+    state.openedPrograms[`${userId}:${programId}`] = new Date().toISOString();
     notify("program-opened", { programId });
     OSLab.events.emit("install:program-opened", { programId }, "softwareState");
     return true;
   }
 
-  function uninstall(programId) {
+  function uninstall(programId, options = {}) {
     const program = state.installedPrograms[programId];
-    if (!program?.installed) return { ok: false, reason: "not-installed" };
-    state.installedPrograms[programId] = { ...program, installed: false, desktopShortcut: false, startMenuShortcut: false, installDate: null };
-    delete state.openedPrograms[programId];
+    const userId = OSLab.users?.getCurrent?.()?.id || "user-aluno";
+    if (!effectiveProgram(programId)?.installed) return { ok: false, reason: "not-installed" };
+    const scope = options.scope || (program.installations?.users?.[userId] && !program.installations?.all ? "user" : "all");
+    if (scope === "all" && OSLab.users && !OSLab.users.isAdministrator() && !options.elevated) return { ok: false, reason: "elevation-required" };
+    if (scope === "user") { delete program.installations.users[userId]; delete program.shortcutsByUser?.[userId]; }
+    else { program.installations.all = false; program.shortcutsByUser = {}; }
+    const stillInstalled = program.installations.all || Object.values(program.installations.users).some(Boolean);
+    state.installedPrograms[programId] = { ...program, installed: Boolean(stillInstalled), desktopShortcut: false, startMenuShortcut: Boolean(stillInstalled), installDate: stillInstalled ? program.installDate : null };
+    delete state.openedPrograms[`${userId}:${programId}`];
     OSLab.shell?.closeApp?.(programId);
-    notify("uninstalled", { programId });
-    OSLab.events.emit("install:uninstalled", { programId, removedFromDesktop: true, removedFromStartMenu: true }, "softwareState");
+    notify("uninstalled", { programId, scope, ownerId: scope === "user" ? userId : null });
+    OSLab.events.emit("install:uninstalled", { programId, scope, ownerId: scope === "user" ? userId : null, removedFromDesktop: true, removedFromStartMenu: true }, "softwareState");
     return { ok: true };
   }
 
-  function isInstalled(programId) { return Boolean(state.installedPrograms[programId]?.installed); }
-  function installedList() { return Object.values(state.installedPrograms).filter((program) => program.installed).map(clone); }
+  function effectiveProgram(programId) {
+    const program = state.installedPrograms[programId];
+    if (!program) return null;
+    const userId = OSLab.users?.getCurrent?.()?.id || "user-aluno";
+    const all = Boolean(program.installations?.all);
+    const own = Boolean(program.installations?.users?.[userId]);
+    const shortcut = program.shortcutsByUser?.[userId] || {};
+    return { ...clone(program), installed: all || own, scope: all ? "all" : own ? "user" : null, ownerUserId: own && !all ? userId : null, desktopShortcut: Boolean(shortcut.desktop || (all && program.desktopShortcut)), startMenuShortcut: Boolean(shortcut.start || (all && program.startMenuShortcut)) };
+  }
+  function saveAppPreference(programId, key, value) {
+    const program = state.installedPrograms[programId];
+    const userId = OSLab.users?.getCurrent?.()?.id || "user-aluno";
+    if (!program || !effectiveProgram(programId)?.installed) return false;
+    program.dataByUser = program.dataByUser || {};
+    program.dataByUser[userId] = { ...(program.dataByUser[userId] || {}), [String(key)]: value };
+    notify("app-data", { programId, userId, key: String(key) });
+    OSLab.events.emit("app:data-saved", { programId, userId, key: String(key) }, "softwareState");
+    return true;
+  }
+  function isInstalled(programId) { return Boolean(effectiveProgram(programId)?.installed); }
+  function installedList() { return Object.keys(state.installedPrograms).map(effectiveProgram).filter((program) => program?.installed); }
   function reset() {
     timers.forEach((timer) => global.clearInterval(timer));
     timers.clear();
@@ -224,7 +267,7 @@
     programs,
     installers,
     getState: () => clone(state),
-    getProgram: (id) => state.installedPrograms[id] ? clone(state.installedPrograms[id]) : null,
+    getProgram: effectiveProgram,
     getDownload: (id) => state.downloads[id] ? clone(state.downloads[id]) : null,
     getInstalledPrograms: installedList,
     isInstalled,
@@ -235,6 +278,7 @@
     installBundle,
     markOpened,
     uninstall,
+    saveAppPreference,
     reset,
     subscribe(listener) { listeners.add(listener); return () => listeners.delete(listener); },
   };

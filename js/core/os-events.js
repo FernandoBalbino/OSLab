@@ -13,6 +13,7 @@
         occurredAt: new Date().toISOString(),
         source,
         detail: detail && typeof detail === "object" ? detail : { value: detail },
+        actorUserId: OSLab.users?.getCurrent?.()?.id || null,
       };
       target.dispatchEvent(new CustomEvent(type, { detail: envelope }));
       target.dispatchEvent(new CustomEvent("oslab:event", { detail: envelope }));

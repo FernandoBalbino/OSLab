@@ -16,9 +16,10 @@
     return `'${clean}' não é reconhecido como um comando interno do OSLab. Digite help para ver os comandos.`;
   }
   function render(record) {
+    const username = OSLab.users?.getCurrent?.()?.username || "Aluno";
     records.add(record); record.terminalLines ||= [];
     record.address.textContent = "Terminal";
-    record.content.innerHTML = `<section class="terminal-page terminal-interactive" aria-label="Terminal do OSLab"><div class="terminal-output" role="log" aria-live="polite"><p>Microsoft Windows [versão 11.0.26100.4652]</p><p>(c) OSLab. Todos os direitos reservados.</p>${record.terminalLines.map((line) => `<div><strong>C:\\Users\\Aluno&gt;${safe(line.command)}</strong>${line.output ? `<pre>${safe(line.output)}</pre>` : ""}</div>`).join("")}</div><form class="terminal-command-form" data-terminal-form><label><span>C:\\Users\\Aluno&gt;</span><input name="command" autocomplete="off" spellcheck="false" aria-label="Comando" autofocus /></label></form></section>`;
+    record.content.innerHTML = `<section class="terminal-page terminal-interactive" aria-label="Terminal do OSLab"><div class="terminal-output" role="log" aria-live="polite"><p>Microsoft Windows [versão 11.0.26100.4652]</p><p>(c) OSLab. Todos os direitos reservados.</p>${record.terminalLines.map((line) => `<div><strong>C:\\Users\\${safe(username)}&gt;${safe(line.command)}</strong>${line.output ? `<pre>${safe(line.output)}</pre>` : ""}</div>`).join("")}</div><form class="terminal-command-form" data-terminal-form><label><span>C:\\Users\\${safe(username)}&gt;</span><input name="command" autocomplete="off" spellcheck="false" aria-label="Comando" autofocus /></label></form></section>`;
     const output = record.content.querySelector(".terminal-output"); if (output) output.scrollTop = output.scrollHeight;
     record.content.querySelector("input")?.focus();
     if (!record.terminalWired) {

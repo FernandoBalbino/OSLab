@@ -8,10 +8,12 @@
   "./css/install-lab.css",
   "./css/software-apps.css",
   "./css/browser.css",
+  "./css/users-permissions.css",
   "./script.js",
   "./js/pwa.js",
   "./js/core/os-events.js",
   "./js/core/app-registry.js",
+  "./js/users/user-state.js",
   "./js/core/file-system.js",
   "./js/core/process-manager.js",
   "./js/core/network-manager.js",
@@ -241,8 +243,12 @@
   "./js/digital/digital-content.js",
   "./js/digital/digital-life.js",
   "./js/digital/digital-life-trail.js",
+  "./js/users/user-mission-catalog.js",
+  "./js/users/user-mission-storage.js",
+  "./js/users/user-mission-engine.js",
   "./js/digital/digital-sites.js",
   "./js/apps/digital-life-app.js",
+  "./js/apps/users-permissions-app.js",
   "./css/digital-life.css",
   "./assets/digital/gmail/imgLogo.png",
   "./assets/digital/gmail/Roboto-LICENSE.txt",
@@ -305,5 +311,6 @@
   "./assets/digital/netflix/NetflixSans-Bd.woff2",
   "./assets/digital/netflix/NetflixSans-Blk.woff2",
   "./assets/digital/ui/chevron.svg",
-  "./assets/digital/ui/language.svg"
+  "./assets/digital/ui/language.svg",
+  "./assets/users-permissions/trail-icon.png"
 ]
