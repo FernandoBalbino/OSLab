@@ -321,5 +321,6 @@
   "assets/learning/icons/pause.svg",
   "assets/learning/icons/key.svg",
   "js/ui/windows-icons.js",
-  "assets/fonts/SettingsIcons-win11React.woff2"
+  "assets/fonts/SettingsIcons-win11React.woff2",
+  "css/quick-settings-light.css"
 ]
