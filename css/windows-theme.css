@@ -99,9 +99,7 @@
 .start-footer .profile-button:hover, .power-button:hover { background: var(--win-hover); }
 @media (max-width: 420px) { .start-menu .start-footer { padding: 10px 14px; gap: 8px; grid-template-columns: minmax(0, 1fr) 112px 36px; } .start-menu .start-search { margin: 18px 18px 0; } .start-menu .start-apps { padding: 0 12px 14px; } }
 .context-menu button:hover, .context-submenu button:hover, .item-context-menu button:hover, .taskbar-context-menu button:hover { background: var(--win-hover); }
-.quick-tile { color: var(--win-text); }
-.quick-tile > span { background: var(--win-surface); border-color: var(--win-border); }
-.quick-tile.is-active > span { background: #0067c0; }
+.quick-panel .quick-slider img, .quick-panel .battery-status img { filter: brightness(0); }
 .learning-instructions { margin: 12px 0; }
 .learning-instructions h3 { margin: 0 0 8px; font-size: 13px; }
 .learning-instructions ol { display: grid; gap: 8px; margin: 0; padding-left: 22px; }
