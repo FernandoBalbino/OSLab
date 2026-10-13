@@ -6,6 +6,9 @@
 - Autor/equipe: blueedgetechno e colaboradores
 - Licença: CC0-1.0
 - Uso no OSLab: ícones raster e referência visual para o desktop, a barra de tarefas, as janelas, Configurações e Gerenciador de Tarefas. O resolvedor interno aplica um asset genérico visível quando uma imagem não pode ser carregada.
+- Referência fixada: commit `afb02e797106c208314abbf837ec11bf50da9d62`.
+- A fonte local `assets/fonts/SettingsIcons-win11React.woff2` é uma cópia de `src/containers/applications/apps/assets/SettingsIcons.woff2` dessa revisão. O mapeamento em `js/ui/windows-icons.js` usa os símbolos originais de `settingsData.json`, preservando os ícones lineares das opções de Configurações.
+- Os assets de categorias em `assets/settings` foram conferidos contra os arquivos originais dessa revisão. Os ícones de aplicativos e categorias conservam suas cores.
 
 O OSLab não é afiliado à Microsoft. A interface é uma simulação educacional executada no navegador e não corresponde ao sistema operacional Windows.
 

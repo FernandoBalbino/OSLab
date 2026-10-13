@@ -269,12 +269,7 @@
 .dl-folder-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:15px;margin-top:25px}
 .dl-folder{display:flex;gap:14px;align-items:center;background:#eef3f9;padding:20px;border-radius:10px;font-size:14px}
 .dl-empty{padding:70px 30px;text-align:center}
-.dl-google-search{background:#303134!important;color:#e8eaed!important;min-height:100%}
-.dl-google-search header,.dl-google-search nav{background:#303134!important;border-color:#555!important}
-.dl-google-search input{background:#303134!important;color:#e8eaed!important}
-.dl-google-search .google-result-card button{color:#8ab4f8!important}
-.dl-google-search .google-result-card p,.dl-google-search .google-result-card small,.dl-google-search .google-result-count{color:#bdc1c6!important}
-.dl-google-search .google-mini-logo{color:#e8eaed!important}
+.dl-google-search{background:#fff;color:#202124;min-height:100%}
 .dl-trail-detail{overflow:auto}
 .dl-trail-detail .learning-detail-actions{flex-wrap:wrap}
 .dl-trail-summary{padding:28px;background:#ecf7f1;border-radius:18px;color:#174d39;margin:20px}

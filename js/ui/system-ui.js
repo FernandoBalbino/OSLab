@@ -71,7 +71,7 @@
     return new Promise((resolve) => {
       const finish = (result, eventType) => {
         uacRoot.classList.add("is-hidden"); uacRoot.innerHTML = "";
-        if (eventType) OSLab.events.emit(eventType, { action: options.action || "administrative-action", actorUserId: current?.id || null, administratorId: result?.administratorId || current?.id || null }, "uac");
+        if (eventType) OSLab.events.emit(eventType, { action: options.action || "administrative-action", targetUserId: options.targetUserId || null, authorizationId: result?.token || null, actorUserId: current?.id || null, administratorId: result?.administratorId || current?.id || null }, "uac");
         previousFocus?.focus?.(); resolve(result || { ok: false });
       };
       uacRoot.querySelector("[data-uac='no']").addEventListener("click", () => finish({ ok: false, reason: "cancelled" }, "elevation:denied"));

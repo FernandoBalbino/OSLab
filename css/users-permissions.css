@@ -7,17 +7,6 @@
 .users-finale img { width: 126px; height: 126px; object-fit: contain; }
 .learning-assistant.is-users-permissions .users-assistant-next { margin: 0 0 10px; padding: 10px 12px; border-radius: 9px; background: #edf5fc; color: #244968; font-size: 11px; line-height: 1.45; }
 
-@media (min-width: 1024px) {
-  body:has(.learning-assistant.is-users-permissions:not(.is-hidden):not(.is-collapsed)) .app-window.is-focused.is-maximized:not(.userspermissions-window) {
-    right: 382px !important;
-    width: calc(100% - 382px) !important;
-  }
-
-  body:has(.learning-assistant.is-users-permissions:not(.is-hidden):not(.is-collapsed)) .app-window.is-focused:not(.is-maximized):not(.userspermissions-window) {
-    left: 16px !important;
-    max-width: calc(100vw - 414px);
-  }
-}
 .users-finale small { display: block; color: #0f6cbd; font-weight: 900; letter-spacing: .1em; }
 .users-finale h2 { margin: 6px 0; font-size: 29px; }
 .users-finale p { max-width: 510px; margin: auto; color: #587088; }

@@ -174,7 +174,7 @@
   }
 
   function wordMarkup() {
-    return `<section class="office-mock word-mock"><header><div class="office-title"><img src="assets/programs/word.svg" alt="" /><span>Documento1 — Word</span><small>${currentUserName()}</small></div><nav>${["Arquivo", "Página Inicial", "Inserir", "Design", "Layout", "Referências", "Revisão", "Exibir"].map((label, index) => `<button class="${index === 1 ? "is-active" : ""}">${label}</button>`).join("")}</nav><div class="office-ribbon"><span><b>Colar</b><small>Área de transferência</small></span><span><b>Calibri · 11</b><small>Fonte</small></span><span><b>N · I · <u>S</u></b><small>Formatação</small></span><span><b>☰ ≡ ☷</b><small>Parágrafo</small></span><span><b>Normal</b><small>Estilos</small></span></div></header><main><div class="word-ruler"><i></i></div><article class="word-page"><h1>Meu documento</h1><p>Comece a criar seu trabalho nesta página em branco.</p></article></main><footer>Página 1 de 1 <span>0 palavras</span><span>Português (Brasil)</span><em>100%</em></footer></section>`;
+    return `<section class="office-mock word-mock"><header><div class="office-title"><img src="assets/programs/word.svg" alt="" /><span>Documento1 — Word</span><small>${currentUserName()}</small></div><nav>${["Arquivo", "Página Inicial", "Inserir", "Design", "Layout", "Referências", "Revisão", "Exibir"].map((label, index) => `<button class="${index === 1 ? "is-active" : ""}">${label}</button>`).join("")}</nav><div class="office-ribbon"><span><b>Colar</b><small>Área de transferência</small></span><span><b>Calibri · 11</b><small>Fonte</small></span><span><b>N · I · <u>S</u></b><small>Formatação</small></span><span><b>☰ ≡ ☷</b><small>Parágrafo</small></span><span><b>Normal</b><small>Estilos</small></span></div></header><main><div class="word-ruler"><i></i></div><article class="word-page"><h1>Meu documento</h1><label class="word-draft-label">Seu texto<textarea data-word-draft aria-label="Texto do documento">${safe(OSLab.software.getProgram("word")?.dataByUser?.[OSLab.users.getCurrent()?.id]?.document || "")}</textarea></label><button class="win-button is-primary" type="button" data-word-save><img src="assets/learning/icons/checkmark_circle.svg" alt="" />Salvar</button></article></main><footer>Página 1 de 1 <span>0 palavras</span><span>Português (Brasil)</span><em>100%</em></footer></section>`;
   }
 
   function excelMarkup() {
@@ -199,6 +199,12 @@
     if (record.appId === "slides") record.content.innerHTML = slidesMarkup();
     if (!record.programPreferenceWired) {
       record.programPreferenceWired = true;
+      record.content.addEventListener("click", event => {
+        if (event.target.closest("[data-word-save]")) {
+          const text = record.content.querySelector("[data-word-draft]")?.value || "";
+          if (OSLab.software.saveAppPreference("word", "document", text)) OSLab.ui.notify("Documento salvo", "Seu texto foi salvo apenas neste perfil.", "success");
+        }
+      });
       record.content.addEventListener("change", (event) => {
         const preference = event.target.closest("[data-app-preference]");
         if (preference) OSLab.software.saveAppPreference(record.appId, "theme", preference.value);

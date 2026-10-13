@@ -31,7 +31,8 @@
       <div class="learning-detail-icon is-${selected.status}"><img src="${selected.icon}" alt="" /></div>
       <div class="learning-detail-heading"><span class="learning-status is-${selected.status}">${O.learningPath.statusLabel(selected.status, true)}</span><small>Missão ${String(selected.order).padStart(2, "0")}</small><h2>${safe(selected.title)}</h2><div class="learning-chips"><span>${safe(selected.category)}</span><span>${safe(selected.difficulty)}</span></div></div>
       <p class="learning-description">${safe(selected.description)}</p>
-      <section class="learning-goal"><h3>Aprenda fazendo</h3><p>${safe(selected.goal)}</p><strong>${safe(selected.instruction)}</strong></section>
+      <section class="learning-goal"><h3>Aprenda fazendo</h3><p>${safe(selected.goal)}</p></section>
+      ${O.learningPath.renderSteps(selected, active, selected.status === "completed")}
       <section class="learning-objectives"><h3>Verificação automática</h3><ul>${objectives}</ul></section>
       ${active?.lastHint ? O.learningPath.renderHint(active.lastHint, "Dica da missão") : ""}
       <div class="learning-detail-actions">${actions}</div>
@@ -40,7 +41,7 @@
     record.address.textContent = "Gerenciamento de Usuários e Permissões";
     record.content.innerHTML = `<section class="learning-page users-permissions-page">
       <header class="learning-hero users-learning-hero"><div class="learning-hero-copy"><span class="learning-app-mark"><img src="assets/users-permissions/trail-icon.png" alt="" /></span><div><small>OSLAB · Trilha prática</small><h1>Gerenciamento de Usuários e Permissões</h1><p>Um computador, vários perfis. Aprenda a separar, compartilhar e proteger.</p></div></div><div class="learning-stats"><span><img src="${O.learningPath.icon("checkmark_circle")}" alt="" /><strong>${completed}/7</strong><small>concluídas</small></span><span><img src="${O.learningPath.icon("apps")}" alt="" /><strong>${O.users.list().length}</strong><small>contas</small></span><span><img src="${O.learningPath.icon("ribbon")}" alt="" /><strong>${progress.totalScore}</strong><small>pontos</small></span><div class="learning-progress"><i style="width:${Math.round(completed / 7 * 100)}%"></i></div></div></header>
-      <div class="learning-toolbar"><span>${completed === 7 ? "Configuração concluída e preservada neste dispositivo." : "As verificações acompanham suas ações reais no Windows simulado."}</span><button type="button" data-users-action="reset">${O.learningPath.actionIcon("arrow_reset")}Redefinir progresso</button></div>
+      <div class="learning-toolbar"><span>${progress.active?.suspended ? "Missão pausada. Clique em Retomar missão para continuar." : completed === 7 ? "Configuração concluída e preservada neste dispositivo." : "Sua sessão é salva automaticamente neste dispositivo."}</span><button type="button" data-users-action="reset">${O.learningPath.actionIcon("arrow_reset")}Redefinir progresso</button></div>
       <div class="learning-layout"><main class="learning-trail-scroller" aria-label="As sete missões de usuários e permissões">${finale}${O.learningPath.renderSections(missions, sections, selected.id, "users-mission")}</main>${detail}</div>
     </section>`;
     if (!record.usersPermissionsWired) {

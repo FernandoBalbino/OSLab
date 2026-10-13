@@ -195,7 +195,7 @@
       };
     });
     notify("installed", { installerId, programIds: [...installer.programIds], desktopShortcut: Boolean(options.desktopShortcut), scope, ownerId: scope === "user" ? userId : null });
-    OSLab.events.emit("install:completed", { installerId, programIds: [...installer.programIds], desktopShortcut: Boolean(options.desktopShortcut), scope, ownerId: scope === "user" ? userId : null }, "softwareState");
+    OSLab.events.emit("install:completed", { installerId, programIds: [...installer.programIds], desktopShortcut: Boolean(options.desktopShortcut), scope, actorUserId: userId, ownerId: scope === "user" ? userId : null }, "softwareState");
     return { ok: true, programIds: [...installer.programIds], scope };
   }
 

@@ -21,7 +21,7 @@
     return root;
   }
   function place() {
-    const focusedLayout = document.querySelector(".missions-window.is-focused .learning-layout, .exercises-window.is-focused .learning-layout, .vpn-lab-window.is-focused .learning-layout, .install-lab-window.is-focused .learning-layout, .browser-trail-window.is-focused .learning-layout, .userspermissions-window.is-focused .learning-layout");
+    const focusedLayout = root.classList.contains("is-users-permissions") ? null : document.querySelector(".missions-window.is-focused .learning-layout, .exercises-window.is-focused .learning-layout, .vpn-lab-window.is-focused .learning-layout, .install-lab-window.is-focused .learning-layout, .browser-trail-window.is-focused .learning-layout");
     const host = focusedLayout || document.querySelector("#desktop");
     if (host && root.parentElement !== host) host.appendChild(root);
     root.classList.toggle("is-docked", Boolean(focusedLayout));
@@ -119,13 +119,13 @@
       mascot: completed ? "celebrate" : hint ? "help" : "neutral",
       eyebrow: completed ? "Missão concluída" : `Usuários e Permissões · Missão ${mission.order}`,
       title: mission.title,
-      message: completed ? mission.success : mission.instruction,
+      message: completed ? "Atividade concluída." : mission.goal,
       body: completed
         ? `<div class="assistant-result"><span><strong>Aprendizado</strong>${safe(mission.success)}</span></div>`
-        : `${nextObjective ? `<p class="users-assistant-next"><strong>Próximo objetivo:</strong> ${safe(nextObjective.label)}</p>` : ""}${objectiveMarkup(mission, active)}${hintMarkup(hint, "Dica da missão")}`,
+        : `${nextObjective ? `<p class="users-assistant-next"><strong>Etapa atual:</strong> ${safe(nextObjective.label)}</p>` : ""}${OSLab.learningPath.renderSteps(mission, active)}${hintMarkup(hint, "Dica adicional")}`,
       actions: completed
         ? `<button type="button" data-assistant-action="users-open"><img src="${icon("arrow_left")}" alt="" />Ver trilha</button><button type="button" data-assistant-action="users-repeat"><img src="${icon("arrow_reset")}" alt="" />Refazer</button><button class="is-primary" type="button" data-assistant-action="users-next"><img src="${icon(hasNext ? "arrow_right" : "target_arrow")}" alt="" />${hasNext ? "Próxima missão" : "Ver conclusão"}</button>`
-        : `<button type="button" data-assistant-action="users-hint"><img src="${icon("lightbulb")}" alt="" />${active.hintsUsed ? "Próxima dica" : "Dica"}</button><button type="button" data-assistant-action="users-tool"><img src="${icon("apps")}" alt="" />Abrir ferramenta</button><button type="button" data-assistant-action="users-open"><img src="${icon("target_arrow")}" alt="" />Trilha</button>`,
+        : `<button type="button" data-assistant-action="users-tool"><img src="${icon(mission.tool === "settings" ? "settings" : mission.tool === "explorer" ? "folder_search" : "globe_search")}" alt="" />Abrir ferramenta</button><button type="button" data-assistant-action="users-open"><img src="${icon("target_arrow")}" alt="" />Trilha</button><button type="button" data-assistant-action="users-pause"><img src="${icon("pause")}" alt="" />Pausar</button><button type="button" data-assistant-action="users-hint"><img src="${icon("lightbulb")}" alt="" />${active.hintsUsed ? "Próxima dica" : "Dica adicional"}</button>`,
     };
   }
   function renderBrowserTrail(progress) {
@@ -215,6 +215,7 @@
       if (mission?.tool) OSLab.shell.openApp(mission.tool, mission.tool === "settings" ? { settingsView: "accounts" } : {});
     }
     if (action === "users-open") OSLab.shell.openApp("userspermissions");
+    if (action === "users-pause") { OSLab.userMissions.stop(); OSLab.shell.openApp("userspermissions"); }
     if (action === "users-repeat") OSLab.userMissions.finish("repeat");
     if (action === "users-next") OSLab.userMissions.finish("next");
     if (action === "browser-trail-browser") { const record = OSLab.shell.openApp("google"); if (record && OSLab.browserTrail?.getProgress?.().active?.id === "browser-6") OSLab.browserApp.openGoogle(record); }

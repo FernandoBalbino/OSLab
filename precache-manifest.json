@@ -312,5 +312,14 @@
   "./assets/digital/netflix/NetflixSans-Blk.woff2",
   "./assets/digital/ui/chevron.svg",
   "./assets/digital/ui/language.svg",
-  "./assets/users-permissions/trail-icon.png"
+  "./assets/users-permissions/trail-icon.png",
+  "css/windows-theme.css",
+  "assets/settings/defAccount.webp",
+  "assets/learning/icons/people.svg",
+  "assets/learning/icons/person.svg",
+  "assets/learning/icons/settings.svg",
+  "assets/learning/icons/pause.svg",
+  "assets/learning/icons/key.svg",
+  "js/ui/windows-icons.js",
+  "assets/fonts/SettingsIcons-win11React.woff2"
 ]

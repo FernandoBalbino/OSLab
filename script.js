@@ -178,6 +178,7 @@
 
   const defaultState = {
     version: 3,
+    theme: "light",
     wallpaperId: "1",
     desktopFolders: [],
     desktopFiles: [],
@@ -189,7 +190,6 @@
       airplane: false,
       hotspot: false,
       "battery-saver": false,
-      theme: true,
       "night-light": false,
     },
     brightness: 86,
@@ -249,6 +249,7 @@
         ...defaultState,
         ...parsed,
         version: 3,
+        theme: "light",
         wallpaperId,
         desktopFolders,
         desktopFiles,
@@ -268,6 +269,12 @@
 
   const state = loadState();
 
+  function applyLightAppearance() {
+    state.theme = "light";
+    document.documentElement.dataset.theme = "light";
+    delete state.quickSettings.theme;
+  }
+
   function saveState() {
     if (persistenceSuspended) return;
     OSLab.users?.captureSystemState?.(state, OSLab.users.getCurrent()?.id || OSLab.users.getSelected()?.id, true);
@@ -282,6 +289,7 @@
   OSLab.fileSystem.bind(state, saveState);
   OSLab.users.bindSystemState(state, () => {
     OSLab.fileSystem.bind(state, saveState);
+    applyLightAppearance();
     currentWallpaperId = state.wallpaperId || "1";
     applyWallpaper(currentWallpaperId, false);
     fileClipboard = null;
@@ -966,6 +974,7 @@
             <img src="${escapeHtml(current.avatar)}" alt="Perfil de ${escapeHtml(current.displayName)}" />
             <span><strong>${escapeHtml(current.displayName)}</strong><small>${current.role === "administrator" ? "Administrador" : "Usuário padrão"} · Conta local</small></span>
           </div>
+          <label class="settings-sidebar-search"><img src="assets/icons/search.png" alt="" /><input type="search" data-settings-search placeholder="Localizar uma configuração" aria-label="Pesquisar categorias de configurações" /></label>
           <nav class="settings-nav">${settingsNavMarkup(active)}</nav>
         </aside>
         <main class="settings-main">${mainContent}</main>
@@ -1040,7 +1049,7 @@
             ${row.page ? `data-settings-page="${row.page}"` : ""}
             ${row.toggle ? `data-state-toggle="${row.toggle}"` : ""}
           >
-            <img src="${row.icon}" alt="" />
+            ${OSLab.windowsIcons.markup(row.name, row.icon)}
             <span><strong>${row.name}</strong><small>${row.description}</small></span>
             ${row.action ? `<em>${row.action}</em>` : ""}
             ${row.toggle ? `<small class="settings-toggle-label">${state.quickSettings[row.toggle] ? "Ativado" : "Desativado"}</small><span class="settings-switch ${state.quickSettings[row.toggle] ? "is-active" : ""}" aria-hidden="true"></span>` : ""}
@@ -1102,7 +1111,7 @@
   function settingsPersonalizationOverviewMarkup() {
     const rows = [
       { name: "Tela de fundo", description: "Imagem de tela de fundo, cor, apresentação de slides", icon: "assets/icons/settings-rows/personalize.png", page: "background" },
-      { name: "Cores", description: "Cor de destaque, efeitos de transparência, tema de cor", icon: "assets/icons/settings-rows/colors.png" },
+      { name: "Cores", description: "Cor de destaque, efeitos de transparência, tema de cor", icon: "assets/icons/settings-rows/colors.png", page: "colors" },
       { name: "Temas", description: "Instalar, criar, gerenciar", icon: "assets/icons/settings-rows/themes.png" },
       { name: "Iluminação Dinâmica", description: "Dispositivos conectados, efeitos, configurações do aplicativo", icon: "assets/icons/ui/brightness.png" },
       { name: "Tela de bloqueio", description: "Imagens da tela de bloqueio, aplicativos, animações", icon: "assets/icons/settings-rows/lock.png" },
@@ -1117,7 +1126,7 @@
       <header class="settings-page-heading"><h1>Personalização</h1></header>
       <section class="personalization-hero">
         <div class="personalization-preview"><img data-current-wallpaper src="${current.src}" alt="${current.name}" /><span></span></div>
-        <div class="personalization-themes"><strong>Selecionar um tema para aplicar</strong><div class="wallpaper-grid is-overview">${wallpaperOptionsMarkup(true)}</div></div>
+        <div class="personalization-themes"><strong>Selecionar um plano de fundo</strong><div class="wallpaper-grid is-overview">${wallpaperOptionsMarkup(true)}</div></div>
       </section>
       <article class="settings-card detailed-settings-card">${settingsRowsMarkup(rows)}</article>`;
   }
@@ -1190,12 +1199,12 @@
   function settingsAccountsMarkup(record, pageId) {
     const current = OSLab.users.getCurrent() || OSLab.users.getSelected();
     if (pageId === "accounts") {
-      return `<header class="settings-page-heading"><h1>Contas</h1><p>Gerencie seu perfil, entrada e outros usuários.</p></header>
+      return `<header class="settings-page-heading"><h1>Contas</h1></header>
         <section class="accounts-hero"><img src="${escapeHtml(current.avatar)}" alt="" /><div><h2>${escapeHtml(current.displayName)}</h2><p>${escapeHtml(current.username)} · ${current.role === "administrator" ? "Administrador" : "Usuário padrão"} · Conta local</p></div></section>
         <article class="settings-card detailed-settings-card">
-          <button type="button" class="settings-row detailed-settings-row" data-account-action="edit-profile"><img src="assets/settings/Accounts.webp" alt="" /><span><strong>Suas informações</strong><small>Nome exibido e imagem do perfil</small></span><img class="settings-chevron" src="assets/icons/ui/right.png" alt="" /></button>
-          <button type="button" class="settings-row detailed-settings-row" data-settings-toggle><img src="assets/icons/settings-rows/lock.png" alt="" /><span><strong>Opções de entrada</strong><small>Senha local simulada e bloqueio de sessão</small></span><img class="settings-chevron" src="assets/icons/ui/right.png" alt="" /></button>
-          <button type="button" class="settings-row detailed-settings-row" data-account-action="other-users"><img src="assets/learning/icons/apps.svg" alt="" /><span><strong>Outros usuários</strong><small>Adicione contas e altere tipos de conta</small></span><img class="settings-chevron" src="assets/icons/ui/right.png" alt="" /></button>
+          <button type="button" class="settings-row detailed-settings-row" data-account-action="edit-profile">${OSLab.windowsIcons.markup("Suas informações")}<span><strong>Suas informações</strong><small>Nome exibido e imagem do perfil</small></span><img class="settings-chevron" src="assets/icons/ui/right.png" alt="" /></button>
+          <button type="button" class="settings-row detailed-settings-row" data-settings-toggle>${OSLab.windowsIcons.markup("Opções de entrada")}<span><strong>Opções de entrada</strong><small>Senha local simulada e bloqueio de sessão</small></span><img class="settings-chevron" src="assets/icons/ui/right.png" alt="" /></button>
+          <button type="button" class="settings-row detailed-settings-row" data-account-action="other-users">${OSLab.windowsIcons.markup("Outros usuários")}<span><strong>Outros usuários</strong><small>Adicione contas e altere tipos de conta</small></span><img class="settings-chevron" src="assets/icons/ui/right.png" alt="" /></button>
         </article>
         ${record.editingProfile ? `<form class="add-user-panel" data-profile-form><h2>Suas informações</h2><p>Personalize o nome mostrado neste perfil.</p><label>Nome exibido<input name="displayName" maxlength="48" value="${escapeHtml(current.displayName)}" required /></label><p class="account-error" data-account-error></p><footer><button class="win-button" type="button" data-account-action="cancel-profile">Cancelar</button><button class="win-button is-primary" type="submit">Salvar</button></footer></form>` : ""}`;
     }
@@ -1233,20 +1242,22 @@
 
   function renderSettings(record, pageId = record.settingsView || state.lastSettingsPage || "home") {
     const isBackground = pageId === "background";
+    const isColors = pageId === "colors";
     const isStorage = pageId === "storage";
     const isOtherUsers = pageId === "other-users";
-    const section = isBackground
+    const section = isBackground || isColors
       ? settingsSections.find((item) => item.id === "personalization")
       : isStorage ? settingsSections.find((item) => item.id === "system")
       : isOtherUsers ? settingsSections.find((item) => item.id === "accounts")
       : settingsSections.find((item) => item.id === pageId) || settingsSections[0];
-    record.settingsView = isBackground ? "background" : isStorage ? "storage" : isOtherUsers ? "other-users" : section.id;
+    record.settingsView = isBackground ? "background" : isColors ? "colors" : isStorage ? "storage" : isOtherUsers ? "other-users" : section.id;
     record.address.textContent = isBackground ? "Plano de fundo" : isStorage ? "Armazenamento" : isOtherUsers ? "Outros usuários" : section.name;
     state.lastSettingsPage = record.settingsView;
     saveState();
 
     let mainContent = settingsHomeMarkup();
-    if (isBackground) mainContent = settingsBackgroundMarkup();
+    if (isColors) mainContent = `<header class="settings-page-heading with-back"><button type="button" data-settings-back="personalization" aria-label="Voltar para Personalização"><img src="assets/icons/ui/left.png" alt="" /></button><div><small>Personalização</small><h1>Cores</h1></div></header><article class="settings-card"><h2>Cor de destaque</h2><p>Azul do Windows</p><span class="settings-accent-preview" aria-label="Azul do Windows"></span></article>`;
+    else if (isBackground) mainContent = settingsBackgroundMarkup();
     else if (isStorage) mainContent = OSLab.systemTools.storageMarkup();
     else if (section.id === "system") mainContent = settingsSystemMarkup();
     else if (section.id === "bluetooth") mainContent = settingsBluetoothMarkup();
@@ -1351,7 +1362,7 @@
     element.setAttribute("aria-labelledby", titleId);
     title.id = titleId;
     title.textContent = definition.title;
-    $("[data-window-role='icon']", element).src = appId === "settings" ? "assets/icons/ui/left.png" : definition.icon;
+    $("[data-window-role='icon']", element).src = definition.icon;
     record.address.textContent = definition.address;
     record.toolbar.classList.toggle("browser-toolbar", ["google", "edge", "firefox", "brave", "opera"].includes(appId));
     element.classList.toggle("settings-window", appId === "settings");
@@ -1667,9 +1678,9 @@
         const select = $(`[data-account-role="${CSS.escape(accountChange)}"]`, record.content);
         const target = OSLab.users.list().find((account) => account.id === accountChange);
         if (select && target && select.value !== target.role) {
-          const elevation = await OSLab.ui.elevate({ action: "change-account-type", actionLabel: `Alterar ${target.displayName} para ${select.value === "administrator" ? "Administrador" : "Usuário padrão"}` });
+          const elevation = await OSLab.ui.elevate({ action: "change-account-type", targetUserId: accountChange, actionLabel: `Alterar ${target.displayName} para ${select.value === "administrator" ? "Administrador" : "Usuário padrão"}` });
           if (elevation.ok) {
-            const changed = OSLab.users.setRole(accountChange, select.value);
+            const changed = OSLab.users.setRole(accountChange, select.value, { authorizationId: elevation.token });
             if (!changed.ok) OSLab.ui.notify("Não foi possível alterar", changed.reason === "last-admin" ? "O computador precisa manter pelo menos um administrador." : "A conta não está disponível.", "warning");
             renderSettings(record, "other-users");
           }
@@ -1679,7 +1690,7 @@
         const key = stateToggle.dataset.stateToggle;
         if (key === "wifi") OSLab.network.setWifi(!OSLab.network.getSnapshot().wifiEnabled);
         else if (key === "airplane") OSLab.network.setAirplaneMode(!OSLab.network.getSnapshot().airplaneMode);
-        else { state.quickSettings[key] = !state.quickSettings[key]; saveState(); }
+      else { state.quickSettings[key] = !state.quickSettings[key]; saveState(); }
         renderSettings(record, record.settingsView);
         syncQuickSettings();
       }
@@ -1761,7 +1772,13 @@
       }
     });
 
+    content.addEventListener("change", (event) => {
+    });
     content.addEventListener("input", (event) => {
+      if (event.target.matches("[data-settings-search]")) {
+        const query = event.target.value.toLocaleLowerCase("pt-BR");
+        $$("[data-settings-label]", content).forEach(item => item.classList.toggle("is-hidden", !item.dataset.settingsLabel.includes(query)));
+      }
       const textFile = event.target.closest("[data-text-file]");
       if (textFile) {
         const file = OSLab.fileSystem.get(textFile.dataset.textFile);
@@ -1890,8 +1907,8 @@
       if (!dragState || dragState.pointerId !== event.pointerId) return;
       const layerRect = windowLayer.getBoundingClientRect();
       const rect = element.getBoundingClientRect();
-      const left = Math.min(Math.max(0, event.clientX - dragState.offsetX), layerRect.width - Math.min(rect.width, 140));
-      const top = Math.min(Math.max(0, event.clientY - dragState.offsetY), layerRect.height - 40);
+      const left = Math.min(Math.max(0, event.clientX - layerRect.left - dragState.offsetX), Math.max(0, layerRect.width - 140));
+      const top = Math.min(Math.max(0, event.clientY - layerRect.top - dragState.offsetY), Math.max(0, layerRect.height - 40));
       element.style.left = `${left}px`;
       element.style.top = `${top}px`;
     });
@@ -2034,7 +2051,14 @@
 
   startProfileButton.addEventListener("click", (event) => {
     event.stopPropagation();
+    updateIdentityUI();
+    const anchor = startProfileButton.getBoundingClientRect();
     toggleFlyout(profileMenu, startProfileButton);
+    startMenu.classList.remove("is-hidden");
+    startButton.setAttribute("aria-expanded", "true");
+    profileMenu.style.left = `${Math.max(8, Math.min(anchor.left, window.innerWidth - 258))}px`;
+    profileMenu.style.bottom = `${Math.max(8, window.innerHeight - anchor.top + 8)}px`;
+    profileMenu.style.maxHeight = `${Math.max(80, anchor.top - 16)}px`;
   });
 
   profileMenu.addEventListener("click", (event) => {
@@ -2352,7 +2376,7 @@
     renderDesktopFolders();
     renderInstalledStartApps();
   });
-  syncQuickSettings();
+  applyLightAppearance();
   saveState();
   updateClock();
   window.setInterval(updateClock, 1000);
