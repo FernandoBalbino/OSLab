@@ -7,6 +7,7 @@
   let previousKind = null;
   let previousDigitalMission = null;
   let previousUsersMission = null;
+  let previousWifiMission = null;
 
   function safe(value) { return OSLab.ui.escapeHtml(value); }
   function icon(name) { return OSLab.learningPath.icon(name); }
@@ -17,11 +18,17 @@
     root.className = "learning-assistant is-hidden";
     root.setAttribute("aria-live", "polite");
     root.addEventListener("click", handleClick);
+    root.addEventListener("submit", event => {
+      if (!event.target.matches("[data-wifi-record-form]")) return;
+      event.preventDefault();
+      const data = new FormData(event.target);
+      OSLab.wifiLab.verifyProperties(data.get("band"), data.get("security"));
+    });
     document.querySelector("#desktop")?.appendChild(root);
     return root;
   }
   function place() {
-    const focusedLayout = root.classList.contains("is-users-permissions") ? null : document.querySelector(".missions-window.is-focused .learning-layout, .exercises-window.is-focused .learning-layout, .vpn-lab-window.is-focused .learning-layout, .install-lab-window.is-focused .learning-layout, .browser-trail-window.is-focused .learning-layout");
+    const focusedLayout = root.classList.contains("is-users-permissions") || root.classList.contains("is-wifi-lab") ? null : document.querySelector(".missions-window.is-focused .learning-layout, .exercises-window.is-focused .learning-layout, .vpn-lab-window.is-focused .learning-layout, .install-lab-window.is-focused .learning-layout, .browser-trail-window.is-focused .learning-layout");
     const host = focusedLayout || document.querySelector("#desktop");
     if (host && root.parentElement !== host) host.appendChild(root);
     root.classList.toggle("is-docked", Boolean(focusedLayout));
@@ -151,7 +158,7 @@
     const installLabProgress = OSLab.installLab?.getProgress?.();
     const browserTrailProgress = OSLab.browserTrail?.getProgress?.();
     const usersProgress = OSLab.userMissions?.getProgress?.();
-    const view = OSLab.digitalLifeApp?.assistantView() || (usersProgress?.active && !usersProgress.active.suspended ? renderUsersPermissions(usersProgress) : browserTrailProgress?.active ? renderBrowserTrail(browserTrailProgress) : installLabProgress?.active ? renderInstallLab(installLabProgress) : vpnLabProgress?.active ? renderVpnLab(vpnLabProgress) : exerciseSession ? renderExercise(exerciseSession) : missionProgress?.active ? renderMission(missionProgress) : null);
+    const view = OSLab.wifiLabApp?.assistantView() || OSLab.digitalLifeApp?.assistantView() || (usersProgress?.active && !usersProgress.active.suspended ? renderUsersPermissions(usersProgress) : browserTrailProgress?.active ? renderBrowserTrail(browserTrailProgress) : installLabProgress?.active ? renderInstallLab(installLabProgress) : vpnLabProgress?.active ? renderVpnLab(vpnLabProgress) : exerciseSession ? renderExercise(exerciseSession) : missionProgress?.active ? renderMission(missionProgress) : null);
     if (view?.kind === "browser-trail" && (document.querySelector(".browser-museum-window.is-focused:not(.is-minimized)") || OSLab.browserMuseum?.getSelected?.())) {
       document.body.classList.remove("has-learning-assistant");
       root.className = "learning-assistant is-hidden";
@@ -165,6 +172,9 @@
     if (usersMission && (previousKind !== "users-permissions" || usersMission !== previousUsersMission)) collapsed = false;
     previousDigitalMission = digitalMission;
     previousUsersMission = usersMission;
+    const wifiMission = view?.kind === "wifi-lab" ? OSLab.wifiLab.getProgress().active?.id : null;
+    if (wifiMission && wifiMission !== previousWifiMission) collapsed = false;
+    previousWifiMission = wifiMission;
     previousKind = view?.kind || null;
     document.body.classList.toggle("has-learning-assistant", Boolean(view));
     if (!view) { root.className = "learning-assistant is-hidden"; root.innerHTML = ""; place(); return; }
@@ -174,8 +184,17 @@
   }
 
   async function handleClick(event) {
+    const wifiAnswer = event.target.closest("[data-wifi-answer]");
+    if (wifiAnswer) { OSLab.wifiLab.answer(Number(wifiAnswer.dataset.wifiAnswer)); return; }
     const action = event.target.closest("[data-assistant-action]")?.dataset.assistantAction;
     if (!action) return;
+    if (action === "wifi-open") OSLab.shell.openApp("wifilab");
+    if (action === "wifi-tool") { event.stopPropagation(); OSLab.wifiLabApp.openTool(); }
+    if (action === "wifi-hint") OSLab.wifiLab.useHint();
+    if (action === "wifi-restart") OSLab.wifiLab.restart();
+    if (action === "wifi-repeat") OSLab.wifiLab.finish("repeat");
+    if (action === "wifi-next") OSLab.wifiLab.finish("next");
+    if (action === "wifi-pause") { OSLab.wifiLab.stop(); OSLab.shell.openApp("wifilab"); }
     if (action === "digital-hint") OSLab.digitalLifeTrail.hint();
     if (action === "digital-browser") OSLab.shell.openApp("google");
     if (action === "digital-open") OSLab.shell.openApp("digitallife");
@@ -234,6 +253,7 @@
   OSLab.installLab?.subscribe?.(render);
   OSLab.browserTrail?.subscribe?.(render);
   OSLab.userMissions?.subscribe?.(render);
+  OSLab.wifiLab?.subscribe?.(render);
   ["app:opened", "app:closed", "window:minimized", "window:maximized", "window:restored"].forEach((type) => OSLab.events?.subscribe?.(type, () => window.requestAnimationFrame(render)));
   OSLab.assistantRobot = { render, expand() { collapsed = false; render(); }, collapse() { collapsed = true; render(); } };
 })(window);

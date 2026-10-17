@@ -20,8 +20,7 @@
     dns: "8.8.8.8",
   });
 
-  let state = { ...defaults };
-  const availableNetworks = Object.freeze([
+  const legacyNetworks = [
     { ssid: "REDE_OSLAB", secure: true, signal: 94 },
     { ssid: "Casa_OS", secure: true, signal: 96 },
     { ssid: "Escola_WiFi", secure: true, signal: 82 },
@@ -29,7 +28,9 @@
     { ssid: "Cafe_Free", secure: false, signal: 58 },
     { ssid: "BIBLIOTECA", secure: true, signal: 67 },
     { ssid: "VISITANTES", secure: false, signal: 42 },
-  ]);
+  ].map(network => ({ ...network, password: network.secure ? "oslab2026" : "", band: "5 GHz", security: network.secure ? "WPA2-Personal" : "Aberta", channel: 36 }));
+  const legacyKnown = Object.fromEntries(legacyNetworks.map(network => [network.ssid, { password: network.password, autoConnect: true, metered: false, profile: "public" }]));
+  let state = { ...defaults, availableNetworks: clone(legacyNetworks), knownNetworks: clone(legacyKnown), connectionStatus: "connected", lastError: null };
 
   function clone(value) { return JSON.parse(JSON.stringify(value)); }
   function ipv4Parts(value) {
@@ -43,7 +44,7 @@
   }
   function adapterConnected() {
     if (state.connectionType === "ethernet") return state.ethernetCableConnected;
-    return state.wifiEnabled && !state.airplaneMode && Boolean(state.connectedSsid);
+    return state.wifiEnabled && Boolean(state.connectedSsid);
   }
   function localNetworkAvailable() { return adapterConnected() && sameNetwork(state.ip, state.gateway, state.mask); }
   function internetByIpAvailable() { return localNetworkAvailable() && state.gateway === "192.168.1.1"; }
@@ -53,7 +54,7 @@
   function snapshot() {
     return {
       ...clone(state),
-      availableNetworks: clone(availableNetworks),
+      availableNetworks: clone(state.availableNetworks),
       adapterConnected: adapterConnected(),
       localNetworkAvailable: localNetworkAvailable(),
       internetByIpAvailable: internetByIpAvailable(),
@@ -66,6 +67,7 @@
     backing.wifi = state.wifiEnabled;
     backing.airplane = state.airplaneMode;
     backing.connectedSsid = state.connectedSsid;
+    backing.networkState = clone(state);
   }
   function notify(reason) {
     syncBacking(); persist();
@@ -81,8 +83,10 @@
     if (state.dnsAutomatic) state.dns = "8.8.8.8";
   }
   function restoreSnapshot(input, options = {}) {
-    state = { ...defaults, ...(input || {}) };
-    delete state.availableNetworks;
+    state = { ...defaults, availableNetworks: clone(legacyNetworks), knownNetworks: clone(legacyKnown), connectionStatus: "disconnected", lastError: null, ...clone(input || {}) };
+    if (!Array.isArray(state.availableNetworks)) state.availableNetworks = clone(legacyNetworks);
+    if (!state.knownNetworks || typeof state.knownNetworks !== "object" || Array.isArray(state.knownNetworks)) state.knownNetworks = clone(legacyKnown);
+    if (!state.wifiEnabled) state.connectedSsid = null;
     delete state.adapterConnected;
     delete state.localNetworkAvailable;
     delete state.internetByIpAvailable;
@@ -90,24 +94,73 @@
     delete state.internetAvailable;
     return options.silent ? (syncBacking(), snapshot()) : notify("restored");
   }
-  function setWifi(enabled) {
+  function setWifi(enabled, source = "networkManager") {
     state.wifiEnabled = Boolean(enabled);
-    if (state.wifiEnabled) state.airplaneMode = false;
-    if (!state.wifiEnabled) state.connectedSsid = null;
-    return notify("wifi");
+    if (!state.wifiEnabled) { state.connectedSsid = null; state.connectionStatus = "disconnected"; }
+    state.lastError = null;
+    notify("wifi");
+    OSLab.events.emit("wifi:toggled", { enabled: state.wifiEnabled, source }, source);
+    if (state.wifiEnabled && !state.connectedSsid) {
+      const candidate = state.availableNetworks.find(network => state.knownNetworks[network.ssid]?.autoConnect && (!network.secure || state.knownNetworks[network.ssid].password === network.password));
+      if (candidate) connectWifi(candidate.ssid);
+    }
+    return snapshot();
   }
   function setAirplaneMode(enabled) {
     state.airplaneMode = Boolean(enabled);
-    if (state.airplaneMode) { state.wifiEnabled = false; state.connectedSsid = null; }
+    if (state.airplaneMode) { state.wifiEnabled = false; state.connectedSsid = null; state.connectionStatus = "disconnected"; state.lastError = null; }
     return notify("airplane");
   }
-  function connectWifi(ssid) {
-    if (!state.wifiEnabled || state.airplaneMode || !availableNetworks.some((network) => network.ssid === ssid)) return { ok: false };
+  function connectWifi(ssid, options = {}) {
+    const network = state.availableNetworks.find(network => network.ssid === ssid);
+    if (!state.wifiEnabled || !network) return { ok: false, reason: "unavailable" };
+    const known = state.knownNetworks[ssid];
+    const password = options.password === undefined ? known?.password : String(options.password);
+    if (network.secure && password !== network.password) {
+      state.lastError = { ssid, reason: password === undefined ? "password-required" : "authentication" };
+      state.connectionStatus = "authentication-error";
+      if (state.connectedSsid === ssid) state.connectedSsid = null;
+      notify("wifi-authentication-failed");
+      OSLab.events.emit("wifi:authentication-failed", { ssid, reason: state.lastError.reason }, "networkManager");
+      return { ok: false, reason: state.lastError.reason };
+    }
     state.connectionType = "wifi";
     state.connectedSsid = ssid;
+    state.knownNetworks[ssid] = { password: password || "", autoConnect: options.autoConnect ?? known?.autoConnect ?? true, metered: known?.metered || false, profile: known?.profile || "public" };
+    state.connectionStatus = "connected"; state.lastError = null;
     if (state.dhcpEnabled) applyDhcp();
     notify("wifi-connected");
+    OSLab.events.emit("wifi:connected", { ssid, authenticated: true }, "networkManager");
     return { ok: true, network: snapshot() };
+  }
+  function disconnectWifi() { state.connectedSsid = null; state.connectionStatus = "disconnected"; state.lastError = null; return notify("wifi-disconnected"); }
+  function forgetWifi(ssid) {
+    if (!Object.hasOwn(state.knownNetworks, ssid)) return { ok: false };
+    delete state.knownNetworks[ssid];
+    if (state.connectedSsid === ssid) { state.connectedSsid = null; state.connectionStatus = "disconnected"; }
+    state.lastError = null; notify("wifi-forgotten");
+    OSLab.events.emit("wifi:forgotten", { ssid }, "networkManager"); return { ok: true };
+  }
+  function setWifiProperty(ssid, property, value) {
+    const known = state.knownNetworks[ssid];
+    if (!known || !["autoConnect", "metered", "profile"].includes(property)) return { ok: false };
+    if (property === "profile" && !["public", "private"].includes(value)) return { ok: false };
+    known[property] = property === "profile" ? value : Boolean(value);
+    notify("wifi-property"); OSLab.events.emit("wifi:property-changed", { ssid, property, value: known[property] }, "networkManager"); return { ok: true };
+  }
+  function revealPassword(ssid) {
+    const known = state.knownNetworks[ssid];
+    if (!known) return { ok: false };
+    OSLab.events.emit("wifi:password-revealed", { ssid }, "settings");
+    return { ok: true, ssid, password: known.password };
+  }
+  function setSignalPosition(position) {
+    const positions = { distant: 24, wall: 43, corridor: 61, near: 91 };
+    if (!Object.hasOwn(positions, position)) return { ok: false };
+    const network = state.availableNetworks.find(network => network.ssid === state.connectedSsid);
+    if (!network) return { ok: false };
+    network.signal = positions[position]; state.signalPosition = position;
+    notify("wifi-signal"); OSLab.events.emit("wifi:position-changed", { ssid: network.ssid, position, signal: network.signal }, "wifiSignal"); return { ok: true };
   }
   function setConnectionType(type) {
     state.connectionType = type === "ethernet" ? "ethernet" : "wifi";
@@ -197,8 +250,9 @@
   OSLab.network = {
     defaults: { ...defaults }, bind(sharedQuickSettings, save) {
       backing = sharedQuickSettings || backing; persist = typeof save === "function" ? save : persist;
+      if (backing?.networkState) { restoreSnapshot(backing.networkState, { silent: true }); return this; }
       if (backing) {
-        const storedSsid = availableNetworks.some((network) => network.ssid === backing.connectedSsid)
+        const storedSsid = state.availableNetworks.some((network) => network.ssid === backing.connectedSsid)
           ? backing.connectedSsid
           : state.connectedSsid;
         state = {
@@ -212,6 +266,7 @@
       syncBacking(); return this;
     },
     getSnapshot: snapshot, restoreSnapshot, setWifi, setAirplaneMode, connectWifi, setConnectionType,
+    disconnectWifi, forgetWifi, setWifiProperty, revealPassword, setSignalPosition,
     setEthernetCable, setDhcp, setIpConfig, setDns, ping, nslookup, browse, ipconfig,
     validIpv4, sameNetwork, subscribe(listener) { listeners.add(listener); return () => listeners.delete(listener); },
   };

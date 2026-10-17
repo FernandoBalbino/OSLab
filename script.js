@@ -1241,6 +1241,18 @@
   }
 
   function renderSettings(record, pageId = record.settingsView || state.lastSettingsPage || "home") {
+    const isNetworkPage = ["network", "wifi", "wifi-known", "wifi-properties"].includes(pageId);
+    record.element.classList.toggle("is-network-page", isNetworkPage);
+    if (isNetworkPage && OSLab.wifiUI) {
+      record.settingsView = pageId;
+      record.address.textContent = "Rede e Internet";
+      state.lastSettingsPage = pageId; saveState();
+      record.content.innerHTML = settingsShellMarkup("network", pageId === "network" ? OSLab.wifiUI.networkMarkup() : OSLab.wifiUI.settingsMarkup(pageId, record));
+      OSLab.wifiUI.wireSettings(record, () => renderSettings(record, record.settingsView));
+      const page = pageId === "wifi-properties" ? "properties" : pageId === "wifi-known" ? "known" : pageId;
+      OSLab.events.emit("wifi:page-opened", { page, ssid: record.wifiSsid || OSLab.network.getSnapshot().connectedSsid }, "settings");
+      return;
+    }
     const isBackground = pageId === "background";
     const isColors = pageId === "colors";
     const isStorage = pageId === "storage";
@@ -1249,8 +1261,10 @@
       ? settingsSections.find((item) => item.id === "personalization")
       : isStorage ? settingsSections.find((item) => item.id === "system")
       : isOtherUsers ? settingsSections.find((item) => item.id === "accounts")
+      : pageId === "network-advanced" ? settingsSections.find((item) => item.id === "network")
       : settingsSections.find((item) => item.id === pageId) || settingsSections[0];
     record.settingsView = isBackground ? "background" : isColors ? "colors" : isStorage ? "storage" : isOtherUsers ? "other-users" : section.id;
+    if (pageId === "network-advanced") record.settingsView = pageId;
     record.address.textContent = isBackground ? "Plano de fundo" : isStorage ? "Armazenamento" : isOtherUsers ? "Outros usuários" : section.name;
     state.lastSettingsPage = record.settingsView;
     saveState();
@@ -1289,6 +1303,7 @@
     if (record.appId === "installlab") OSLab.installLabApp.render(record);
     if (record.appId === "digitallife") OSLab.digitalLifeApp.render(record);
     if (record.appId === "userspermissions") OSLab.usersPermissionsApp.render(record);
+    if (record.appId === "wifilab") OSLab.wifiLabApp.render(record);
     if (record.appId === "browsertrail") OSLab.browserTrailsApp.renderTrail(record);
     if (record.appId === "browsermuseum") OSLab.browserTrailsApp.renderMuseum(record);
     if (OSLab.softwareApps?.appIds?.has(record.appId)) OSLab.softwareApps.render(record);
@@ -1366,7 +1381,7 @@
     record.address.textContent = definition.address;
     record.toolbar.classList.toggle("browser-toolbar", ["google", "edge", "firefox", "brave", "opera"].includes(appId));
     element.classList.toggle("settings-window", appId === "settings");
-    record.toolbar.classList.toggle("is-hidden", ["settings", "taskmanager", "missions", "exercises", "vpn", "vpnlab", "installlab", "browsertrail", "digitallife", "userspermissions", "browsermuseum", "controlpanel", "installer", "appjavafx", "word", "excel", "slides", "texteditor"].includes(appId));
+    record.toolbar.classList.toggle("is-hidden", ["settings", "taskmanager", "missions", "exercises", "vpn", "vpnlab", "installlab", "browsertrail", "digitallife", "userspermissions", "wifilab", "browsermuseum", "controlpanel", "installer", "appjavafx", "word", "excel", "slides", "texteditor"].includes(appId));
     record.settingsSearch.classList.toggle("is-hidden", appId !== "settings" && appId !== "taskmanager");
     element.classList.toggle("taskmanager-window", appId === "taskmanager");
     element.classList.toggle("missions-window", appId === "missions");
@@ -1376,6 +1391,7 @@
     element.classList.toggle("install-lab-window", appId === "installlab");
     element.classList.toggle("browser-trail-window", appId === "browsertrail" || appId === "digitallife");
     element.classList.toggle("userspermissions-window", appId === "userspermissions");
+    element.classList.toggle("wifilab-window", appId === "wifilab");
     element.classList.toggle("browser-museum-window", appId === "browsermuseum");
     element.classList.toggle("software-window", OSLab.softwareApps?.appIds?.has(appId));
     element.classList.toggle("texteditor-window", appId === "texteditor");
@@ -1395,7 +1411,7 @@
     positionWindow(record);
     wireWindow(record);
     renderApp(record);
-    if (["settings", "taskmanager", "missions", "exercises", "vpnlab", "installlab", "browsertrail", "digitallife", "userspermissions", "browsermuseum"].includes(appId)) {
+    if (["settings", "taskmanager", "missions", "exercises", "vpnlab", "installlab", "browsertrail", "digitallife", "userspermissions", "wifilab", "browsermuseum"].includes(appId)) {
       element.classList.add("is-maximized");
       record.maximizeIcon.src = "assets/icons/ui/restore.png";
       record.maximizeIcon.closest("button").setAttribute("aria-label", "Restaurar");
@@ -1408,7 +1424,7 @@
       icon: definition.icon,
       status: "Em execução",
       cpu: appId === "taskmanager" ? 0.3 : 0.1,
-      memory: ["google", "edge", "firefox", "brave", "opera"].includes(appId) ? 64.2 : ["missions", "exercises", "vpnlab", "installlab", "browsertrail", "digitallife", "userspermissions", "browsermuseum"].includes(appId) ? 42.6 : ["word", "excel", "slides"].includes(appId) ? 78.4 : appId === "vpn" ? 34.8 : appId === "texteditor" ? 42 : 28.4,
+      memory: ["google", "edge", "firefox", "brave", "opera"].includes(appId) ? 64.2 : ["missions", "exercises", "vpnlab", "installlab", "browsertrail", "digitallife", "userspermissions", "wifilab", "browsermuseum"].includes(appId) ? 42.6 : ["word", "excel", "slides"].includes(appId) ? 78.4 : appId === "vpn" ? 34.8 : appId === "texteditor" ? 42 : 28.4,
       missionId: options.missionId || null,
       efficient: appId === "google",
     });
@@ -1518,6 +1534,8 @@
     openFolder(folderId) { const record = openApp("explorer"); renderFolder(record, folderId); return record; },
     openRecycleBin() { const record = openApp("recycle"); renderRecycleBin(record); return record; },
     openSettings(page = "home") { const record = openApp("settings"); renderSettings(record, page); return record; },
+    openWifiProperties(ssid) { const record = openApp("settings"); record.wifiSsid = ssid; renderSettings(record, "wifi-properties"); return record; },
+    openQuickSettings(view = "main") { closeFlyouts(quickPanel); quickPanel.classList.remove("is-hidden"); quickSettingsButton.setAttribute("aria-expanded", "true"); OSLab.events.emit("wifi:quick-opened", {}, "quickSettings"); OSLab.wifiUI.show(view); },
     openTextEditor(options = {}) {
       const existing = windows.get("texteditor");
       if (existing && existing.options?.missionId !== options.missionId) closeWindow(existing, { force: true });
@@ -1828,6 +1846,7 @@
       searchInput.addEventListener("keydown", (event) => {
         if (event.key !== "Enter") return;
         const query = searchInput.value.trim().toLocaleLowerCase("pt-BR");
+        if (query.includes("wi-fi") || query.includes("wifi")) { renderSettings(record, query.includes("conhecid") ? "wifi-known" : "wifi"); return; }
         const match = settingsSections.find((section) => section.name.toLocaleLowerCase("pt-BR").includes(query));
         if (match) {
           renderSettings(record, match.id);
@@ -2037,6 +2056,7 @@
   quickSettingsButton.addEventListener("click", (event) => {
     event.stopPropagation();
     toggleFlyout(quickPanel, quickSettingsButton);
+    if (!quickPanel.classList.contains("is-hidden")) { OSLab.wifiUI.show("main"); OSLab.events.emit("wifi:quick-opened", {}, "quickSettings"); }
   });
 
   clockButton.addEventListener("click", (event) => {
@@ -2213,6 +2233,7 @@
     });
     $("#brightness-slider").value = String(state.brightness);
     $("#volume-slider").value = String(state.volume);
+    $("#volume-slider").style.setProperty("--range-value", state.volume + "%");
     setVolume(state.volume, state.muted, false);
     const trayNetworkIcon = $("#quick-settings-button img");
     if (trayNetworkIcon) {
@@ -2237,8 +2258,9 @@
 
   OSLab.network.subscribe(() => {
     syncQuickSettings();
+    OSLab.wifiUI.render();
     const settingsRecord = windows.get("settings");
-    if (settingsRecord && ["home", "network"].includes(settingsRecord.settingsView)) renderSettings(settingsRecord, settingsRecord.settingsView);
+    if (settingsRecord && ["home", "network", "wifi", "wifi-known", "wifi-properties", "network-advanced"].includes(settingsRecord.settingsView)) renderSettings(settingsRecord, settingsRecord.settingsView);
   });
 
   $("#brightness-slider").addEventListener("input", (event) => {
@@ -2377,6 +2399,7 @@
     renderInstalledStartApps();
   });
   applyLightAppearance();
+  OSLab.wifiLab.initialize();
   saveState();
   updateClock();
   window.setInterval(updateClock, 1000);

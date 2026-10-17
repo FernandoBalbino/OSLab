@@ -21,6 +21,7 @@
     installlab: { title: "Instalação de Programas", shortTitle: "Instalação", icon: "assets/programs/install-lab.svg", address: "Instalação e Desinstalação", task: "installlab", pinned: true },
     digitallife: { title: "Minha Primeira Vida Digital", shortTitle: "Vida Digital", icon: "assets/digital/trail-icon.png", address: "Minha Primeira Vida Digital", task: "digitallife", pinned: true },
     userspermissions: { title: "Gerenciamento de Usuários e Permissões", shortTitle: "Usuários e Permissões", icon: "assets/users-permissions/trail-icon.png", address: "Gerenciamento de Usuários e Permissões", task: "userspermissions", pinned: true },
+    wifilab: { title: "Diagnóstico de Wi-Fi", icon: "assets/wifi/trail-icon.png", address: "Diagnóstico de Wi-Fi", task: "wifilab", pinned: true },
     browsertrail: { title: "Navegadores e Internet", icon: "assets/learning/icons/globe_search.svg", address: "Navegadores e Internet", task: "browsertrail", pinned: true },
     browsermuseum: { title: "Conhecendo os Navegadores", shortTitle: "Navegadores", icon: "assets/learning/icons/apps.svg", address: "Conhecendo os Navegadores", task: "browsermuseum", pinned: true },
     controlpanel: { title: "Painel de Controle", icon: "assets/programs/control-panel.png", address: "Painel de Controle", task: "controlpanel", pinned: true },

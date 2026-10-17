@@ -56,7 +56,8 @@
           if (accept) { reloadingForUpdate = true; worker.postMessage("SKIP_WAITING"); }
         });
       });
-      void registration.update();
+      // A versão já instalada continua válida quando não há rede para procurar uma atualização.
+      void registration.update().catch(() => {});
     } catch (error) {
       console.error("Não foi possível preparar o OSLab para uso offline.", error);
       message("Modo offline indisponível", "Recarregue a página quando houver conexão para preparar os arquivos locais.", "warning");

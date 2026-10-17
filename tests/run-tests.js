@@ -33,6 +33,10 @@ test("trilha de usuários valida contas, isolamento, ACLs e escopos", () => {
   const focused = spawnSync(process.execPath, [path.join(root, "tests/users-permissions.test.mjs")], { encoding: "utf8" });
   assert.equal(focused.status, 0, focused.stderr || focused.stdout);
 });
+test("trilha Wi-Fi exige prática, pergunta, retomada e compatibilidade da rede", () => {
+  const focused = spawnSync(process.execPath, ["--test", path.join(root, "tests/wifi-lab.test.mjs")], { encoding: "utf8" });
+  assert.equal(focused.status, 0, focused.stderr || focused.stdout);
+});
 
 test("todas as referências de assets estáticos existem", () => {
   const sources = [path.join(root, "index.html"), path.join(root, "styles.css"), ...filesIn(path.join(root, "css"), ".css"), path.join(root, "script.js"), ...filesIn(path.join(root, "js"), ".js")];

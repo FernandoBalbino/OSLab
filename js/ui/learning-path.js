@@ -24,7 +24,7 @@
   function nodeMarkup(item, index, selectedId, kind, hasNext) {
     const lane = lanes[index % lanes.length];
     const nextLane = lanes[(index + 1) % lanes.length];
-    const isMission = kind === "mission" || kind === "vpn-mission" || kind === "install-mission" || kind === "browser-mission" || kind === "digital-mission" || kind === "users-mission";
+    const isMission = kind === "mission" || kind === "vpn-mission" || kind === "install-mission" || kind === "browser-mission" || kind === "digital-mission" || kind === "users-mission" || kind === "wifi-mission";
     const feminine = isMission;
     const selectAttr = kind === "mission"
       ? "data-mission-select"
@@ -34,7 +34,7 @@
           ? "data-install-mission-select"
           : kind === "browser-mission"
             ? "data-browser-mission-select"
-        : kind === "digital-mission" ? "data-digital-mission-select" : kind === "users-mission" ? "data-users-mission-select" : "data-exercise-select";
+        : kind === "digital-mission" ? "data-digital-mission-select" : kind === "users-mission" ? "data-users-mission-select" : kind === "wifi-mission" ? "data-wifi-mission-select" : "data-exercise-select";
     const connector = !hasNext ? "" : `<img class="learning-connector lane-${lane} ${connectorDirection(lane, nextLane)}" src="${icon("arrow_right")}" alt="" aria-hidden="true" />`;
     return `<div class="learning-step lane-${lane}">
       <button type="button" class="learning-node is-${item.status} ${item.id === selectedId ? "is-selected" : ""}" ${selectAttr}="${safe(item.id)}" ${item.status === "locked" ? "disabled" : ""} ${item.status === "active" ? 'aria-current="step"' : ""} aria-label="${safe(`${isMission ? "Missão" : "Exercício"} ${item.order}: ${item.title}. ${statusLabel(item.status, feminine)}`)}">

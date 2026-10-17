@@ -1,5 +1,9 @@
 # Avisos de terceiros
 
+## Diagnóstico de Wi-Fi
+
+Os novos ícones locais, as capturas dos glifos oficiais, o gerador QR offline e o ícone ilustrado original estão descritos em [Créditos de assets da trilha Wi-Fi](docs/diagnostico-wifi-assets.md), com revisões e licenças incluídas em `assets/wifi/`. As redes, credenciais e propriedades são cenários educacionais fictícios.
+
 ## win11React
 
 - Projeto original: https://github.com/blueedgetechno/win11React

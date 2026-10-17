@@ -25,6 +25,7 @@
     <link rel="stylesheet" href="css/users-permissions.css">
     <link rel="stylesheet" href="css/windows-theme.css">
     <link rel="stylesheet" href="css/quick-settings-light.css">
+    <link rel="stylesheet" href="css/wifi.css">
   </head>
   <body>
     <main id="oslab" class="oslab" data-state="login">
@@ -117,6 +118,7 @@
           </button>
           <button class="desktop-shortcut" type="button" data-app="digitallife"><img src="assets/digital/trail-icon.png" alt=""><span>Minha Primeira Vida Digital</span></button>
           <button class="desktop-shortcut" type="button" data-app="userspermissions"><img src="assets/users-permissions/trail-icon.png" alt=""><span>Usuários e Permissões</span></button>
+          <button class="desktop-shortcut" type="button" data-app="wifilab"><img src="assets/wifi/trail-icon.png" alt=""><span>Diagnóstico de Wi-Fi</span></button>
           <button class="desktop-shortcut" type="button" data-app="browsertrail">
             <img src="assets/learning/icons/globe_search.svg" alt="" />
             <span>Navegadores e Internet</span>
@@ -221,6 +223,7 @@
             </button>
             <button type="button" data-app="digitallife"><img src="assets/digital/trail-icon.png" alt=""><span>Vida Digital</span></button>
             <button type="button" data-app="userspermissions"><img src="assets/users-permissions/trail-icon.png" alt=""><span>Usuários e Permissões</span></button>
+            <button type="button" data-app="wifilab"><img src="assets/wifi/trail-icon.png" alt=""><span>Diagnóstico de Wi-Fi</span></button>
             <button type="button" data-app="browsertrail">
               <img src="assets/learning/icons/globe_search.svg" alt="" />
               <span>Navegadores e Internet</span>
@@ -477,6 +480,10 @@
     <script defer src="js/core/network-manager.js"></script>
     <script defer src="js/core/system-state.js"></script>
     <script defer src="js/core/activity-coordinator.js"></script>
+    <script defer src="js/wifi/wifi-mission-catalog.js"></script>
+    <script defer src="js/wifi/wifi-scenarios.js"></script>
+    <script defer src="js/wifi/wifi-mission-storage.js"></script>
+    <script defer src="js/wifi/wifi-mission-engine.js"></script>
     <script defer src="js/install/software-state.js"></script>
     <script defer src="js/install/install-mission-catalog.js"></script>
     <script defer src="js/install/install-mission-storage.js"></script>
@@ -518,6 +525,9 @@
     <script defer src="js/apps/vpn-app.js"></script>
     <script defer src="js/apps/vpn-lab-app.js"></script>
     <script defer src="js/apps/system-tools.js"></script>
+    <script defer src="assets/wifi/vendor/qrcode.js"></script>
+    <script defer src="js/apps/wifi-ui.js"></script>
+    <script defer src="js/apps/wifi-lab-app.js"></script>
     <script defer src="script.js"></script>
     <script defer src="js/pwa.js"></script>
   </body>
