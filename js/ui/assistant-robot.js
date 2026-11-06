@@ -9,6 +9,7 @@
   let previousUsersMission = null;
   let previousWifiMission = null;
   let previousDriversMission = null;
+  let previousAudioMission = null;
 
   function safe(value) { return OSLab.ui.escapeHtml(value); }
   function icon(name) { return OSLab.learningPath.icon(name); }
@@ -20,6 +21,7 @@
     root.setAttribute("aria-live", "polite");
     root.addEventListener("click", handleClick);
     root.addEventListener("submit", event => {
+      if (event.target.matches("[data-audio-record-form]")) { event.preventDefault(); OSLab.audioLab.verifyRecord(Object.fromEntries(new FormData(event.target))); return; }
       if (event.target.matches("[data-drivers-record-form]")) { event.preventDefault(); OSLab.driversLab.verifyRecord(Object.fromEntries(new FormData(event.target))); return; }
       if (!event.target.matches("[data-wifi-record-form]")) return;
       event.preventDefault();
@@ -30,7 +32,7 @@
     return root;
   }
   function place() {
-    const focusedLayout = root.classList.contains("is-users-permissions") || root.classList.contains("is-wifi-lab") || root.classList.contains("is-drivers-lab") ? null : document.querySelector(".missions-window.is-focused .learning-layout, .exercises-window.is-focused .learning-layout, .vpn-lab-window.is-focused .learning-layout, .install-lab-window.is-focused .learning-layout, .browser-trail-window.is-focused .learning-layout");
+    const focusedLayout = root.classList.contains("is-users-permissions") || root.classList.contains("is-wifi-lab") || root.classList.contains("is-drivers-lab") || root.classList.contains("is-audio-lab") ? null : document.querySelector(".missions-window.is-focused .learning-layout, .exercises-window.is-focused .learning-layout, .vpn-lab-window.is-focused .learning-layout, .install-lab-window.is-focused .learning-layout, .browser-trail-window.is-focused .learning-layout");
     const host = focusedLayout || document.querySelector("#desktop");
     if (host && root.parentElement !== host) host.appendChild(root);
     root.classList.toggle("is-docked", Boolean(focusedLayout));
@@ -160,7 +162,7 @@
     const installLabProgress = OSLab.installLab?.getProgress?.();
     const browserTrailProgress = OSLab.browserTrail?.getProgress?.();
     const usersProgress = OSLab.userMissions?.getProgress?.();
-    const view = OSLab.wifiLabApp?.assistantView() || OSLab.driversLabApp?.assistantView() || OSLab.digitalLifeApp?.assistantView() || (usersProgress?.active && !usersProgress.active.suspended ? renderUsersPermissions(usersProgress) : browserTrailProgress?.active ? renderBrowserTrail(browserTrailProgress) : installLabProgress?.active ? renderInstallLab(installLabProgress) : vpnLabProgress?.active ? renderVpnLab(vpnLabProgress) : exerciseSession ? renderExercise(exerciseSession) : missionProgress?.active ? renderMission(missionProgress) : null);
+    const view = OSLab.wifiLabApp?.assistantView() || OSLab.driversLabApp?.assistantView() || OSLab.audioLabApp?.assistantView() || OSLab.digitalLifeApp?.assistantView() || (usersProgress?.active && !usersProgress.active.suspended ? renderUsersPermissions(usersProgress) : browserTrailProgress?.active ? renderBrowserTrail(browserTrailProgress) : installLabProgress?.active ? renderInstallLab(installLabProgress) : vpnLabProgress?.active ? renderVpnLab(vpnLabProgress) : exerciseSession ? renderExercise(exerciseSession) : missionProgress?.active ? renderMission(missionProgress) : null);
     if (view?.kind === "browser-trail" && (document.querySelector(".browser-museum-window.is-focused:not(.is-minimized)") || OSLab.browserMuseum?.getSelected?.())) {
       document.body.classList.remove("has-learning-assistant");
       root.className = "learning-assistant is-hidden";
@@ -180,11 +182,18 @@
     const driversMission = view?.kind === "drivers-lab" ? OSLab.driversLab.getProgress().active?.id : null;
     if (driversMission && driversMission !== previousDriversMission) collapsed = false;
     previousDriversMission = driversMission;
+    const audioMission = view?.kind === "audio-lab" ? OSLab.audioLab.getProgress().active?.id : null;
+    if (audioMission && audioMission !== previousAudioMission) collapsed = false;
+    previousAudioMission = audioMission;
     previousKind = view?.kind || null;
     document.body.classList.toggle("has-learning-assistant", Boolean(view));
     if (!view) { root.className = "learning-assistant is-hidden"; root.innerHTML = ""; place(); return; }
+    // o robô se redesenha quando o foco muda de janela: guarda o que o aluno já escolheu nos formulários da mesma missão
+    const kept = root.dataset.formFor === view.title ? [...root.querySelectorAll("form select, form input:not([type=submit])")].filter((el) => el.name && el.value).map((el) => [el.name, el.value]) : [];
+    root.dataset.formFor = view.title;
     root.className = `learning-assistant is-${view.kind} ${collapsed ? "is-collapsed" : ""}`;
     root.innerHTML = `<div class="assistant-shell"><header><img class="assistant-mascot" src="${mascot(view.mascot)}" alt="Mascote assistente do OSLab" /><span><small>${safe(view.eyebrow)}</small><strong>${safe(view.title)}</strong></span><button type="button" data-assistant-action="toggle" aria-expanded="${!collapsed}" aria-label="${collapsed ? "Expandir assistente" : "Recolher assistente"}"><img src="${icon("panel_right")}" alt="" /></button></header><div class="assistant-body"><p>${safe(view.message)}</p>${view.body}<footer>${view.actions}</footer></div></div>`;
+    kept.forEach(([name, value]) => { const el = root.querySelector(`form [name="${name}"]`); if (el && !el.value) el.value = value; });
     place();
   }
 
@@ -193,6 +202,8 @@
     if (wifiAnswer) { OSLab.wifiLab.answer(Number(wifiAnswer.dataset.wifiAnswer)); return; }
     const driversAnswer = event.target.closest("[data-drivers-answer]");
     if (driversAnswer) { OSLab.driversLab.answer(Number(driversAnswer.dataset.driversAnswer)); return; }
+    const audioAnswer = event.target.closest("[data-audio-answer]");
+    if (audioAnswer) { OSLab.audioLab.answer(Number(audioAnswer.dataset.audioAnswer)); return; }
     const action = event.target.closest("[data-assistant-action]")?.dataset.assistantAction;
     if (!action) return;
     if (action === "wifi-open") OSLab.shell.openApp("wifilab");
@@ -209,6 +220,13 @@
     if (action === "drivers-repeat") OSLab.driversLab.finish("repeat");
     if (action === "drivers-next") OSLab.driversLab.finish("next");
     if (action === "drivers-pause") { OSLab.driversLab.stop(); OSLab.shell.openApp("driverslab"); }
+    if (action === "audio-open") OSLab.shell.openApp("audiolab");
+    if (action === "audio-tool") { event.stopPropagation(); OSLab.audioLabApp.openTool(); }
+    if (action === "audio-hint") OSLab.audioLab.useHint();
+    if (action === "audio-restart") OSLab.audioLab.restart();
+    if (action === "audio-repeat") OSLab.audioLab.finish("repeat");
+    if (action === "audio-next") OSLab.audioLab.finish("next");
+    if (action === "audio-pause") { OSLab.audioLab.stop(); OSLab.shell.openApp("audiolab"); }
     if (action === "digital-hint") OSLab.digitalLifeTrail.hint();
     if (action === "digital-browser") OSLab.shell.openApp("google");
     if (action === "digital-open") OSLab.shell.openApp("digitallife");

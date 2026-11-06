@@ -81,6 +81,7 @@
     emit("drivers:installed", { fileId, version: f.version });
     return { ok: true };
   }
+  function unplug() { if (state.usb) { state.usb = false; publish("unplug"); } }
   function connectUsb() { if (!state.usb) { state.usb = true; publish("usb"); emit("drivers:usb-connected", {}); } return true; }
   function rollback() {
     if (!state.previous) return { ok: false };
@@ -110,7 +111,7 @@
 
   O.drivers = {
     BRAND, LAB, CORRECT, printers, files, PROBLEM_TEXT,
-    get: () => clone(state), problem, install, connectUsb, rollback, uninstall, testPrint, prepare, reset, emit,
+    get: () => clone(state), problem, install, connectUsb, unplug, rollback, uninstall, testPrint, prepare, reset, emit,
     deviceName: () => (state.driver ? `${BRAND} ${printers[LAB].model}` : "Dispositivo desconhecido"),
     subscribe(fn) { listeners.add(fn); return () => listeners.delete(fn); },
   };

@@ -27,6 +27,7 @@
     <link rel="stylesheet" href="css/quick-settings-light.css">
     <link rel="stylesheet" href="css/wifi.css">
     <link rel="stylesheet" href="css/drivers.css">
+    <link rel="stylesheet" href="css/audio.css">
   </head>
   <body>
     <main id="oslab" class="oslab" data-state="login">
@@ -122,6 +123,8 @@
           <button class="desktop-shortcut" type="button" data-app="wifilab"><img src="assets/wifi/trail-icon.png" alt=""><span>Diagnóstico de Wi-Fi</span></button>
           <button class="desktop-shortcut" type="button" data-app="driverslab"><img src="assets/drivers/trail-icon.svg" alt=""><span>Drivers: Impressora</span></button>
           <button class="desktop-shortcut" type="button" data-app="printer"><img src="assets/drivers/printer-icon.png" alt=""><span>Impressora</span></button>
+          <button class="desktop-shortcut" type="button" data-app="audiolab"><img src="assets/audio/trail-icon.svg" alt=""><span>Som: sem áudio na aula</span></button>
+          <button class="desktop-shortcut" type="button" data-app="aulaonline"><img src="assets/audio/aula-icon.svg" alt=""><span>Aula On-line</span></button>
           <button class="desktop-shortcut" type="button" data-app="browsertrail">
             <img src="assets/learning/icons/globe_search.svg" alt="" />
             <span>Navegadores e Internet</span>
@@ -231,6 +234,8 @@
             <button type="button" data-app="printer"><img src="assets/drivers/printer-icon.png" alt=""><span>Impressora</span></button>
             <button type="button" data-app="devicemanager"><img src="assets/drivers/devmgr/root-32.png" alt=""><span>Gerenciador de Dispositivos</span></button>
             <button type="button" data-app="sysinfo"><img src="assets/drivers/system-info.svg" alt=""><span>Informações do Sistema</span></button>
+            <button type="button" data-app="audiolab"><img src="assets/audio/trail-icon.svg" alt=""><span>Som</span></button>
+            <button type="button" data-app="aulaonline"><img src="assets/audio/aula-icon.svg" alt=""><span>Aula On-line</span></button>
             <button type="button" data-app="browsertrail">
               <img src="assets/learning/icons/globe_search.svg" alt="" />
               <span>Navegadores e Internet</span>
@@ -497,6 +502,8 @@
     <script defer src="js/install/install-mission-engine.js"></script>
     <script defer src="js/drivers/driver-state.js"></script>
     <script defer src="js/drivers/driver-missions.js"></script>
+    <script defer src="js/audio/audio-state.js"></script>
+    <script defer src="js/audio/audio-missions.js"></script>
     <script defer src="js/missions/mission-catalog.js"></script>
     <script defer src="js/missions/mission-storage.js"></script>
     <script defer src="js/missions/mission-engine.js"></script>
@@ -538,6 +545,7 @@
     <script defer src="js/apps/wifi-ui.js"></script>
     <script defer src="js/apps/wifi-lab-app.js"></script>
     <script defer src="js/apps/drivers-app.js"></script>
+    <script defer src="js/apps/audio-app.js"></script>
     <script defer src="script.js"></script>
     <script defer src="js/pwa.js"></script>
   </body>

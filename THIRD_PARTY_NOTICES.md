@@ -52,6 +52,14 @@ O OSLab não é afiliado à Microsoft. A interface é uma simulação educaciona
 - `assets/drivers/devmgr/*.png`: ícones extraídos dos arquivos do Windows 11 (`setupapi.dll`, `devmgr.dll`, `mmc.exe`, `imageres.dll`, `mmsys.cpl`, `mmres.dll` e `ddores.dll`). A pasta usa os IDs que o registro do Windows indica para cada classe de dispositivo, como `setupapi.dll,-5` para Adaptadores de rede e a sobreposição `setupapi.dll,-500` para o triângulo amarelo. São propriedade da Microsoft e aparecem aqui só para simular fielmente o Gerenciador de Dispositivos em uma atividade educacional sem fins lucrativos.
 - Printix, os modelos InkJet e o site `suporte.printix.com.br` são fictícios. Nenhum arquivo real é baixado.
 
+## Trilha de Som
+
+- `assets/drivers/devmgr/camera-*.png`: ícone da classe Câmeras extraído de `ddores.dll,-2555` do Windows 11.
+- `*-disabled-*.png` e `media-warn-*.png`: composições com as sobreposições oficiais de `setupapi.dll` (`-501`, a seta para baixo de desabilitado, e `-500`, o triângulo amarelo). Mesmas condições dos demais ícones do Gerenciador.
+- `assets/audio/tray-muted.png` e `tray-nodevice.png`: derivados do `assets/icons/ui/audio.png` (win11React). As ondas foram trocadas por um "x" (mudo) e por um círculo vermelho com "x" (sem dispositivo).
+- `assets/audio/trail-icon.svg`, `aula-icon.svg` e `assets/audio/icons/*.svg`: desenhos originais do OSLab, no estilo dos ícones Fluent já usados nas trilhas.
+- Vertex, Sonora, o site `suporte.vertex.com.br` e a professora da Aula On-line são fictícios.
+
 ## Flag Icons
 
 - Projeto original: https://github.com/lipis/flag-icons

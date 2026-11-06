@@ -43,6 +43,11 @@ test("trilha de Drivers tem 12 missões, avisos de erro, instalação e reversã
   assert.equal(focused.status, 0, focused.stderr || focused.stdout);
 });
 
+test("trilha de Som tem 12 missões e separa driver, desabilitado e mudo", () => {
+  const focused = spawnSync(process.execPath, ["--test", path.join(root, "tests/audio-lab.test.mjs")], { encoding: "utf8" });
+  assert.equal(focused.status, 0, focused.stderr || focused.stdout);
+});
+
 test("todas as referências de assets estáticos existem", () => {
   const sources = [path.join(root, "index.html"), path.join(root, "styles.css"), ...filesIn(path.join(root, "css"), ".css"), path.join(root, "script.js"), ...filesIn(path.join(root, "js"), ".js")];
   const missing = new Set();

@@ -62,6 +62,26 @@ A marca **Printix** e os modelos são fictícios; o site imita a estrutura de um
 
 Slides para passar antes da atividade: [`/slide/`](https://fernandobalbino.github.io/OSLab/slide/). Use as setas ou o espaço para avançar, **F** para tela cheia e **N** para as notas da aula. Código: `js/drivers/`, `js/apps/drivers-app.js` e `css/drivers.css`; testes em `tests/drivers-lab.test.mjs`.
 
+## Som: sem áudio na aula on-line
+
+Trilha com 12 missões sobre um sintoma só, "sem som", e as três famílias de causa que parecem iguais. O robô guia cada missão com exemplo, dicas e uma pergunta no fim. Só se avança quando o teste da **Aula On-line** comprova que o som (ou o microfone) funciona.
+
+| Unidade | Missões |
+| --- | --- |
+| Leia os sinais | 1. X vermelho no ícone de som · 2. Código 28 no Gerenciador · 3. Triângulo (28) × seta para baixo (22) |
+| Driver faltando | 4. Fabricante e modelo do notebook · 5. Driver de áudio no site oficial `suporte.vertex.com.br` · 6. Instalar, reiniciar (Código 14) e testar |
+| Desabilitado | 7. Habilitar o controlador (Código 22) · 8. Alto-falantes "Não permitido" em Configurações › Som · 9. Microfone desabilitado |
+| Mudo e saída errada | 10. Mudo do sistema (ícone diferente do X vermelho) · 11. Aplicativo no mudo no Mixer de volume · 12. Som indo para a TV (HDMI) |
+
+Peças novas:
+- app **Aula On-line**, que toca um bipe curto só quando o som simulado funciona;
+- página **Configurações › Sistema › Som**, com Todos os dispositivos de som e Mixer de volume;
+- ícone de som da barra de tarefas com três estados: normal, mudo e sem dispositivo;
+- instalador do driver de áudio com reinício;
+- dispositivos de som e câmera no Gerenciador, com Habilitar e Desabilitar.
+
+Vertex (notebook) e Sonora (chip de som) são marcas fictícias. Rota direta: `index.html?app=audiolab`. Código: `js/audio/`, `js/apps/audio-app.js` e `css/audio.css`; testes em `tests/audio-lab.test.mjs`.
+
 ## Missões
 
 As 12 missões cobrem abertura de aplicativos, controle de janelas, criação/renomeação/movimentação/cópia/restauração/pesquisa de arquivos, personalização, volume, encerramento de aplicativo travado e organização integrada do computador.

@@ -60,11 +60,11 @@
       <section class="px-downloads"><nav><strong>Drivers e downloads</strong><span>Manuais</span><span>Perguntas frequentes</span><span>Garantia</span></nav><label class="px-os">Sistema operacional<select data-printix-os="${p.id}"><option value="">Selecione o sistema operacional</option>${Object.entries(OS_LABEL).map(([k, v]) => `<option value="${k}" ${os === k ? "selected" : ""}>${v}</option>`).join("")}</select></label>
       ${!os ? `<p class="px-empty">Selecione o sistema operacional para ver os arquivos compatíveis.</p>` : shown.length ? `<h2 class="px-sub">Drivers recomendados para ${safe(OS_LABEL[os])}</h2>${shown.map((fid) => fileRow(fid, false)).join("")}` : `<p class="px-empty">Não há arquivos para este sistema. Os drivers deste modelo são para Windows de 64 bits.</p>`}</section>`;
   }
-  function badSite() {
-    return `<section class="bad-site"><div class="bad-ads"><span>ANÚNCIO</span><strong>Seu PC tem 37 drivers desatualizados!</strong><button type="button" data-bad-click>Corrigir agora</button></div><h1>Driver InkJet 2350 GRÁTIS 2026</h1><p>Clique no botão verde para baixar. Download rápido, sem cadastro!!!</p><div class="bad-buttons"><button type="button" data-bad-click>⬇ BAIXAR AGORA</button><button type="button" data-bad-click>⬇ DOWNLOAD</button><button type="button" data-bad-click>⬇ INICIAR</button></div><aside class="bad-lesson"><strong>Por que desconfiar deste site?</strong><ul><li>O endereço não é da fabricante.</li><li>Vários botões de download parecidos (quase todos são propaganda).</li><li>Promete “atualizador de drivers” milagroso, que pode instalar programas indesejados.</li></ul><button type="button" data-browser-go="google.com">Voltar ao Google</button></aside></section>`;
+  function badSite(record) {
+    return `<section class="bad-site"><div class="bad-ads"><span>ANÚNCIO</span><strong>Seu PC tem 37 drivers desatualizados!</strong><button type="button" data-bad-click>Corrigir agora</button></div><h1>Driver ${safe(record.badFor || "InkJet 2350")} GRÁTIS 2026</h1><p>Clique no botão verde para baixar. Download rápido, sem cadastro!!!</p><div class="bad-buttons"><button type="button" data-bad-click>⬇ BAIXAR AGORA</button><button type="button" data-bad-click>⬇ DOWNLOAD</button><button type="button" data-bad-click>⬇ INICIAR</button></div><aside class="bad-lesson"><strong>Por que desconfiar deste site?</strong><ul><li>O endereço não é da fabricante.</li><li>Vários botões de download parecidos (quase todos são propaganda).</li><li>Promete “atualizador de drivers” milagroso, que pode instalar programas indesejados.</li></ul><button type="button" data-browser-go="google.com">Voltar ao Google</button></aside></section>`;
   }
   function render(record) {
-    if (record.browserHost === BAD_HOST) return badSite();
+    if (record.browserHost === BAD_HOST) return badSite(record);
     const path = route(record);
     let body;
     if (path.startsWith("/produto/")) body = productPage(record, path.slice(9));
@@ -158,12 +158,24 @@
     ["disk", "Unidades de disco", ["SSD NVMe 256 GB"]],
   ];
   const prnName = () => `Printix ${D().printers[D().LAB].model}`;
+  // outras trilhas acrescentam ou trocam categorias: [{ key, title, devices, append }]; cada dispositivo pode ter code (28, 22, 14), info e ações
+  const providers = [];
   function dmTree(s) {
     const cats = CATS.map(([key, title, names]) => ({ key, title, devices: names.map((name, i) => ({ id: `${key}-${i}`, name, icon: key })) }));
     if (s.driver) cats.push({ key: "printer", title: "Impressoras", devices: [{ id: "printer", name: prnName(), icon: "printer" }] });
-    else if (s.usb) cats.push({ key: "other", title: "Outros dispositivos", devices: [{ id: "unknown", name: "Dispositivo desconhecido", icon: "unknown-warn" }] });
-    return cats.sort((a, b) => a.title.localeCompare(b.title, "pt-BR"));
+    else if (s.usb) cats.push({ key: "other", title: "Outros dispositivos", devices: [{ id: "unknown", name: "Dispositivo desconhecido", icon: "unknown-warn", code: 28 }] });
+    providers.forEach((fn) => (fn() || []).forEach((p) => {
+      const cat = cats.find((c) => c.key === p.key), devices = p.devices.map((d) => ({ icon: p.key, ...d }));
+      if (cat) cat.devices = p.append ? [...cat.devices, ...devices] : devices;
+      else cats.push({ key: p.key, title: p.title, devices });
+    }));
+    return cats.filter((c) => c.devices.length).sort((a, b) => a.title.localeCompare(b.title, "pt-BR"));
   }
+  const CODE_TEXT = {
+    28: "Os drivers deste dispositivo não estão instalados. (Código 28)\n\nNão há drivers compatíveis para este dispositivo.\n\nPara localizar um driver para este dispositivo, clique em Atualizar Driver.",
+    22: "Este dispositivo está desabilitado. (Código 22)\n\nClique em Habilitar Dispositivo para habilitar este dispositivo.",
+    14: "Este dispositivo não poderá funcionar corretamente até que você reinicie o computador. (Código 14)\n\nClique em Reiniciar o Computador para reiniciá-lo agora.",
+  };
   const dmDevices = (s) => dmTree(s).flatMap((c) => c.devices.map((d) => ({ ...d, cat: c })));
   /** linhas visíveis da árvore, na ordem da tela (usadas também pelas setas do teclado) */
   function dmRows(st, cats) {
@@ -175,6 +187,7 @@
     return rows;
   }
   function dmDeviceInfo(dev, s) {
+    if (dev.info) return { maker: dev.info.maker, local: dev.info.local, drv: dev.info.drv, status: CODE_TEXT[dev.code] || "Este dispositivo está funcionando corretamente." };
     const isPrn = dev.id === "printer", unknown = dev.id === "unknown";
     const maker = isPrn ? "Printix" : unknown ? "Desconhecido" : /^Intel/.test(dev.name) ? "Intel Corporation" : /^Realtek/.test(dev.name) ? "Realtek" : "(Dispositivos padrão do sistema)";
     const status = unknown ? "Os drivers deste dispositivo não estão instalados. (Código 28)\n\nNão há drivers compatíveis para este dispositivo.\n\nPara localizar um driver para este dispositivo, clique em Atualizar Driver." : "Este dispositivo está funcionando corretamente.";
@@ -188,29 +201,29 @@
     const head = `<div class="dm-dhead">${dmIcon(dev.icon, 32)}<strong>${safe(dev.name)}</strong></div>`;
     const tabs = [["general", "Geral"], ["driver", "Driver"], ["details", "Detalhes"], ["events", "Eventos"]];
     const buttons = [
-      ["details", "Detalhes do Driver", "Exibir detalhes sobre os arquivos de driver carregados para este dispositivo.", dev.id !== "unknown"],
+      ["details", "Detalhes do Driver", "Exibir detalhes sobre os arquivos de driver carregados para este dispositivo.", dev.code !== 28],
       ["update", "Atualizar Driver", "Atualizar o driver deste dispositivo.", true],
       ["rollback", "Reverter Driver", "Se o dispositivo falhar após a atualização do driver, reverta para o driver instalado anteriormente.", isPrn && Boolean(s.previous)],
-      ["disable", "Desabilitar Dispositivo", "Desabilite o dispositivo.", dev.id !== "unknown"],
+      dev.code === 22 ? ["enable", "Habilitar Dispositivo", "Habilite o dispositivo.", true] : ["disable", "Desabilitar Dispositivo", "Desabilite o dispositivo.", dev.code !== 28],
       ["uninstall", "Desinstalar Dispositivo", "Desinstale o dispositivo do sistema (Avançado).", true],
     ];
-    const body = tab === "general" ? `${head}<dl class="dm-kv"><dt>Tipo de dispositivo:</dt><dd>${safe(dev.cat.title)}</dd><dt>Fabricante:</dt><dd>${safe(info.maker)}</dd><dt>Local:</dt><dd>${safe(info.local)}</dd></dl><fieldset class="dm-statusbox"><legend>Status do dispositivo</legend><div>${safe(info.status)}</div></fieldset>`
+    const body = tab === "general" ? `${head}<dl class="dm-kv"><dt>Tipo de dispositivo:</dt><dd>${safe(dev.cat.title)}</dd><dt>Fabricante:</dt><dd>${safe(info.maker)}</dd><dt>Local:</dt><dd>${safe(info.local)}</dd></dl><fieldset class="dm-statusbox"><legend>Status do dispositivo</legend><div>${safe(info.status)}</div></fieldset>${dev.code === 14 ? '<p class="dm-restart"><button type="button" class="dm-btn" data-dm-act="restart">Reiniciar o Computador</button></p>' : ""}`
       : tab === "driver" ? `${head}<dl class="dm-kv"><dt>Fornecedor do Driver:</dt><dd>${safe(info.drv[0])}</dd><dt>Data do Driver:</dt><dd>${safe(info.drv[1])}</dd><dt>Versão do Driver:</dt><dd>${safe(info.drv[2])}</dd><dt>Assinante Digital:</dt><dd>${safe(info.drv[3])}</dd></dl><div class="dm-drvbtns">${buttons.map(([a, label, text, on]) => `<button type="button" class="dm-btn" data-dm-act="${a}" ${on ? "" : "disabled"}>${label}</button><span>${text}</span>`).join("")}</div>`
         : tab === "details" ? `${head}<label class="dm-detail">Propriedade<select disabled><option>Descrição do dispositivo</option></select></label><span class="dm-detail-label">Valor</span><div class="dm-valuebox">${safe(dev.name)}</div>`
-          : `${head}<div class="dm-valuebox dm-events"><span><b>Carimbo de data/hora</b><b>Descrição</b></span><span><i>06/11/2026 08:12:40</i><i>${dev.id === "unknown" ? "Dispositivo não migrado" : "Dispositivo instalado"}</i></span><span><i>06/11/2026 08:12:41</i><i>Dispositivo configurado</i></span></div>`;
+          : `${head}<div class="dm-valuebox dm-events"><span><b>Carimbo de data/hora</b><b>Descrição</b></span><span><i>06/11/2026 08:12:40</i><i>${dev.code === 28 ? "Dispositivo não migrado" : dev.code === 22 ? "Dispositivo desabilitado" : "Dispositivo instalado"}</i></span><span><i>06/11/2026 08:12:41</i><i>Dispositivo configurado</i></span></div>`;
     return `<div class="dm-backdrop"><section class="dm-dialog" role="dialog" aria-modal="true" aria-label="Propriedades de ${safe(dev.name)}"><header><span>Propriedades de ${safe(dev.name)}</span><button type="button" class="dm-x" data-dm-close aria-label="Fechar">✕</button></header><nav role="tablist">${tabs.map(([id, label]) => `<button type="button" role="tab" aria-selected="${tab === id}" class="${tab === id ? "is-on" : ""}" data-dm-tab="${id}">${label}</button>`).join("")}</nav><div class="dm-tabbody" role="tabpanel">${body}</div><footer><button type="button" class="dm-btn is-default" data-dm-close>OK</button><button type="button" class="dm-btn" data-dm-close>Cancelar</button></footer></section></div>`;
   }
   function dmMenu(st, dev) {
     if (!st.menu) return "";
-    const items = dev ? [["update", "Atualizar driver"], ["disable", "Desabilitar dispositivo", dev.id === "unknown"], ["uninstall", "Desinstalar dispositivo"], "-", ["scan", "Verificar se há alterações de hardware"], "-", ["props", "Propriedades", false, true]]
+    const items = dev ? [["update", "Atualizar driver"], dev.code === 22 ? ["enable", "Habilitar dispositivo"] : ["disable", "Desabilitar dispositivo", dev.code === 28], ["uninstall", "Desinstalar dispositivo"], "-", ["scan", "Verificar se há alterações de hardware"], "-", ["props", "Propriedades", false, true]]
       : [["scan", "Verificar se há alterações de hardware"], "-", ["props", "Propriedades", true]];
     return `<div class="dm-ctx" role="menu" style="left:${st.menu.x}px;top:${st.menu.y}px">${items.map((it) => it === "-" ? "<hr />" : `<button type="button" role="menuitem" data-dm-menu="${it[0]}" ${it[2] ? "disabled" : ""} class="${it[3] ? "is-bold" : ""}">${it[1]}</button>`).join("")}</div>`;
   }
   function deviceManager(record) {
     const s = D().get(), st = record.dm || (record.dm = { open: { root: true }, sel: "root", dialog: null, tab: "general", menu: null });
     const cats = dmTree(s);
-    // como no Windows, a categoria que tem dispositivo com problema já abre expandida
-    if (s.usb && !s.driver && st.open.other === undefined) st.open.other = true;
+    // como no Windows, a categoria que tem dispositivo com problema (ou desabilitado) já abre expandida
+    cats.forEach((c) => { if (st.open[c.key] === undefined && c.devices.some((d) => d.code)) st.open[c.key] = true; });
     if (s.driver && st.sel === "unknown") st.sel = "printer";
     if (s.driver && st.dialog === "unknown") st.dialog = null;
     const rows = dmRows(st, cats);
@@ -220,7 +233,7 @@
     const scroll = record.content.querySelector(".dm-tree")?.scrollTop || 0;
     const tb = (id, label, on = true) => `<button type="button" class="dm-tb" data-dm-tb="${id}" title="${label}" aria-label="${label}" ${on ? "" : "disabled"}>${tbIcon(id)}</button>`;
     record.content.innerHTML = `<section class="dm-app"><nav class="dm-menubar"><button type="button" data-dm-bar="file">Arquivo</button><button type="button" data-dm-bar="action">Ação</button><button type="button" data-dm-bar="view">Exibir</button><button type="button" data-dm-bar="help">Ajuda</button></nav>
-      <div class="dm-toolbar" role="toolbar">${tb("back", "Voltar", false)}${tb("forward", "Avançar", false)}<i class="dm-sep"></i>${tb("tree", "Mostrar/ocultar árvore de console")}<i class="dm-sep"></i>${tb("props", "Propriedades", Boolean(dev))}${tb("help", "Ajuda")}<i class="dm-sep"></i>${dev ? `${tb("update", "Atualizar driver")}${tb("uninstall", "Desinstalar dispositivo")}${tb("disable", "Desabilitar dispositivo", dev.id !== "unknown")}` : ""}${tb("scan", "Verificar se há alterações de hardware")}</div>
+      <div class="dm-toolbar" role="toolbar">${tb("back", "Voltar", false)}${tb("forward", "Avançar", false)}<i class="dm-sep"></i>${tb("tree", "Mostrar/ocultar árvore de console")}<i class="dm-sep"></i>${tb("props", "Propriedades", Boolean(dev))}${tb("help", "Ajuda")}<i class="dm-sep"></i>${dev ? `${tb("update", "Atualizar driver")}${tb("uninstall", "Desinstalar dispositivo")}${dev.code === 22 ? tb("enable", "Habilitar dispositivo") : tb("disable", "Desabilitar dispositivo", dev.code !== 28)}` : ""}${tb("scan", "Verificar se há alterações de hardware")}</div>
       <div class="dm-tree" role="tree" aria-label="Dispositivos">${rows.map((r) => `<div class="dm-row lvl-${r.level} ${r.id === st.sel ? "is-sel" : ""}" role="treeitem" aria-level="${r.level + 1}" aria-selected="${r.id === st.sel}" ${r.level < 2 ? `aria-expanded="${Boolean(r.open)}"` : ""} tabindex="${r.id === st.sel ? 0 : -1}" data-dm-row="${safe(r.id)}">${r.level < 2 ? `<button type="button" class="dm-chev ${r.open ? "is-open" : ""}" data-dm-toggle="${safe(r.id)}" tabindex="-1" aria-label="${r.open ? "Recolher" : "Expandir"}"></button>` : '<i class="dm-chev-space"></i>'}${dmIcon(r.icon)}<span>${safe(r.label)}</span></div>`).join("")}</div>
       <footer class="dm-statusbar"></footer>${dmMenu(st, dev)}${dialogDev ? dmDialog(dialogDev, st, s) : ""}</section>`;
     record.address.textContent = "Gerenciador de Dispositivos";
@@ -230,16 +243,25 @@
     if (record.dmWired) return; record.dmWired = true;
     D().emit("drivers:devmgr-opened", {});
     const toggle = (id) => { const key = id === "root" ? "root" : id.slice(4); st.open[key] = !st.open[key]; };
-    const select = (id) => { st.sel = id; if (id === "unknown") D().emit("drivers:devmgr-unknown", {}); };
-    const openProps = (id) => { if (!dmDevices(D().get()).some((d) => d.id === id)) return; st.dialog = id; st.tab = "general"; st.menu = null; if (id === "unknown") D().emit("drivers:devmgr-unknown", {}); };
+    const find = (id) => dmDevices(D().get()).find((d) => d.id === id);
+    const select = (id) => { st.sel = id; if (id === "unknown") D().emit("drivers:devmgr-unknown", {}); const d = find(id); if (d) O.events.emit("devmgr:selected", { id, code: d.code || 0 }, "devmgr"); };
+    const openProps = (id) => { const d = find(id); if (!d) return; st.dialog = id; st.tab = "general"; st.menu = null; if (id === "unknown") D().emit("drivers:devmgr-unknown", {}); O.events.emit("devmgr:properties", { id, code: d.code || 0, tab: "general" }, "devmgr"); };
     async function act(a) {
-      const id = st.dialog || st.sel, isPrn = id === "printer";
+      const id = st.dialog || st.sel, isPrn = id === "printer", dev = find(id);
       st.menu = null;
+      if (dev?.onToggle && (a === "enable" || a === "disable")) {
+        if (a === "enable" || await O.ui.confirm({ title: "Desabilitar Dispositivo", message: "Desabilitar este dispositivo fará com que ele pare de funcionar. Deseja realmente desabilitá-lo?", confirmLabel: "Sim" })) { dev.onToggle(a === "enable"); O.events.emit("devmgr:toggled", { id, enabled: a === "enable" }, "devmgr"); }
+        deviceManager(record); return;
+      }
+      if (a === "enable") O.ui.notify("Habilitar Dispositivo", "Este dispositivo já está habilitado.", "info", 3200);
+      if (a === "restart") { dev?.onRestart?.(); st.dialog = null; deviceManager(record); return; }
+      if (dev?.updateText && a === "update") { O.ui.notify("Atualizar Driver", dev.updateText, "info", 6400); deviceManager(record); return; }
+      if (dev?.info && a === "uninstall") { O.ui.notify("Desinstalar Dispositivo", "Nesta atividade, não desinstale este dispositivo: descubra a causa e use a correção certa.", "info", 5200); deviceManager(record); return; }
       if (a === "props") openProps(id);
       if (a === "scan") O.ui.notify("Gerenciador de Dispositivos", "Verificação concluída: nenhuma alteração de hardware nova.", "info", 3200);
       if (a === "update") O.ui.notify("Atualizar Driver", id === "unknown" || isPrn ? "O Windows procurou automaticamente e não encontrou um driver melhor. Para impressoras, baixe o driver no site oficial da fabricante." : "Os melhores drivers para o dispositivo já estão instalados.", "info", 6400);
       if (a === "details") O.ui.notify("Detalhes do Driver", isPrn ? "Arquivo: C:\\Windows\\System32\\DriverStore\\FileRepository\\printix_ij2350.inf" : "Arquivos de driver fornecidos pelo Windows.", "info", 5200);
-      if (a === "disable") O.ui.notify("Desabilitar Dispositivo", "Nesta atividade, mantenha os dispositivos ativados.", "info", 4200);
+      if (a === "disable" && !dev?.onToggle) O.ui.notify("Desabilitar Dispositivo", "Nesta atividade, mantenha os dispositivos ativados.", "info", 4200);
       if (a === "rollback" && isPrn && await O.ui.confirm({ title: "Reversão de Pacote de Driver", message: "Tem certeza de que deseja reverter para o software de driver instalado anteriormente? O driver que funcionava antes será restaurado.", confirmLabel: "Sim" })) { D().rollback(); O.ui.notify("Driver revertido", `Versão ${D().get().driver.version} restaurada.`, "success"); }
       if (a === "uninstall") {
         if (!isPrn) O.ui.notify("Desinstalar Dispositivo", "Nesta atividade, só a impressora pode ser desinstalada.", "info", 4200);
@@ -259,7 +281,7 @@
         deviceManager(record); return;
       }
       const tab = event.target.closest("[data-dm-tab]")?.dataset.dmTab;
-      if (tab) { st.tab = tab; if (tab === "driver" && st.dialog === "printer") D().emit("drivers:devmgr-properties", { tab: "driver" }); deviceManager(record); return; }
+      if (tab) { st.tab = tab; if (tab === "driver" && st.dialog === "printer") D().emit("drivers:devmgr-properties", { tab: "driver" }); O.events.emit("devmgr:properties", { id: st.dialog, code: find(st.dialog)?.code || 0, tab }, "devmgr"); deviceManager(record); return; }
       if (event.target.closest("[data-dm-close]")) { st.dialog = null; st.focus = true; deviceManager(record); return; }
       const bar = event.target.closest("[data-dm-bar]");
       if (bar?.dataset.dmBar === "action") { const r = bar.getBoundingClientRect(), base = record.content.querySelector(".dm-app").getBoundingClientRect(); st.menu = st.menu ? null : { x: r.left - base.left, y: r.bottom - base.top }; deviceManager(record); return; }
@@ -271,7 +293,8 @@
     record.content.addEventListener("contextmenu", (event) => {
       const row = event.target.closest("[data-dm-row]")?.dataset.dmRow;
       if (!row) return;
-      event.preventDefault();
+      // a lista é redesenhada aqui: sem parar o evento, o menu da Área de Trabalho também abriria
+      event.preventDefault(); event.stopPropagation();
       const base = record.content.querySelector(".dm-app").getBoundingClientRect();
       select(row); st.menu = { x: event.clientX - base.left, y: event.clientY - base.top };
       deviceManager(record);
@@ -294,9 +317,9 @@
 
   // ================= Informações do Sistema =================
   function sysInfo(record) {
-    const rows = [["Nome do dispositivo", "OSLAB-PC"], ["Processador", "Processador x64 de 4 núcleos (simulado) 2,40 GHz"], ["RAM instalada", "8,00 GB"], ["Tipo de sistema", "Sistema operacional de 64 bits, processador baseado em x64"]];
+    const rows = [["Nome do dispositivo", "OSLAB-PC"], ["Fabricante do sistema", "Vertex"], ["Modelo do sistema", "Note 14 (VN14-2026)"], ["Processador", "Processador x64 de 4 núcleos (simulado) 2,40 GHz"], ["RAM instalada", "8,00 GB"], ["Tipo de sistema", "Sistema operacional de 64 bits, processador baseado em x64"]];
     const win = [["Edição", "Windows 11 Pro"], ["Versão", "24H2"], ["Instalado em", "02/02/2026"]];
-    record.content.innerHTML = `<section class="si-app"><small>Sistema › Sobre</small><h1>Sobre</h1><article><h2>Especificações do dispositivo</h2><dl>${rows.map(([k, v]) => `<div class="${k === "Tipo de sistema" ? "is-key" : ""}"><dt>${k}</dt><dd>${v}</dd></div>`).join("")}</dl></article><article><h2>Especificações do Windows</h2><dl>${win.map(([k, v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join("")}</dl></article></section>`;
+    record.content.innerHTML = `<section class="si-app"><small>Sistema › Sobre</small><h1>Sobre</h1><article class="si-head"><strong>OSLAB-PC</strong><span>Vertex Note 14</span></article><article><h2>Especificações do dispositivo</h2><dl>${rows.map(([k, v]) => `<div class="${k === "Tipo de sistema" ? "is-key" : ""}"><dt>${k}</dt><dd>${v}</dd></div>`).join("")}</dl></article><article><h2>Especificações do Windows</h2><dl>${win.map(([k, v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join("")}</dl></article></section>`;
     record.address.textContent = "Informações do Sistema";
     if (!record.siEmitted) { record.siEmitted = true; D().emit("drivers:sysinfo-opened", {}); }
   }
@@ -412,7 +435,9 @@
   O.driversLab.subscribe((p, reason) => { if (reason === "started") selectedId = p.active?.id || selectedId; renderAll(); });
   // telas que mostram o estado da impressora se atualizam sozinhas
   const live = new Set();
-  D().subscribe(() => live.forEach((r) => { if (!r.element?.isConnected) { live.delete(r); return; } if (r.appId === "printer") printerApp(r); if (r.appId === "devicemanager") deviceManager(r); }));
+  const refreshLive = () => live.forEach((r) => { if (!r.element?.isConnected) { live.delete(r); return; } if (r.appId === "printer") printerApp(r); if (r.appId === "devicemanager") deviceManager(r); });
+  D().subscribe(refreshLive);
+  O.devmgr = { register(fn) { providers.push(fn); refreshLive(); }, refresh: refreshLive };
   function renderApp(record) {
     if (record.appId === "driverslab") trail(record);
     if (record.appId === "printer") { live.add(record); if (!record.prnEmitted) { record.prnEmitted = true; D().emit("drivers:printer-opened", {}); } printerApp(record); }

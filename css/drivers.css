@@ -7,11 +7,11 @@
 .drivers-trail-page .learning-stats>span>small { flex-basis:100%; text-align:center; }
 .drv-example { margin:10px 0; padding:10px 12px; border-left:3px solid #0a5bd3; border-radius:0 8px 8px 0; background:#eef5ff; color:#203650; font-size:12px; line-height:1.5; }
 .drv-example strong { display:block; margin-bottom:2px; font-size:11px; letter-spacing:.04em; text-transform:uppercase; color:#0a5bd3; }
-.learning-assistant.is-drivers-lab { right:14px; left:auto; width:354px; max-width:calc(100vw - 28px); max-height:calc(100dvh - var(--taskbar-height) - 26px); z-index:120; }
-.learning-assistant.is-drivers-lab.is-collapsed { width:94px; }
-.learning-assistant.is-drivers-lab .assistant-body { max-height:min(510px,calc(100dvh - var(--taskbar-height) - 135px)); overflow:auto; }
-.learning-assistant.is-drivers-lab .learning-instructions { margin:0; }
-.learning-assistant.is-drivers-lab .learning-instructions li { font-size:12px; }
+.learning-assistant:is(.is-drivers-lab,.is-audio-lab) { right:14px; left:auto; width:354px; max-width:calc(100vw - 28px); max-height:calc(100dvh - var(--taskbar-height) - 26px); z-index:120; }
+.learning-assistant:is(.is-drivers-lab,.is-audio-lab).is-collapsed { width:94px; }
+.learning-assistant:is(.is-drivers-lab,.is-audio-lab) .assistant-body { max-height:min(510px,calc(100dvh - var(--taskbar-height) - 135px)); overflow:auto; }
+.learning-assistant:is(.is-drivers-lab,.is-audio-lab) .learning-instructions { margin:0; }
+.learning-assistant:is(.is-drivers-lab,.is-audio-lab) .learning-instructions li { font-size:12px; }
 
 /* ---------- app Impressora ---------- */
 .prn-app { min-height:100%; padding:20px 24px; background:linear-gradient(180deg,#fff 0,#f2f5fa 100%); }
@@ -210,6 +210,12 @@
 .px-foot { display:flex; align-items:center; gap:16px; padding:16px 28px; background:#0f1e3d; color:#c7d2e4; font-size:12px; }
 .px-foot .px-logo { color:#fff; font-size:18px; }
 
+/* Sobre: cabeçalho com nome e modelo do computador */
+.si-head { display:grid; gap:2px; }
+.si-head strong { font-size:20px; }
+.si-head span { color:#5b6473; }
+.dm-restart { margin:12px 0 0; text-align:right; }
+
 /* janelas pequenas, para não ficarem embaixo do robô (que fica à direita) */
 @media(min-width:801px) {
   .app-window[data-app="driverinstaller"]:not(.is-maximized) { width:min(640px,72vw); height:min(450px,76vh); }
@@ -219,8 +225,8 @@
 
 /* com o robô aberto à direita, o conteúdo do site e o painel de downloads vão para a esquerda */
 @media(min-width:801px) {
-  body:has(.learning-assistant.is-drivers-lab:not(.is-collapsed)) .px-site main { margin-left:28px; max-width:min(1080px,calc(100% - 430px)); }
-  body:has(.learning-assistant.is-drivers-lab:not(.is-collapsed)) .vpn-browser-shell:has(.px-site,.google-results-page) .browser-downloads-panel { float:left; margin:-15px auto 14px 14px; }
+  body:has(.learning-assistant:is(.is-drivers-lab,.is-audio-lab):not(.is-collapsed)) .px-site main { margin-left:28px; max-width:min(1080px,calc(100% - 430px)); }
+  body:has(.learning-assistant:is(.is-drivers-lab,.is-audio-lab):not(.is-collapsed)) .vpn-browser-shell:has(.px-site,.google-results-page) .browser-downloads-panel { float:left; margin:-15px auto 14px 14px; }
 }
 
 /* resultados do Google para drivers */
@@ -243,5 +249,5 @@
 
 .px-site button:focus-visible, .bad-site button:focus-visible, .prn-app button:focus-visible, .dw-app button:focus-visible { outline:2px solid #0a5bd3; outline-offset:2px; }
 @media(max-width:900px) { .prn-body, .px-product { grid-template-columns:1fr; } .px-types { grid-template-columns:repeat(2,minmax(0,1fr)); } .px-models { grid-template-columns:repeat(2,minmax(0,1fr)); } .px-top nav { display:none; } }
-@media(max-width:650px) { .learning-assistant.is-drivers-lab { left:8px; max-width:calc(100vw - 16px); } .learning-assistant.is-drivers-lab:not(.is-collapsed) { max-height:250px; } .learning-assistant.is-drivers-lab:not(.is-collapsed) .assistant-body { max-height:162px; } .dw-app { grid-template-columns:1fr; } .dw-app aside { display:none; } .px-file { flex-wrap:wrap; } }
+@media(max-width:650px) { .learning-assistant:is(.is-drivers-lab,.is-audio-lab) { left:8px; max-width:calc(100vw - 16px); } .learning-assistant:is(.is-drivers-lab,.is-audio-lab):not(.is-collapsed) { max-height:250px; } .learning-assistant:is(.is-drivers-lab,.is-audio-lab):not(.is-collapsed) .assistant-body { max-height:162px; } .dw-app { grid-template-columns:1fr; } .dw-app aside { display:none; } .px-file { flex-wrap:wrap; } }
 @media(prefers-reduced-motion:reduce) { .prn-paper, .prn-error, .prn-label { animation:none; } .dw-cable, .dw-bar i, .px-types button, .px-product-card { transition:none; } }

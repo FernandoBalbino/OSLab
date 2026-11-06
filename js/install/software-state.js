@@ -31,6 +31,17 @@
       ["drv-ij3250-full", "Printix_InkJet3250_Completo_x64_5.0.1.exe", 196],
       ["drv-ij3255-full", "Printix_InkJet3255_Completo_x64_5.0.1.exe", 196],
     ].map(([id, fileName, totalMb]) => [id, Object.freeze({ id, productName: "Driver Printix", fileName, totalMb, programIds: [], icon: "assets/drivers/driver-file.svg", durationMs: 15000, driver: true })])),
+    // arquivos do site de suporte da trilha de Som (notebook Vertex)
+    ...Object.fromEntries([
+      ["aud-vn14-w11", "Vertex_Note14_Audio_Sonora_6.0.9612.1_W11x64.exe", 312],
+      ["aud-vn14-w10x86", "Vertex_Note14_Audio_Sonora_6.0.8899.1_W10x86.exe", 186],
+      ["app-vn14-console", "SonoraAudioConsole_1.4.2_x64.exe", 64],
+      ["vid-vn14-w11", "Vertex_Note14_Video_IntelUHD_31.0.101.5590_W11x64.exe", 520],
+      ["bios-vn14", "Vertex_Note14_BIOS_1.12.exe", 18],
+      ["aud-vn14pro-w11", "Vertex_Note14Pro_Audio_SonoraStudio_7.1.2_W11x64.exe", 344],
+      ["aud-vn15-w11", "Vertex_Note15_Audio_Sonora_6.0.9580.1_W11x64.exe", 309],
+      ["aud-vb14-w11", "Vertex_Book14_Audio_Sonora_6.0.9101.1_W11x64.exe", 298],
+    ].map(([id, fileName, totalMb]) => [id, Object.freeze({ id, productName: "Driver Vertex", fileName, totalMb, programIds: [], icon: "assets/drivers/driver-file.svg", durationMs: 12000, driver: true, audio: true })])),
   });
   const durationOf = (installerId) => installers[installerId]?.durationMs || DOWNLOAD_DURATION_MS;
 
