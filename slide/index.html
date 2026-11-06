@@ -1,0 +1,424 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Drivers — Aula antes do OSLab</title>
+<meta name="description" content="Slides sobre drivers: o que são, como encontrar o driver certo, instalar, conferir e reverter." />
+<link rel="icon" href="../assets/drivers/trail-icon.svg" />
+<style>
+  @font-face { font-family: "Nunito Sans"; src: url("../assets/fonts/NunitoSans-Variable.ttf") format("truetype"); font-weight: 200 1000; font-display: swap; }
+  :root {
+    --ink: #13213a; --muted: #4b5a73; --line: #e3e8f0; --soft: #f3f6fb; --paper: #ffffff;
+    --blue: #0a5bd3; --navy: #0a3d91; --amber: #f59e0b; --amber-ink: #8a4b00; --red: #c2341b; --green: #11804a;
+    --font: "Nunito Sans", "Segoe UI", system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--paper); color: var(--ink); font-family: var(--font); }
+  body { display: grid; grid-template-rows: 56px 1fr 62px; overflow: hidden; }
+  button { font: inherit; color: inherit; cursor: pointer; }
+  :focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; border-radius: 6px; }
+
+  .top { display: flex; align-items: center; gap: 12px; padding: 0 clamp(16px, 4vw, 56px); border-bottom: 1px solid var(--line); }
+  .top img { width: 26px; height: 26px; }
+  .top strong { font-size: 13px; letter-spacing: .12em; text-transform: uppercase; color: var(--navy); }
+  .top .grow { flex: 1; }
+  .top a { display: inline-flex; align-items: center; gap: 10px; color: var(--navy); font-weight: 700; text-decoration: none; font-size: 15px; }
+  .top a span { font-size: 20px; transition: transform .2s; }
+  .top a:hover span { transform: translateX(4px); }
+  .icon-btn { display: grid; place-items: center; width: 40px; height: 40px; border: 0; border-radius: 10px; background: none; }
+  .icon-btn:hover { background: var(--soft); }
+  .icon-btn svg { width: 22px; height: 22px; stroke: var(--navy); fill: none; stroke-width: 2; }
+
+  main { position: relative; overflow: hidden; }
+  .slide { position: absolute; inset: 0; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); align-items: center; gap: clamp(24px, 5vw, 80px); padding: clamp(20px, 4vh, 48px) clamp(20px, 6vw, 88px); opacity: 0; visibility: hidden; transform: translateX(24px); transition: opacity .35s ease, transform .35s ease, visibility 0s .35s; }
+  .slide.is-on { opacity: 1; visibility: visible; transform: none; transition: opacity .35s ease, transform .35s ease; }
+  .slide.is-back { transform: translateX(-24px); }
+  .slide.is-on .stagger > * { animation: up .5s both; }
+  .slide.is-on .stagger > *:nth-child(2) { animation-delay: .08s; } .slide.is-on .stagger > *:nth-child(3) { animation-delay: .16s; }
+  .slide.is-on .stagger > *:nth-child(4) { animation-delay: .24s; } .slide.is-on .stagger > *:nth-child(5) { animation-delay: .32s; }
+  .slide.is-on .stagger > *:nth-child(6) { animation-delay: .40s; } .slide.is-on .stagger > *:nth-child(7) { animation-delay: .48s; }
+  @keyframes up { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+
+  .kicker { margin: 0 0 14px; font-size: 13px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: var(--blue); }
+  h1, h2 { margin: 0 0 18px; font-weight: 900; line-height: 1; letter-spacing: -.02em; }
+  h1 { font-size: clamp(44px, 6.4vw, 92px); }
+  h2 { font-size: clamp(36px, 4.6vw, 66px); }
+  h1 em, h2 em { font-style: normal; color: var(--amber); }
+  .lead { margin: 0 0 14px; font-size: clamp(19px, 1.75vw, 26px); line-height: 1.45; }
+  .note { margin: 18px 0 0; padding-top: 16px; border-top: 1px solid var(--line); font-size: clamp(16px, 1.35vw, 20px); line-height: 1.5; color: var(--navy); }
+  .muted { color: var(--muted); }
+
+  /* capa */
+  .cover { grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); background: radial-gradient(ellipse at 80% 60%, #e7f0ff 0, #fff 60%); }
+  .cover-art { position: relative; display: grid; place-items: center; }
+  .cover-art .printer { width: min(100%, 560px); filter: drop-shadow(0 30px 30px rgba(10, 61, 145, .18)); animation: float 6s ease-in-out infinite; }
+  .cover-art .badge { position: absolute; right: 6%; top: 4%; width: clamp(80px, 9vw, 130px); animation: float 6s ease-in-out -3s infinite; }
+  @keyframes float { 50% { transform: translateY(-10px); } }
+  .pill { display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: 999px; background: #fff7e6; color: var(--amber-ink); font-weight: 800; font-size: 15px; }
+
+  /* camadas */
+  .stack { display: grid; gap: 10px; }
+  .stack .layer { padding: 16px 20px; text-align: center; background: var(--soft); border: 1px solid var(--line); }
+  .stack .layer small { display: block; font-size: 12px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: var(--blue); }
+  .stack .layer b { font-size: clamp(18px, 1.6vw, 24px); }
+  .stack .layer.hot { background: var(--amber); border-color: var(--amber); color: #2b1600; }
+  .stack .layer.hot small { color: #5a3300; }
+  .stack .arrow { text-align: center; color: var(--amber); font-size: 20px; line-height: 1; }
+
+  /* janela tipo Windows */
+  .win { border: 1px solid #cfd6e0; border-radius: 10px; background: #fff; box-shadow: 0 24px 60px rgba(19, 33, 58, .16); overflow: hidden; font-family: "Segoe UI", Tahoma, sans-serif; font-size: 15px; color: #000; }
+  .win header { display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-bottom: 1px solid #eee; font-size: 14px; }
+  .win header img { width: 18px; height: 18px; }
+  .tree { padding: 10px 14px 16px; }
+  .tree div { display: flex; align-items: center; gap: 8px; height: 30px; }
+  .tree img { width: 20px; height: 20px; }
+  .tree .l1 { padding-left: 24px; } .tree .l2 { padding-left: 52px; }
+  .tree .sel span { background: #cce8ff; outline: 1px solid #99d1ff; padding: 1px 4px; }
+  .tree .chev { width: 10px; color: #777; font-size: 12px; }
+  .callout { margin-top: 14px; padding: 12px 16px; border-left: 4px solid var(--amber); background: #fff8eb; font-size: clamp(15px, 1.25vw, 18px); line-height: 1.45; color: #3d2600; }
+
+  /* etiqueta e modelos */
+  .label { display: grid; gap: 6px; padding: 22px 26px; border: 3px solid #111; border-radius: 10px; background: #fff; font-family: "Segoe UI", Arial, sans-serif; box-shadow: 0 16px 40px rgba(0,0,0,.12); }
+  .label small { font-size: 12px; letter-spacing: .14em; color: #555; }
+  .label strong { font-size: 34px; font-style: italic; color: var(--navy); }
+  .label span { font-size: 20px; }
+  .label b { font-size: 26px; background: #fff3c4; padding: 0 6px; }
+  .models { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 18px; }
+  .models span { padding: 12px 14px; border: 1px solid var(--line); border-radius: 10px; background: #fff; font-weight: 700; font-size: clamp(15px, 1.3vw, 19px); }
+  .models .ok { border: 2px solid var(--green); color: var(--green); }
+  .models .no { color: #8a94a6; text-decoration: line-through; text-decoration-color: var(--red); }
+
+  /* comparação */
+  .compare { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .card { padding: 20px; border: 1px solid var(--line); border-radius: 14px; background: #fff; box-shadow: 0 10px 30px rgba(19, 33, 58, .07); }
+  .card h3 { margin: 0 0 10px; font-size: clamp(18px, 1.6vw, 24px); }
+  .card ul { margin: 0; padding-left: 20px; font-size: clamp(15px, 1.25vw, 18px); line-height: 1.55; }
+  .card.good { border-top: 6px solid var(--green); }
+  .card.bad { border-top: 6px solid var(--red); }
+  .url { display: block; margin-bottom: 12px; padding: 8px 12px; border-radius: 999px; background: var(--soft); font-family: Consolas, monospace; font-size: clamp(14px, 1.1vw, 16px); }
+  .search { display: grid; gap: 12px; }
+  .search div { display: flex; align-items: center; gap: 12px; padding: 14px 20px; border: 1px solid #dfe1e5; border-radius: 999px; background: #fff; font-size: clamp(17px, 1.5vw, 22px); box-shadow: 0 2px 6px rgba(32, 33, 36, .1); }
+  .search .tag { margin-left: auto; padding: 3px 10px; border-radius: 999px; font-size: 13px; font-weight: 800; }
+  .search .ok .tag { background: #e6f6ec; color: var(--green); }
+  .search .no .tag { background: #fdecea; color: var(--red); }
+  .formula { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 20px; font-size: clamp(18px, 1.6vw, 24px); font-weight: 800; }
+  .formula span { padding: 8px 14px; border-radius: 10px; background: var(--navy); color: #fff; }
+  .formula i { font-style: normal; color: var(--amber); }
+
+  /* arquivos */
+  .files { display: grid; gap: 10px; }
+  .file { display: grid; grid-template-columns: 44px 1fr auto; align-items: center; gap: 14px; padding: 14px 16px; border: 1px solid var(--line); border-radius: 12px; background: #fff; }
+  .file img { width: 40px; height: 40px; }
+  .file strong { display: block; font-size: clamp(16px, 1.35vw, 20px); }
+  .file small { color: var(--muted); font-size: clamp(13px, 1.05vw, 15px); }
+  .file em { font-style: normal; font-weight: 800; padding: 4px 10px; border-radius: 999px; font-size: 13px; }
+  .file.right { border: 2px solid var(--green); }
+  .file.right em { background: #e6f6ec; color: var(--green); }
+  .file.wrong em { background: #fdecea; color: var(--red); }
+
+  /* passos */
+  .steps { counter-reset: s; display: grid; gap: 12px; margin: 0; padding: 0; list-style: none; }
+  .steps li { counter-increment: s; display: grid; grid-template-columns: 52px 1fr; align-items: center; gap: 14px; padding: 14px 16px; border-radius: 14px; background: var(--soft); font-size: clamp(16px, 1.4vw, 21px); line-height: 1.35; }
+  .steps li::before { content: counter(s); display: grid; place-items: center; width: 52px; height: 52px; border-radius: 50%; background: var(--navy); color: #fff; font-weight: 900; font-size: 22px; }
+  .steps li.hot { background: #fff4dc; }
+  .steps li.hot::before { background: var(--amber); color: #2b1600; }
+
+  /* propriedades */
+  .props { padding: 16px 18px; }
+  .props nav { display: flex; gap: 0; margin-bottom: -1px; }
+  .props nav span { padding: 6px 14px; border: 1px solid #d9d9d9; border-bottom: 0; background: #f3f3f3; font-size: 14px; }
+  .props nav .on { background: #fff; font-weight: 700; }
+  .props .panel { padding: 16px; border: 1px solid #d9d9d9; }
+  .props dl { display: grid; grid-template-columns: 170px 1fr; gap: 10px; margin: 0 0 14px; font-size: 16px; }
+  .props dd { margin: 0; }
+  .props .hl { background: #fff3c4; font-weight: 700; padding: 0 4px; }
+  .props .btns { display: grid; grid-template-columns: 170px 1fr; gap: 8px 12px; align-items: center; font-size: 14px; }
+  .props .btns b { padding: 5px 10px; border: 1px solid #ccc; border-radius: 4px; background: #fdfdfd; text-align: center; font-weight: 400; }
+  .props .btns b.hot { border: 2px solid var(--amber); background: #fff8eb; font-weight: 700; }
+
+  /* página de teste */
+  .pages { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  .paper { aspect-ratio: 3 / 4; padding: 18px; border: 1px solid #d8dee8; border-radius: 6px; background: #fff; box-shadow: 0 14px 34px rgba(0,0,0,.12); display: grid; align-content: start; gap: 8px; font-size: clamp(13px, 1.1vw, 16px); }
+  .paper strong { font-size: clamp(16px, 1.4vw, 20px); }
+  .paper .inks { display: flex; gap: 6px; }
+  .paper .inks i { width: 30px; height: 14px; border-radius: 3px; }
+  .paper b { margin-top: 8px; }
+  .paper.ok b { color: var(--green); }
+  .paper.bad { font-family: "Courier New", monospace; }
+  .paper.bad b { color: var(--red); font-family: var(--font); }
+
+  /* final */
+  .check { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
+  .check li { display: flex; gap: 12px; align-items: center; font-size: clamp(17px, 1.5vw, 22px); }
+  .check li::before { content: "✓"; display: grid; place-items: center; flex: none; width: 34px; height: 34px; border-radius: 50%; background: #e6f6ec; color: var(--green); font-weight: 900; }
+  .go { display: inline-flex; align-items: center; gap: 12px; margin-top: 26px; padding: 16px 26px; border-radius: 14px; background: var(--navy); color: #fff; font-weight: 800; font-size: clamp(18px, 1.5vw, 22px); text-decoration: none; box-shadow: 0 14px 30px rgba(10, 61, 145, .28); transition: transform .2s; }
+  .go:hover { transform: translateY(-2px); }
+
+  /* rodapé */
+  .bottom { display: flex; align-items: center; gap: 16px; padding: 0 clamp(16px, 4vw, 56px); border-top: 1px solid var(--line); }
+  .bottom .notes-btn { border: 0; background: none; color: var(--muted); font-size: 14px; }
+  .dots { flex: 1; display: flex; justify-content: center; gap: 10px; }
+  .dots button { width: 8px; height: 8px; padding: 0; border: 0; border-radius: 99px; background: #c9d3e3; transition: width .25s, background .25s; }
+  .dots button.on { width: 28px; background: var(--navy); }
+  .count { min-width: 56px; text-align: center; font-size: 15px; color: var(--muted); }
+  .count b { color: var(--ink); }
+  .nav { display: grid; place-items: center; width: 44px; height: 44px; border: 0; border-radius: 10px; background: none; color: var(--navy); font-size: 22px; }
+  .nav.next { background: var(--navy); color: #fff; }
+  .nav:disabled { opacity: .35; cursor: default; }
+  .notes { position: fixed; left: clamp(16px, 4vw, 56px); bottom: 74px; z-index: 5; width: min(560px, calc(100vw - 32px)); padding: 16px 18px; border: 1px solid var(--line); border-radius: 14px; background: #fff; box-shadow: 0 18px 50px rgba(19, 33, 58, .2); font-size: 16px; line-height: 1.5; }
+  .notes[hidden] { display: none; }
+  .notes small { display: block; margin-bottom: 6px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--blue); font-size: 12px; }
+
+  @media (max-width: 900px) {
+    body { overflow: auto; }
+    .slide { position: relative; grid-template-columns: 1fr; display: none; padding: 20px 16px 28px; }
+    .slide.is-on { display: grid; }
+    main { overflow: visible; }
+    .compare, .pages { grid-template-columns: 1fr; }
+    .top a b { display: none; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+  }
+</style>
+</head>
+<body>
+<header class="top">
+  <img src="../assets/drivers/trail-icon.svg" alt="" />
+  <strong>Drivers · Instalando uma impressora</strong>
+  <span class="grow"></span>
+  <a href="../index.html?app=driverslab"><b>Atividade prática</b><span aria-hidden="true">→</span></a>
+  <button class="icon-btn" id="fs" type="button" aria-label="Tela cheia"><svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
+</header>
+
+<main id="deck" aria-live="polite">
+  <section class="slide cover" data-note="Pergunte: alguém já ligou uma impressora ou um controle no computador e ele não funcionou? Hoje vamos entender por quê e resolver como um técnico.">
+    <div class="stagger">
+      <p class="kicker">Aula antes do OSLab</p>
+      <h1>O que é um <em>driver</em>?</h1>
+      <p class="lead">O programa que ensina o computador a conversar com cada aparelho.</p>
+      <p class="lead muted">Hoje: instalar o driver de uma impressora do jeito certo.</p>
+      <span class="pill">12 missões práticas no OSLab</span>
+    </div>
+    <div class="cover-art"><img class="printer" src="../assets/drivers/printer-inkjet-2350.png" alt="Impressora multifuncional Printix InkJet 2350" /><img class="badge" src="../assets/drivers/trail-icon.svg" alt="" /></div>
+  </section>
+
+  <section class="slide" data-note="O Windows conhece muitos aparelhos, mas não todos. O driver é feito pela fabricante e traduz os pedidos do sistema para a linguagem daquele aparelho.">
+    <div class="stagger">
+      <p class="kicker">01 / O tradutor</p>
+      <h2>Driver é um <em>tradutor</em></h2>
+      <p class="lead">Quando você clica em Imprimir, o aplicativo pede ao sistema. O sistema entrega ao driver, e o driver fala com a impressora.</p>
+      <p class="lead">Sem o driver, o Windows não sabe como usar o aparelho.</p>
+      <p class="note">Impressora, placa de vídeo, Wi-Fi, mouse: todo dispositivo precisa de um driver.</p>
+    </div>
+    <div class="stack stagger">
+      <div class="layer"><small>Você</small><b>Clica em Imprimir</b></div><div class="arrow">↓</div>
+      <div class="layer"><small>Aplicativo</small><b>Word · Navegador · PDF</b></div><div class="arrow">↓</div>
+      <div class="layer"><small>Sistema operacional</small><b>Windows 11</b></div><div class="arrow">↓</div>
+      <div class="layer hot"><small>Driver da impressora</small><b>Traduz o pedido para o aparelho</b></div><div class="arrow">↓</div>
+      <div class="layer"><small>Hardware</small><b>Impressora Printix InkJet 2350</b></div>
+    </div>
+  </section>
+
+  <section class="slide" data-note="Mostre que o computador percebe que algo foi ligado, mas não sabe o que é. Código 28 significa: drivers não instalados.">
+    <div class="stagger">
+      <p class="kicker">02 / Sem driver</p>
+      <h2>Dispositivo <em>desconhecido</em></h2>
+      <p class="lead">No Gerenciador de Dispositivos, um aparelho sem driver aparece em Outros dispositivos, com um triângulo amarelo.</p>
+      <p class="lead">A impressora pode estar perfeita: só falta o programa certo.</p>
+    </div>
+    <div class="stagger">
+      <div class="win"><header><img src="../assets/drivers/devmgr/root-32.png" alt="" />Gerenciador de Dispositivos</header>
+        <div class="tree">
+          <div><span class="chev">⌄</span><img src="../assets/drivers/devmgr/root-32.png" alt="" /><span>OSLAB-PC</span></div>
+          <div class="l1"><span class="chev">›</span><img src="../assets/drivers/devmgr/net-32.png" alt="" /><span>Adaptadores de rede</span></div>
+          <div class="l1"><span class="chev">›</span><img src="../assets/drivers/devmgr/monitor-32.png" alt="" /><span>Monitores</span></div>
+          <div class="l1"><span class="chev">⌄</span><img src="../assets/drivers/devmgr/other-32.png" alt="" /><span>Outros dispositivos</span></div>
+          <div class="l2 sel"><img src="../assets/drivers/devmgr/unknown-warn-32.png" alt="" /><span>Dispositivo desconhecido</span></div>
+          <div class="l1"><span class="chev">›</span><img src="../assets/drivers/devmgr/keyboard-32.png" alt="" /><span>Teclados</span></div>
+        </div>
+      </div>
+      <div class="callout"><b>Status:</b> Os drivers deste dispositivo não estão instalados. (Código 28)</div>
+    </div>
+  </section>
+
+  <section class="slide" data-note="Peça para alguém ler a etiqueta. Destaque que um número trocado ou a palavra Pro já é outro aparelho, com outro driver.">
+    <div class="stagger">
+      <p class="kicker">03 / Marca e modelo</p>
+      <h2>Leia a <em>etiqueta</em></h2>
+      <p class="lead">Cada modelo tem o seu driver. Antes de pesquisar, anote a marca e o modelo exatos.</p>
+      <p class="note">Nomes parecidos enganam: InkJet 2350, 2350 Pro, 2305 e 2530 são aparelhos diferentes.</p>
+    </div>
+    <div class="stagger">
+      <div class="label"><small>ETIQUETA DO PRODUTO</small><strong>Printix</strong><span>Modelo: <b>InkJet 2350</b></span><span>N/S: PX2350-BR-0426</span></div>
+      <div class="models"><span class="ok">✓ InkJet 2350</span><span class="no">InkJet 2350 Pro</span><span class="no">InkJet 2305</span><span class="no">InkJet 2530</span></div>
+    </div>
+  </section>
+
+  <section class="slide" data-note="Mostre onde ver isso no Windows: Configurações › Sistema › Sobre. 64 bits é o padrão hoje, mas ainda existem computadores de 32 bits e computadores com macOS.">
+    <div class="stagger">
+      <p class="kicker">04 / O seu computador</p>
+      <h2>Qual é o <em>sistema</em>?</h2>
+      <p class="lead">O driver também depende do sistema operacional: Windows ou macOS, 64 ou 32 bits.</p>
+      <p class="lead">Veja em Sistema › Sobre, no campo Tipo de sistema.</p>
+    </div>
+    <div class="stagger">
+      <div class="win"><header><img src="../assets/drivers/system-info.svg" alt="" />Sistema › Sobre</header>
+        <div class="props"><dl><dt>Edição</dt><dd>Windows 11 Pro</dd><dt>Processador</dt><dd>x64 de 4 núcleos, 2,40 GHz</dd><dt>Tipo de sistema</dt><dd class="hl">Sistema operacional de 64 bits, processador baseado em x64</dd></dl></div>
+      </div>
+      <div class="callout">Anote: <b>Printix · InkJet 2350 · Windows 11 (64 bits)</b>. Com isso você acha o arquivo certo de primeira.</div>
+    </div>
+  </section>
+
+  <section class="slide" data-note="Faça a turma comparar as pesquisas. A boa é específica: quem fabrica, qual aparelho e o que você quer.">
+    <div class="stagger">
+      <p class="kicker">05 / Pesquisa</p>
+      <h2>Pesquise do <em>jeito certo</em></h2>
+      <p class="lead">Pesquisa vaga traz milhares de páginas. Pesquisa específica leva direto à página certa.</p>
+      <div class="formula"><span>Marca</span><i>+</i><span>Modelo</span><i>+</i><span>driver</span></div>
+    </div>
+    <div class="search stagger">
+      <div class="no">🔍 impressora não funciona <span class="tag">vaga</span></div>
+      <div class="no">🔍 baixar driver grátis <span class="tag">perigosa</span></div>
+      <div class="ok">🔍 Printix InkJet 2350 driver <span class="tag">certa</span></div>
+    </div>
+  </section>
+
+  <section class="slide" data-note="Sites de terceiros podem trazer driver errado, desatualizado ou junto com programas indesejados. Ensine a ler o endereço antes de clicar.">
+    <div class="stagger">
+      <p class="kicker">06 / Onde baixar</p>
+      <h2>Só no site <em>oficial</em></h2>
+      <p class="lead">O driver confiável vem da fabricante. Leia o endereço antes de clicar.</p>
+    </div>
+    <div class="compare stagger">
+      <div class="card good"><h3>Site da fabricante</h3><span class="url">suporte.printix.com.br</span><ul><li>Nome da marca no endereço</li><li>Busca por modelo</li><li>Escolha do sistema</li><li>Versão e data do driver</li></ul></div>
+      <div class="card bad"><h3>Site suspeito</h3><span class="url">baixardriversgratis.net</span><ul><li>Endereço sem a marca</li><li>Vários botões BAIXAR</li><li>Anúncios e “atualizador milagroso”</li><li>Pode instalar programas indesejados</li></ul></div>
+    </div>
+  </section>
+
+  <section class="slide" data-note="Explique cada tipo. Firmware é o programa de dentro da impressora; .dmg é instalador de Mac; o driver básico de 32 bits não serve para Windows de 64 bits.">
+    <div class="stagger">
+      <p class="kicker">07 / Qual arquivo?</p>
+      <h2>Escolha o <em>arquivo</em> certo</h2>
+      <p class="lead">A página do modelo mostra vários arquivos. Só um bate com tudo o que você anotou.</p>
+      <p class="note">Driver fica no computador. Firmware é o programa que roda dentro da própria impressora.</p>
+    </div>
+    <div class="files stagger">
+      <div class="file right"><img src="../assets/drivers/driver-file.svg" alt="" /><span><strong>Pacote completo de software e driver</strong><small>Windows 11 e 10 (64 bits) · versão 3.1.0</small></span><em>Este</em></div>
+      <div class="file wrong"><img src="../assets/drivers/driver-file.svg" alt="" /><span><strong>Driver básico</strong><small>Windows 10 (32 bits)</small></span><em>32 bits</em></div>
+      <div class="file wrong"><img src="../assets/drivers/driver-file.svg" alt="" /><span><strong>Atualização de firmware</strong><small>Programa interno da impressora</small></span><em>Firmware</em></div>
+      <div class="file wrong"><img src="../assets/drivers/driver-file.svg" alt="" /><span><strong>Pacote completo para Mac</strong><small>Arquivo .dmg para macOS</small></span><em>macOS</em></div>
+    </div>
+  </section>
+
+  <section class="slide" data-note="Destaque o passo 3: muitos instaladores pedem para conectar o cabo só quando o programa pedir. Primeiro os arquivos do driver são copiados, depois o Windows reconhece a impressora.">
+    <div class="stagger">
+      <p class="kicker">08 / Instalação</p>
+      <h2>Instale e <em>conecte</em></h2>
+      <p class="lead">Abra o arquivo baixado e siga o assistente.</p>
+      <p class="lead">Leia cada tela antes de clicar em Avançar.</p>
+    </div>
+    <ol class="steps stagger">
+      <li>Abra o arquivo baixado no painel de downloads.</li>
+      <li>Leia e aceite o contrato de licença.</li>
+      <li class="hot">Conecte o cabo USB só quando o instalador pedir.</li>
+      <li>Espere copiar os arquivos e clique em Concluir.</li>
+    </ol>
+  </section>
+
+  <section class="slide" data-note="Todo técnico confere. Mostre que o triângulo some, a impressora aparece em Impressoras e a guia Driver mostra fornecedor, data e versão.">
+    <div class="stagger">
+      <p class="kicker">09 / Conferir</p>
+      <h2>Confira no <em>Gerenciador</em></h2>
+      <p class="lead">Dê dois cliques na impressora e abra a guia Driver.</p>
+      <p class="lead">Ali estão o fornecedor, a data e a versão instalada.</p>
+    </div>
+    <div class="win stagger"><header><img src="../assets/drivers/devmgr/printer-32.png" alt="" />Propriedades de Printix InkJet 2350</header>
+      <div class="props"><nav><span>Geral</span><span class="on">Driver</span><span>Detalhes</span><span>Eventos</span></nav>
+        <div class="panel"><dl><dt>Fornecedor do Driver:</dt><dd>Printix</dd><dt>Data do Driver:</dt><dd>12/08/2026</dd><dt>Versão do Driver:</dt><dd class="hl">3.1.0</dd></dl>
+          <div class="btns"><b>Atualizar Driver</b><span>Procura uma versão nova.</span><b class="hot">Reverter Driver</b><span>Volta para a versão anterior.</span><b>Desinstalar Dispositivo</b><span>Remove o driver.</span></div></div></div>
+    </div>
+  </section>
+
+  <section class="slide" data-note="A página de teste é a prova final. Se uma atualização deixar a impressão com símbolos estranhos, use Reverter Driver na guia Driver.">
+    <div class="stagger">
+      <p class="kicker">10 / Testar e corrigir</p>
+      <h2>Página de <em>teste</em></h2>
+      <p class="lead">Imprimir uma página de teste confirma que computador, driver e impressora conversam.</p>
+      <p class="lead">Se uma atualização estragar a impressão, <b>Reverter Driver</b> volta para a versão que funcionava.</p>
+    </div>
+    <div class="pages stagger">
+      <div class="paper ok"><strong>Página de teste</strong><span>Printix InkJet 2350</span><span>Driver 3.1.0</span><span class="inks"><i style="background:#06b6d4"></i><i style="background:#db2777"></i><i style="background:#facc15"></i><i style="background:#111827"></i></span><b>✓ Impressão correta</b></div>
+      <div class="paper bad"><strong>Pá§ina d€ t€st€</strong><span>ÿ¤¶Ø¥ ÆÐ ¢¬ ¦¦¦</span><span>#&amp;@% ¿¿ Þ¶ øø</span><b>Driver beta com problema → Reverter</b></div>
+    </div>
+  </section>
+
+  <section class="slide" data-note="Recapitule em voz alta e abra o OSLab. O robô guia cada missão, dá dicas e mostra exemplos. Cada missão termina com uma pergunta.">
+    <div class="stagger">
+      <p class="kicker">Agora é com você</p>
+      <h2>No <em>OSLab</em></h2>
+      <p class="lead">12 missões curtas com o robô guiando. Ao final de cada uma, responda à pergunta para ganhar 10 pontos.</p>
+      <a class="go" href="../index.html?app=driverslab">Abrir a trilha de Drivers <span aria-hidden="true">→</span></a>
+    </div>
+    <ul class="check stagger">
+      <li>Leia marca e modelo na etiqueta</li>
+      <li>Confira o tipo de sistema (64 bits)</li>
+      <li>Pesquise marca + modelo + driver</li>
+      <li>Baixe só do site oficial</li>
+      <li>Escolha o arquivo certo e instale</li>
+      <li>Confira, imprima o teste e reverta se precisar</li>
+    </ul>
+  </section>
+</main>
+
+<aside class="notes" id="notes" hidden><small>Notas da aula</small><span id="note-text"></span></aside>
+<footer class="bottom">
+  <button class="notes-btn" id="notes-btn" type="button" aria-expanded="false">Notas da aula (N)</button>
+  <nav class="dots" id="dots" aria-label="Slides"></nav>
+  <button class="nav" id="prev" type="button" aria-label="Slide anterior">←</button>
+  <span class="count" id="count"></span>
+  <button class="nav next" id="next" type="button" aria-label="Próximo slide">→</button>
+</footer>
+
+<script>
+(() => {
+  const slides = [...document.querySelectorAll(".slide")];
+  const dots = document.getElementById("dots"), count = document.getElementById("count");
+  const prev = document.getElementById("prev"), next = document.getElementById("next");
+  const notes = document.getElementById("notes"), noteText = document.getElementById("note-text"), notesBtn = document.getElementById("notes-btn");
+  let index = 0;
+  slides.forEach((_, i) => { const b = document.createElement("button"); b.type = "button"; b.setAttribute("aria-label", `Ir para o slide ${i + 1}`); b.addEventListener("click", () => go(i)); dots.appendChild(b); });
+  function go(i) {
+    const to = Math.max(0, Math.min(slides.length - 1, i)), back = to < index;
+    slides.forEach((s, n) => { s.classList.toggle("is-on", n === to); s.classList.toggle("is-back", back && n !== to); s.setAttribute("aria-hidden", n !== to); });
+    [...dots.children].forEach((d, n) => { d.classList.toggle("on", n === to); d.setAttribute("aria-current", n === to ? "step" : "false"); });
+    index = to;
+    count.innerHTML = `<b>${String(to + 1).padStart(2, "0")}</b> / ${slides.length}`;
+    prev.disabled = to === 0; next.disabled = to === slides.length - 1;
+    noteText.textContent = slides[to].dataset.note || "";
+    history.replaceState(null, "", `#${to + 1}`);
+  }
+  prev.addEventListener("click", () => go(index - 1));
+  next.addEventListener("click", () => go(index + 1));
+  notesBtn.addEventListener("click", () => toggleNotes());
+  function toggleNotes() { notes.hidden = !notes.hidden; notesBtn.setAttribute("aria-expanded", String(!notes.hidden)); }
+  document.addEventListener("keydown", (e) => {
+    if (e.altKey || e.ctrlKey || e.metaKey) return;
+    if (["ArrowRight", "PageDown", " "].includes(e.key)) { e.preventDefault(); go(index + 1); }
+    if (["ArrowLeft", "PageUp"].includes(e.key)) { e.preventDefault(); go(index - 1); }
+    if (e.key === "Home") go(0);
+    if (e.key === "End") go(slides.length - 1);
+    if (e.key.toLowerCase() === "n") toggleNotes();
+    if (e.key.toLowerCase() === "f") fullscreen();
+  });
+  let startX = null;
+  document.getElementById("deck").addEventListener("touchstart", (e) => { startX = e.touches[0].clientX; }, { passive: true });
+  document.getElementById("deck").addEventListener("touchend", (e) => { if (startX === null) return; const dx = e.changedTouches[0].clientX - startX; if (Math.abs(dx) > 60) go(index + (dx < 0 ? 1 : -1)); startX = null; });
+  function fullscreen() { if (document.fullscreenElement) document.exitFullscreen?.(); else document.documentElement.requestFullscreen?.().catch(() => {}); }
+  document.getElementById("fs").addEventListener("click", fullscreen);
+  go(Math.max(0, (parseInt(location.hash.slice(1), 10) || 1) - 1));
+})();
+</script>
+</body>
+</html>

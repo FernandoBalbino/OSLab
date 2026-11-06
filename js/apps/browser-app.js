@@ -3,7 +3,7 @@
 
   const OSLab = global.OSLab = global.OSLab || {};
   const records = new Set();
-  const knownHosts = ["google.com", "www.google.com", "wikipedia.org", "youtube.com", "hardware.oslab.local", "componentes.oslab.local", "falha.oslab.local", "appjavafx.local", "office.local", "netflix.com", "meuip.com", "portal.empresa.local", "bancoos.com", "speedtest.os", "meet.os", "admin.escola.local"];
+  const knownHosts = ["google.com", "www.google.com", "wikipedia.org", "youtube.com", "hardware.oslab.local", "componentes.oslab.local", "falha.oslab.local", "appjavafx.local", "office.local", "netflix.com", "meuip.com", "portal.empresa.local", "bancoos.com", "speedtest.os", "meet.os", "admin.escola.local", "suporte.printix.com.br", "baixardriversgratis.net"];
   const browsers = {
     google: { name: "Google Chrome", logo: "assets/browser/chrome.svg", maker: "Google", description: "O Chrome é um dos navegadores mais utilizados no mundo.", menu: "⋮" },
     edge: { name: "Microsoft Edge", logo: "assets/browser/edge.png", maker: "Microsoft", description: "É o navegador padrão das versões atuais do Windows.", menu: "⋯" },
@@ -76,7 +76,7 @@
     ensureHistory(record);
     record.browserHost = host;
     record.googleQuery = isSearch ? searchQuery : null;
-    record.browserResult = digitalRoute ? { ok: true, host, ip: "127.0.0.1", reason: null } : ["appjavafx.local", "office.local", "newtab", "wikipedia.org", "youtube.com", "hardware.oslab.local", "componentes.oslab.local", "falha.oslab.local"].includes(host) ? { ok: true, host, ip: "127.0.0.1", reason: null } : OSLab.network.browse(host);
+    record.browserResult = digitalRoute ? { ok: true, host, ip: "127.0.0.1", reason: null } : ["appjavafx.local", "office.local", "newtab", "wikipedia.org", "youtube.com", "hardware.oslab.local", "componentes.oslab.local", "falha.oslab.local", "suporte.printix.com.br", "baixardriversgratis.net"].includes(host) ? { ok: true, host, ip: "127.0.0.1", reason: null } : OSLab.network.browse(host);
     record.browserPageState = pageState();
     if (host === "speedtest.os") record.speedResult = null;
     if (host === "meet.os") record.meetJoined = false;
@@ -93,6 +93,7 @@
     const term = String(query || "").trim();
     if (!term) return load(record, "google.com");
     OSLab.software?.recordSearch?.(term);
+    OSLab.driverSites?.recordSearch?.(term);
     return load(record, `search:${encodeURIComponent(term)}`, { source });
   }
   function restoreClosed(record) {
@@ -151,6 +152,9 @@
   }
   function searchResults(record) {
     const query = String(record.googleQuery || "").trim();
+    // drivers antes da Vida Digital: "driver" contém "drive" e cairia no Google Drive
+    const drivers = OSLab.driverSites?.searchResults(query);
+    if (drivers) return drivers;
     const digital = OSLab.digitalSites?.searchResult(query);
     if (digital) return digital;
     const normalized = query.toLocaleLowerCase("pt-BR");
@@ -240,6 +244,7 @@
     if (record.browserHost === "speedtest.os") return speedTest(record, state);
     if (record.browserHost === "meet.os") return meet(record, state);
     if (record.browserHost === "admin.escola.local") return school(record, state);
+    if (OSLab.driverSites?.isHost(record.browserHost)) return OSLab.driverSites.render(record);
     return `<section class="offline-browser-success"><span class="browser-secure">● Conexão simulada segura</span><h2>${safe(record.browserHost)}</h2><p>A página foi carregada corretamente pelo navegador virtual.</p></section>`;
   }
   function newTabPage(record) {
@@ -302,6 +307,7 @@
       record.toolbar.addEventListener("focusin", (event) => { if (event.target.matches("[name='address']")) changed(record, "focus-address"); });
       record.content.addEventListener("click", (event) => {
         navigateClick(event);
+        if (OSLab.driverSites?.click(record, event)) return;
         const go = event.target.closest("[data-browser-go]")?.dataset.browserGo; if (go) { load(record, go, { source: "page" }); if (event.target.closest("[data-browser-first-result]")) changed(record, "first-result", { value: go }); }
         const tabUrl = event.target.closest("[data-browser-open-tab]")?.dataset.browserOpenTab; if (tabUrl) { const tab = OSLab.browserState.open(record.browserState, tabUrl); load(record, tabUrl, { push: false }); changed(record, "open-tab", { value: tabUrl, openedTabId: tab.id }); }
         const historyGo = event.target.closest("[data-browser-history-go]")?.dataset.browserHistoryGo; if (historyGo) { record.browserState.historyOpen = false; load(record, historyGo, { source: "history" }); changed(record, "history-select", { value: historyGo }); }
@@ -316,7 +322,7 @@
         const installSite = event.target.closest("[data-install-site]")?.dataset.installSite; if (installSite) { OSLab.software.visitSite(installSite); load(record, installSite === "office" ? "office.local" : "appjavafx.local"); }
         const section = event.target.closest("[data-site-section]")?.dataset.siteSection; if (section) { event.preventDefault(); record.content.querySelector(`[data-site-anchor="${CSS.escape(section)}"]`)?.scrollIntoView({ behavior: "smooth", block: "start" }); }
         const downloadId = event.target.closest("[data-download-start]")?.dataset.downloadStart; if (downloadId) { const result = OSLab.software.startDownload(downloadId); record.downloadPanelOpen = true; render(record); if (result.existing && result.download.status === "completed") OSLab.ui.notify("Download disponível", `${result.download.fileName} já está pronto para abrir.`, "info"); }
-        const openDownload = event.target.closest("[data-open-download]")?.dataset.openDownload; if (openDownload) OSLab.software.openInstaller(openDownload);
+        const openDownload = event.target.closest("[data-open-download]")?.dataset.openDownload; if (openDownload) { if (OSLab.software.installers[openDownload]?.driver) OSLab.driverInstaller.open(openDownload); else OSLab.software.openInstaller(openDownload); }
         if (event.target.closest("[data-download-close]")) { record.downloadPanelOpen = false; render(record); }
         const profile = event.target.closest("[data-netflix-profile]")?.dataset.netflixProfile; if (profile) { record.netflixProfile = profile; render(record); emit(record, "netflix-profile", { profile }); }
         const ticket = event.target.closest("[data-portal-ticket]")?.dataset.portalTicket; if (ticket) { record.portalTicket = ticket; render(record); if (ticket === "1542") emit(record, "portal-ticket-1542", { ticket }); }
@@ -326,7 +332,9 @@
         const schoolView = event.target.closest("[data-school-view]")?.dataset.schoolView; if (schoolView) { record.schoolView = schoolView; render(record); if (schoolView === "lab02") emit(record, "school-lab-02"); }
         if (event.target.closest("[data-netflix-watch]")) OSLab.ui.notify("Netflix simulada", "Reprodução fictícia iniciada. Nenhum vídeo real é transmitido.", "info");
       });
+      record.content.addEventListener("change", (event) => OSLab.driverSites?.change(record, event));
       record.content.addEventListener("submit", (event) => {
+        if (OSLab.driverSites?.submit(record, event)) return;
         const googleForm = event.target.closest("[data-google-search]");
         const netflixForm = event.target.closest("[data-netflix-search]");
         const ipQuiz = event.target.closest("[data-myip-quiz]");

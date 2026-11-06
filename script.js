@@ -1304,6 +1304,7 @@
     if (record.appId === "digitallife") OSLab.digitalLifeApp.render(record);
     if (record.appId === "userspermissions") OSLab.usersPermissionsApp.render(record);
     if (record.appId === "wifilab") OSLab.wifiLabApp.render(record);
+    if (OSLab.driversApps?.ids.has(record.appId)) OSLab.driversApps.render(record);
     if (record.appId === "browsertrail") OSLab.browserTrailsApp.renderTrail(record);
     if (record.appId === "browsermuseum") OSLab.browserTrailsApp.renderMuseum(record);
     if (OSLab.softwareApps?.appIds?.has(record.appId)) OSLab.softwareApps.render(record);
@@ -1381,7 +1382,7 @@
     record.address.textContent = definition.address;
     record.toolbar.classList.toggle("browser-toolbar", ["google", "edge", "firefox", "brave", "opera"].includes(appId));
     element.classList.toggle("settings-window", appId === "settings");
-    record.toolbar.classList.toggle("is-hidden", ["settings", "taskmanager", "missions", "exercises", "vpn", "vpnlab", "installlab", "browsertrail", "digitallife", "userspermissions", "wifilab", "browsermuseum", "controlpanel", "installer", "appjavafx", "word", "excel", "slides", "texteditor"].includes(appId));
+    record.toolbar.classList.toggle("is-hidden", ["settings", "taskmanager", "missions", "exercises", "vpn", "vpnlab", "installlab", "browsertrail", "digitallife", "userspermissions", "wifilab", "driverslab", "printer", "devicemanager", "sysinfo", "driverinstaller", "browsermuseum", "controlpanel", "installer", "appjavafx", "word", "excel", "slides", "texteditor"].includes(appId));
     record.settingsSearch.classList.toggle("is-hidden", appId !== "settings" && appId !== "taskmanager");
     element.classList.toggle("taskmanager-window", appId === "taskmanager");
     element.classList.toggle("missions-window", appId === "missions");
@@ -1392,6 +1393,8 @@
     element.classList.toggle("browser-trail-window", appId === "browsertrail" || appId === "digitallife");
     element.classList.toggle("userspermissions-window", appId === "userspermissions");
     element.classList.toggle("wifilab-window", appId === "wifilab");
+    element.classList.toggle("drivers-window", Boolean(OSLab.driversApps?.ids.has(appId)));
+    element.classList.toggle("driverslab-window", appId === "driverslab");
     element.classList.toggle("browser-museum-window", appId === "browsermuseum");
     element.classList.toggle("software-window", OSLab.softwareApps?.appIds?.has(appId));
     element.classList.toggle("texteditor-window", appId === "texteditor");
@@ -1411,7 +1414,7 @@
     positionWindow(record);
     wireWindow(record);
     renderApp(record);
-    if (["settings", "taskmanager", "missions", "exercises", "vpnlab", "installlab", "browsertrail", "digitallife", "userspermissions", "wifilab", "browsermuseum"].includes(appId)) {
+    if (["settings", "taskmanager", "missions", "exercises", "vpnlab", "installlab", "browsertrail", "digitallife", "userspermissions", "wifilab", "driverslab", "browsermuseum"].includes(appId)) {
       element.classList.add("is-maximized");
       record.maximizeIcon.src = "assets/icons/ui/restore.png";
       record.maximizeIcon.closest("button").setAttribute("aria-label", "Restaurar");
@@ -1424,7 +1427,7 @@
       icon: definition.icon,
       status: "Em execução",
       cpu: appId === "taskmanager" ? 0.3 : 0.1,
-      memory: ["google", "edge", "firefox", "brave", "opera"].includes(appId) ? 64.2 : ["missions", "exercises", "vpnlab", "installlab", "browsertrail", "digitallife", "userspermissions", "wifilab", "browsermuseum"].includes(appId) ? 42.6 : ["word", "excel", "slides"].includes(appId) ? 78.4 : appId === "vpn" ? 34.8 : appId === "texteditor" ? 42 : 28.4,
+      memory: ["google", "edge", "firefox", "brave", "opera"].includes(appId) ? 64.2 : ["missions", "exercises", "vpnlab", "installlab", "browsertrail", "digitallife", "userspermissions", "wifilab", "driverslab", "browsermuseum"].includes(appId) ? 42.6 : ["word", "excel", "slides"].includes(appId) ? 78.4 : appId === "vpn" ? 34.8 : appId === "texteditor" ? 42 : 28.4,
       missionId: options.missionId || null,
       efficient: appId === "google",
     });

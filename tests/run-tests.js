@@ -38,6 +38,11 @@ test("trilha Wi-Fi exige prática, pergunta, retomada e compatibilidade da rede"
   assert.equal(focused.status, 0, focused.stderr || focused.stdout);
 });
 
+test("trilha de Drivers tem 12 missões, avisos de erro, instalação e reversão", () => {
+  const focused = spawnSync(process.execPath, ["--test", path.join(root, "tests/drivers-lab.test.mjs")], { encoding: "utf8" });
+  assert.equal(focused.status, 0, focused.stderr || focused.stdout);
+});
+
 test("todas as referências de assets estáticos existem", () => {
   const sources = [path.join(root, "index.html"), path.join(root, "styles.css"), ...filesIn(path.join(root, "css"), ".css"), path.join(root, "script.js"), ...filesIn(path.join(root, "js"), ".js")];
   const missing = new Set();

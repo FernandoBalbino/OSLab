@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'oslab-offline-v46';
+const CACHE_VERSION = 'oslab-offline-v47';
 const CACHE_PREFIX = 'oslab-offline-';
 
 const CORE_FILES = [
@@ -60,6 +60,7 @@ self.addEventListener('fetch', (event) => {
         })
         .catch(async () => {
           return (await caches.match(event.request, { ignoreSearch: true }))
+            || (requestUrl.pathname.endsWith('/') && await caches.match(new URL('index.html', requestUrl).href, { ignoreSearch: true }))
             || (await caches.match(scopedUrl('./index.html'), { ignoreSearch: true }))
             || caches.match(scopedUrl('./offline.html'), { ignoreSearch: true });
         })

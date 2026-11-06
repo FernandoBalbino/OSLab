@@ -17,7 +17,22 @@
   const installers = Object.freeze({
     appjavafx: Object.freeze({ id: "appjavafx", productName: "AppJavaFX", fileName: "AppJavaFX-Setup.exe", totalMb: 80, programIds: ["appjavafx"], icon: "assets/programs/appjavafx.svg" }),
     office: Object.freeze({ id: "office", productName: "Pacote Office", fileName: "OfficeSetup.exe", totalMb: 420, programIds: ["word", "excel", "slides"], icon: "assets/programs/office.svg" }),
+    // arquivos do site de suporte da trilha de Drivers (download mais curto, 15 s)
+    ...Object.fromEntries([
+      ["drv-ij2350-full", "Printix_InkJet2350_Completo_x64_3.1.0.exe", 148],
+      ["drv-ij2350-basic32", "Printix_InkJet2350_Basico_x86_3.0.4.exe", 32],
+      ["drv-ij2350-fw", "Printix_InkJet2350_Firmware_02.14.bin", 18],
+      ["drv-ij2350-mac", "Printix_InkJet2350_macOS_3.1.0.dmg", 156],
+      ["drv-ij2305-full", "Printix_InkJet2305_Completo_x64_2.8.1.exe", 139],
+      ["drv-ij2530-full", "Printix_InkJet2530_Completo_x64_4.0.2.exe", 171],
+      ["drv-ij2350pro-full", "Printix_InkJet2350Pro_Completo_x64_3.3.0.exe", 188],
+      ["drv-ij2300-full", "Printix_InkJet2300_Completo_x64_2.6.0.exe", 131],
+      ["drv-ij2355-full", "Printix_InkJet2355_Completo_x64_3.1.2.exe", 152],
+      ["drv-ij3250-full", "Printix_InkJet3250_Completo_x64_5.0.1.exe", 196],
+      ["drv-ij3255-full", "Printix_InkJet3255_Completo_x64_5.0.1.exe", 196],
+    ].map(([id, fileName, totalMb]) => [id, Object.freeze({ id, productName: "Driver Printix", fileName, totalMb, programIds: [], icon: "assets/drivers/driver-file.svg", durationMs: 15000, driver: true })])),
   });
+  const durationOf = (installerId) => installers[installerId]?.durationMs || DOWNLOAD_DURATION_MS;
 
   function blankProgram(program) {
     return { ...program, installed: false, desktopShortcut: false, startMenuShortcut: false, installDate: null, scope: null, ownerUserId: null, installations: { all: false, users: {} }, shortcutsByUser: {}, dataByUser: {} };
@@ -88,7 +103,7 @@
     download.downloadedMb = download.totalMb;
     download.completedAt = new Date().toISOString();
     notify("download-completed", { installerId, download: clone(download) });
-    OSLab.events.emit("install:download-completed", { installerId, fileName: download.fileName, durationMs: DOWNLOAD_DURATION_MS }, "softwareState");
+    OSLab.events.emit("install:download-completed", { installerId, fileName: download.fileName, durationMs: durationOf(installerId) }, "softwareState");
     OSLab.ui?.notify?.("Download concluído", `${download.fileName} está pronto para abrir.`, "success", 5200);
     return clone(download);
   }
@@ -97,9 +112,10 @@
     const download = state.downloads[installerId];
     if (!download || download.status !== "downloading") return;
     const elapsed = Math.max(0, Date.now() - Number(download.startedAt || Date.now()));
-    if (elapsed >= DOWNLOAD_DURATION_MS) { finishDownload(installerId); return; }
-    download.progress = Math.min(99, Math.floor(elapsed / DOWNLOAD_DURATION_MS * 100));
-    download.downloadedMb = Math.min(download.totalMb, Number((download.totalMb * elapsed / DOWNLOAD_DURATION_MS).toFixed(1)));
+    const total = durationOf(installerId);
+    if (elapsed >= total) { finishDownload(installerId); return; }
+    download.progress = Math.min(99, Math.floor(elapsed / total * 100));
+    download.downloadedMb = Math.min(download.totalMb, Number((download.totalMb * elapsed / total).toFixed(1)));
     notify("download-progress", { installerId, progress: download.progress });
   }
 
@@ -112,7 +128,7 @@
   function resumeDownloads() {
     Object.values(state.downloads).forEach((download) => {
       if (download.status !== "downloading") return;
-      if (Date.now() - Number(download.startedAt || 0) >= DOWNLOAD_DURATION_MS) finishDownload(download.installerId);
+      if (Date.now() - Number(download.startedAt || 0) >= durationOf(download.installerId)) finishDownload(download.installerId);
       else ensureTimer(download.installerId);
     });
   }
@@ -135,9 +151,23 @@
       completedAt: null,
     };
     notify("download-started", { installerId, download: clone(state.downloads[installerId]) });
-    OSLab.events.emit("install:download-started", { installerId, fileName: installer.fileName, durationMs: DOWNLOAD_DURATION_MS }, "softwareState");
+    OSLab.events.emit("install:download-started", { installerId, fileName: installer.fileName, durationMs: durationOf(installerId) }, "softwareState");
     ensureTimer(installerId);
     return { ok: true, download: clone(state.downloads[installerId]) };
+  }
+
+  /** deixa um arquivo já baixado (usado para preparar missões que começam depois do download) */
+  function completeDownload(installerId) {
+    const installer = installers[installerId];
+    if (!installer) return null;
+    state.downloads[installerId] = { id: `download-${installerId}`, installerId, fileName: installer.fileName, totalMb: installer.totalMb, downloadedMb: installer.totalMb, progress: 100, status: "completed", startedAt: Date.now() - durationOf(installerId), completedAt: new Date().toISOString() };
+    notify("download-completed", { installerId });
+    return clone(state.downloads[installerId]);
+  }
+  /** apaga os downloads de driver (início da trilha) */
+  function clearDownloads(filter) {
+    Object.keys(state.downloads).filter(filter).forEach((id) => { global.clearInterval(timers.get(id)); timers.delete(id); delete state.downloads[id]; });
+    notify("downloads-cleared");
   }
 
   function recordSearch(query) {
@@ -272,6 +302,8 @@
     getInstalledPrograms: installedList,
     isInstalled,
     startDownload,
+    completeDownload,
+    clearDownloads,
     recordSearch,
     visitSite,
     openInstaller,

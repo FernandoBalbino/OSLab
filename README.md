@@ -41,6 +41,27 @@ O perfil legado **Aluno** é migrado como administrador e mantém a senha didát
 
 Veja o [guia de uso e reinício](docs/minha-primeira-vida-digital.md), os [créditos](docs/digital-life-credits.md) e o [relatório de testes](qa-evidence/digital-life/report.md).
 
+## Drivers: instalando uma impressora
+
+Trilha com 12 missões curtas, guiadas pelo robô, com exemplo, dicas e uma pergunta no fim de cada missão:
+
+1. Ler marca e modelo na etiqueta (app **Impressora**).
+2. Ver o erro de impressão e o **Dispositivo desconhecido** (Código 28) no **Gerenciador de Dispositivos**.
+3. Conferir o tipo de sistema em **Informações do Sistema** (Windows 11, 64 bits).
+4. Pesquisar no Google do OSLab: marca + modelo + driver.
+5. Escolher o site oficial (`suporte.printix.com.br`), não o site suspeito (`baixardriversgratis.net`).
+6. Achar o modelo exato no meio de nomes parecidos (2300, 2305, 2350 Pro, 2355, 2530, 3250, 3255).
+7. Selecionar o sistema operacional certo na página do produto.
+8. Baixar o pacote completo, e não o driver de 32 bits, o firmware ou o arquivo para Mac.
+9. Instalar e conectar o cabo USB quando o instalador pedir.
+10. Conferir fornecedor, data e versão na guia **Driver** das propriedades.
+11. Imprimir a página de teste.
+12. Usar **Reverter Driver** depois de uma atualização beta que embaralha a impressão.
+
+A marca **Printix** e os modelos são fictícios; o site imita a estrutura de um portal de suporte de fabricante sem copiar marca real. A foto da impressora foi enviada pelo professor, com o logotipo trocado. O Gerenciador de Dispositivos usa os ícones do próprio Windows 11 (veja os créditos). Rota direta: `index.html?app=driverslab`.
+
+Slides para passar antes da atividade: [`/slide/`](https://fernandobalbino.github.io/OSLab/slide/). Use as setas ou o espaço para avançar, **F** para tela cheia e **N** para as notas da aula. Código: `js/drivers/`, `js/apps/drivers-app.js` e `css/drivers.css`; testes em `tests/drivers-lab.test.mjs`.
+
 ## Missões
 
 As 12 missões cobrem abertura de aplicativos, controle de janelas, criação/renomeação/movimentação/cópia/restauração/pesquisa de arquivos, personalização, volume, encerramento de aplicativo travado e organização integrada do computador.

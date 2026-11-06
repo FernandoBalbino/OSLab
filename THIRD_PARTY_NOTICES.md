@@ -45,6 +45,13 @@ O OSLab não é afiliado à Microsoft. A interface é uma simulação educaciona
 - Uso no OSLab: atalho, Menu Iniciar e cabeçalho da trilha Gerenciamento de Usuários e Permissões.
 - Composição solicitada: perfis de usuários, pasta compartilhada e escudo de permissões em linguagem visual inspirada no Fluent Design, sem texto, marcas ou logotipos de terceiros.
 
+## Trilha de Drivers
+
+- `assets/drivers/printer-*.png`: foto de impressora enviada pelo professor (Fernando), com fundo transparente. O logotipo e o selo originais foram trocados pela marca fictícia **Printix** e por um selo genérico "INK". As variações de modelo são a mesma foto recolorida ou espelhada.
+- `assets/drivers/trail-icon.svg`, `driver-file.svg` e `system-info.svg`: desenhos originais do OSLab.
+- `assets/drivers/devmgr/*.png`: ícones extraídos dos arquivos do Windows 11 (`setupapi.dll`, `devmgr.dll`, `mmc.exe`, `imageres.dll`, `mmsys.cpl`, `mmres.dll` e `ddores.dll`). A pasta usa os IDs que o registro do Windows indica para cada classe de dispositivo, como `setupapi.dll,-5` para Adaptadores de rede e a sobreposição `setupapi.dll,-500` para o triângulo amarelo. São propriedade da Microsoft e aparecem aqui só para simular fielmente o Gerenciador de Dispositivos em uma atividade educacional sem fins lucrativos.
+- Printix, os modelos InkJet e o site `suporte.printix.com.br` são fictícios. Nenhum arquivo real é baixado.
+
 ## Flag Icons
 
 - Projeto original: https://github.com/lipis/flag-icons
