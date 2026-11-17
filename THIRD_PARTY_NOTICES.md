@@ -89,3 +89,42 @@ O OSLab apresenta interfaces educacionais simuladas. Não é afiliado nem endoss
 | `assets/browser/opera.png` | [Pacote oficial Opera One 2026](https://media-production-opera-website.operacdn.com/media/documents/Opera_Logo.zip), arquivo `2. Marque/For Screen/PNG/Medium/Opera_Marque_med.png` | Opera é marca da Opera Norway AS. Consulte as [diretrizes Opera](https://brand.opera.com/opera-product-logos). |
 
 As marcas são usadas apenas para identificar os navegadores na atividade comparativa. As páginas visitadas, telas e dados exibidos no OSLab são simulações locais.
+
+
+## WhatsApp simulado (trilha Segurança Digital)
+
+O OSLab não é afiliado nem endossado pelo WhatsApp ou pela Meta. A interface é uma simulação local para fins educacionais; nenhuma mensagem é enviada para fora do computador.
+
+- `assets/icons/trails/whatsapp.svg`: logotipo do WhatsApp, cópia local do arquivo [WhatsApp.svg](https://commons.wikimedia.org/wiki/File:WhatsApp.svg) do Wikimedia Commons. WhatsApp é marca registrada da WhatsApp LLC/Meta e aparece apenas para identificar o aplicativo simulado.
+- Ícones de traço da interface (`js/apps/zap-app.js`): redesenhados no estilo do [Lucide](https://lucide.dev/) (licença ISC).
+- `assets/whatsapp/doodle-light.svg`, `assets/whatsapp/doodle-dark.svg`, `assets/whatsapp/people/promo.svg`, `suporte.svg`, `vaga.svg` e os ícones de `assets/icons/trails/` (exceto o do WhatsApp): desenhos próprios do OSLab.
+- Fotos: [Unsplash](https://unsplash.com/) sob a [Licença Unsplash](https://unsplash.com/license) (uso gratuito, sem atribuição obrigatória; os créditos ficam aqui por cortesia). As pessoas das fotos não têm relação com as personagens. Os contatos golpistas usam fotos sem rosto (máscara, moto, pôr do sol) ou avatares desenhados.
+
+| Arquivo | Fotógrafo(a) | Origem |
+| --- | --- | --- |
+| `assets/whatsapp/people/antonio.webp` | [@jcorl](https://unsplash.com/@jcorl) | `https://images.unsplash.com/photo-1718717436460-907cc7be39e3` |
+| `assets/whatsapp/people/lucas.webp` | [@wtonfers](https://unsplash.com/@wtonfers) | `https://images.unsplash.com/photo-1695927621677-ec96e048dce2` |
+| `assets/whatsapp/people/junior.webp` | [@andremagalhaes](https://unsplash.com/@andremagalhaes) | `https://images.unsplash.com/photo-1626790890768-4c246c6417cd` |
+| `assets/whatsapp/people/davi.webp` | [@mikenaboa](https://unsplash.com/@mikenaboa) | `https://images.unsplash.com/photo-1710357956796-4227c56641ca` |
+| `assets/whatsapp/people/jorge.webp` | [@abstralofficial](https://unsplash.com/@abstralofficial) | `https://images.unsplash.com/photo-1535643302794-19c3804b874b` |
+| `assets/whatsapp/people/carol.webp` | [@luca_nicoletti](https://unsplash.com/@luca_nicoletti) | `https://images.unsplash.com/photo-1631377307692-36a9b6ae3ef6` |
+| `assets/whatsapp/people/bia.webp` | [@jabarib](https://unsplash.com/@jabarib) | `https://images.unsplash.com/photo-1656473031961-9d5d9ee19f40` |
+| `assets/whatsapp/people/fernanda.webp` | [@alexcrphoto](https://unsplash.com/@alexcrphoto) | `https://images.unsplash.com/photo-1772989665252-7cb41ae759cc` |
+| `assets/whatsapp/people/vovo.webp` | [@dani_franco](https://unsplash.com/@dani_franco) | `https://images.unsplash.com/photo-1496672254107-b07a26403885` |
+| `assets/whatsapp/people/rose.webp` | [@ofelipequeiroz](https://unsplash.com/@ofelipequeiroz) | `https://images.unsplash.com/photo-1704749301600-29be53d0f534` |
+| `assets/whatsapp/people/mae.webp` | [@davieees](https://unsplash.com/@davieees) | `https://images.unsplash.com/photo-1652226825940-46ad2a55d132` |
+| `assets/whatsapp/people/marta.webp` | [@luandmario](https://unsplash.com/@luandmario) | `https://images.unsplash.com/photo-1629540266304-fff9c67b7660` |
+| `assets/whatsapp/people/rafael.webp` | [@jassirjonis](https://unsplash.com/@jassirjonis) | `https://images.unsplash.com/photo-1588560979004-a4de3190506e` |
+| `assets/whatsapp/people/tadeu.webp` | [@mdishakrahman](https://unsplash.com/@mdishakrahman) | `https://images.unsplash.com/photo-1780733058106-1126f2c42c0d` |
+| `assets/whatsapp/media/capivara-1.webp` | [@annaroro](https://unsplash.com/@annaroro) | `https://images.unsplash.com/photo-1716064554838-f9ae49db992b` |
+| `assets/whatsapp/media/capivara-2.webp` | [@antonioxyz](https://unsplash.com/@antonioxyz) | `https://images.unsplash.com/photo-1786115066642-cd12692ef022` |
+| `assets/whatsapp/media/capivara-3.webp` | [@hakiost](https://unsplash.com/@hakiost) | `https://images.unsplash.com/photo-1763686041681-31f8d3bafe0f` |
+| `assets/whatsapp/media/capivara-4.webp` | [@sushioutlaw](https://unsplash.com/@sushioutlaw) | `https://images.unsplash.com/photo-1595017013941-cab3d4c8d02f` |
+| `assets/whatsapp/media/capivara-5.webp` | [@on_earth_in_space](https://unsplash.com/@on_earth_in_space) | `https://images.unsplash.com/photo-1633123784883-9cc9ba6d8c9e` |
+| `assets/whatsapp/media/capivara-6.webp` | [@didinhasb_](https://unsplash.com/@didinhasb_) | `https://images.unsplash.com/photo-1700553792546-3fbfc6b6613e` |
+| `assets/whatsapp/people/hacker.webp` | [@stumpie10](https://unsplash.com/@stumpie10) | `https://images.unsplash.com/photo-1648917980781-06b43457390b` |
+| `assets/whatsapp/people/larissa.webp` | [@lemonvlad](https://unsplash.com/@lemonvlad) | `https://images.unsplash.com/photo-1629916318676-4b6f77aa4f6d` |
+| `assets/whatsapp/people/cleiton.webp` | [@takeshi2](https://unsplash.com/@takeshi2) | `https://images.unsplash.com/photo-1747227231297-829a32781f65` |
+| `assets/whatsapp/media/webcam-pug.webp` | [@charlesdeluvio](https://unsplash.com/@charlesdeluvio) | `https://images.unsplash.com/photo-1541364983171-a8ba01e95cfc` |
+| `assets/whatsapp/media/bomdia.webp` | [@aaronburden](https://unsplash.com/@aaronburden) | `https://images.unsplash.com/photo-1533523611631-15e4ef69be08` |
+| `assets/whatsapp/media/milho.webp` | [@bamin](https://unsplash.com/@bamin) | `https://images.unsplash.com/photo-1623066798929-946425dbe1b0` |

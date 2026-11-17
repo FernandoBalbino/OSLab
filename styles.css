@@ -235,20 +235,6 @@ img {
   filter: brightness(0) invert(1);
 }
 
-.welcome-state {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 9px;
-  font-size: 14px;
-}
-
-.welcome-state img {
-  width: 28px;
-  height: 21px;
-  object-fit: cover;
-}
-
 .login-system-icons {
   position: absolute;
   z-index: 2;

@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="pt-BR">
+<html lang="pt-BR" data-shell-tone="dark">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -28,6 +28,8 @@
     <link rel="stylesheet" href="css/wifi.css">
     <link rel="stylesheet" href="css/drivers.css">
     <link rel="stylesheet" href="css/audio.css">
+    <link rel="stylesheet" href="css/shell.css">
+    <link rel="stylesheet" href="css/zap.css">
   </head>
   <body>
     <main id="oslab" class="oslab" data-state="login">
@@ -57,14 +59,6 @@
             <img src="assets/icons/ui/maximize.png" alt="" />
             <span>Abrir em tela cheia</span>
           </button>
-          <button class="fullscreen-login-button pwa-install-button" type="button" data-pwa-install>
-            <img src="assets/icons/context/restore-item.png" alt="" />
-            <span>Instalar para usar offline</span>
-          </button>
-          <div id="welcome-state" class="welcome-state is-hidden" aria-live="polite">
-            <img src="assets/loader.gif" alt="" />
-            <span>Bem-vindo</span>
-          </div>
         </form>
 
         <nav id="login-user-list" class="login-user-list" aria-label="Escolher usuário"></nav>
@@ -98,20 +92,21 @@
             <img src="assets/icons/settings.png" alt="" />
             <span>Configurações</span>
           </button>
+          <button class="desktop-shortcut" type="button" data-app="whatsapp"><img src="assets/icons/trails/whatsapp.svg" alt=""><span>WhatsApp</span></button>
           <button class="desktop-shortcut" type="button" data-app="missions">
-            <img src="assets/learning/icons/target_arrow.svg" alt="" />
+            <img src="assets/icons/trails/missions.svg" alt="" />
             <span>Missões</span>
           </button>
           <button class="desktop-shortcut" type="button" data-app="exercises">
-            <img src="assets/learning/icons/wrench.svg" alt="" />
+            <img src="assets/icons/trails/exercises.svg" alt="" />
             <span>Exercícios</span>
           </button>
           <button class="desktop-shortcut" type="button" data-app="vpn">
-            <img src="assets/learning/icons/shield_checkmark.svg" alt="" />
+            <img src="assets/icons/trails/vpn.svg" alt="" />
             <span>VPN</span>
           </button>
           <button class="desktop-shortcut" type="button" data-app="vpnlab">
-            <img src="assets/learning/icons/globe_search.svg" alt="" />
+            <img src="assets/icons/trails/vpnlab.svg" alt="" />
             <span>Laboratório VPN</span>
           </button>
           <button class="desktop-shortcut" type="button" data-app="installlab">
@@ -126,11 +121,11 @@
           <button class="desktop-shortcut" type="button" data-app="audiolab"><img src="assets/audio/trail-icon.svg" alt=""><span>Som: sem áudio na aula</span></button>
           <button class="desktop-shortcut" type="button" data-app="aulaonline"><img src="assets/audio/aula-icon.svg" alt=""><span>Aula On-line</span></button>
           <button class="desktop-shortcut" type="button" data-app="browsertrail">
-            <img src="assets/learning/icons/globe_search.svg" alt="" />
+            <img src="assets/icons/trails/browsertrail.svg" alt="" />
             <span>Navegadores e Internet</span>
           </button>
           <button class="desktop-shortcut" type="button" data-app="browsermuseum">
-            <img src="assets/learning/icons/apps.svg" alt="" />
+            <img src="assets/icons/trails/browsermuseum.svg" alt="" />
             <span>Conhecendo os Navegadores</span>
           </button>
           <button class="desktop-shortcut" type="button" data-app="controlpanel">
@@ -207,20 +202,21 @@
               <img src="assets/icons/settings.png" alt="" />
               <span>Configurações</span>
             </button>
+            <button type="button" data-app="whatsapp"><img src="assets/icons/trails/whatsapp.svg" alt=""><span>WhatsApp</span></button>
             <button type="button" data-app="missions">
-              <img src="assets/learning/icons/target_arrow.svg" alt="" />
+              <img src="assets/icons/trails/missions.svg" alt="" />
               <span>Missões</span>
             </button>
             <button type="button" data-app="exercises">
-              <img src="assets/learning/icons/wrench.svg" alt="" />
+              <img src="assets/icons/trails/exercises.svg" alt="" />
               <span>Exercícios</span>
             </button>
             <button type="button" data-app="vpn">
-              <img src="assets/learning/icons/shield_checkmark.svg" alt="" />
+              <img src="assets/icons/trails/vpn.svg" alt="" />
               <span>VPN</span>
             </button>
             <button type="button" data-app="vpnlab">
-              <img src="assets/learning/icons/globe_search.svg" alt="" />
+              <img src="assets/icons/trails/vpnlab.svg" alt="" />
               <span>Laboratório VPN</span>
             </button>
             <button type="button" data-app="installlab">
@@ -237,11 +233,11 @@
             <button type="button" data-app="audiolab"><img src="assets/audio/trail-icon.svg" alt=""><span>Som</span></button>
             <button type="button" data-app="aulaonline"><img src="assets/audio/aula-icon.svg" alt=""><span>Aula On-line</span></button>
             <button type="button" data-app="browsertrail">
-              <img src="assets/learning/icons/globe_search.svg" alt="" />
+              <img src="assets/icons/trails/browsertrail.svg" alt="" />
               <span>Navegadores e Internet</span>
             </button>
             <button type="button" data-app="browsermuseum">
-              <img src="assets/learning/icons/apps.svg" alt="" />
+              <img src="assets/icons/trails/browsermuseum.svg" alt="" />
               <span>Conhecendo os Navegadores</span>
             </button>
             <button type="button" data-app="controlpanel">
@@ -253,10 +249,6 @@
             <button id="start-profile-button" type="button" class="profile-button" aria-expanded="false">
               <img id="start-profile-avatar" src="assets/icons/avatar.webp" alt="" />
               <span id="start-profile-name">Aluno</span>
-            </button>
-            <button type="button" class="profile-button pwa-start-install" data-pwa-install>
-              <img src="assets/icons/context/restore-item.png" alt="" />
-              <span>Instalar offline</span>
             </button>
             <button id="power-button" type="button" class="power-button" aria-label="Energia">
               <img src="assets/icons/ui/power.png" alt="" />
@@ -465,7 +457,7 @@
           </div>
           <div class="taskbar-right">
             <button id="vpn-indicator" class="vpn-indicator is-hidden" type="button" data-app="vpn" aria-label="VPN desconectada">
-              <img src="assets/learning/icons/shield_checkmark.svg" alt="" />
+              <img src="assets/icons/trails/vpn.svg" alt="" />
               <span>VPN</span>
             </button>
             <button id="quick-settings-button" class="system-tray" type="button" aria-label="Rede, volume e bateria" aria-expanded="false">
@@ -523,6 +515,9 @@
     <script defer src="js/browser/browser-state.js"></script>
     <script defer src="js/browser/browser-trail.js"></script>
     <script defer src="js/browser/browser-museum.js"></script>
+    <script defer src="js/zap/zap-story.js"></script>
+    <script defer src="js/zap/zap-engine.js"></script>
+    <script defer src="js/zap/zap-sites.js"></script>
     <script defer src="js/ui/system-ui.js"></script>
     <script defer src="js/ui/learning-path.js"></script>
     <script defer src="js/ui/windows-icons.js"></script>
@@ -546,6 +541,7 @@
     <script defer src="js/apps/wifi-lab-app.js"></script>
     <script defer src="js/apps/drivers-app.js"></script>
     <script defer src="js/apps/audio-app.js"></script>
+    <script defer src="js/apps/zap-app.js"></script>
     <script defer src="script.js"></script>
     <script defer src="js/pwa.js"></script>
   </body>

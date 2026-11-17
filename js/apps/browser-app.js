@@ -3,7 +3,7 @@
 
   const OSLab = global.OSLab = global.OSLab || {};
   const records = new Set();
-  const knownHosts = ["google.com", "www.google.com", "wikipedia.org", "youtube.com", "hardware.oslab.local", "componentes.oslab.local", "falha.oslab.local", "appjavafx.local", "office.local", "netflix.com", "meuip.com", "portal.empresa.local", "bancoos.com", "speedtest.os", "meet.os", "admin.escola.local", "suporte.printix.com.br", "baixardriversgratis.net", "suporte.vertex.com.br"];
+  const knownHosts = ["google.com", "www.google.com", "wikipedia.org", "youtube.com", "hardware.oslab.local", "componentes.oslab.local", "falha.oslab.local", "appjavafx.local", "office.local", "netflix.com", "meuip.com", "portal.empresa.local", "bancoos.com", "speedtest.os", "meet.os", "admin.escola.local", "suporte.printix.com.br", "baixardriversgratis.net", "suporte.vertex.com.br", "facebook.com"];
   const browsers = {
     google: { name: "Google Chrome", logo: "assets/browser/chrome.svg", maker: "Google", description: "O Chrome é um dos navegadores mais utilizados no mundo.", menu: "⋮" },
     edge: { name: "Microsoft Edge", logo: "assets/browser/edge.png", maker: "Microsoft", description: "É o navegador padrão das versões atuais do Windows.", menu: "⋯" },
@@ -28,6 +28,7 @@
     if (clean.includes("appjavafx")) return "appjavafx.local";
     if (clean.includes("office") || clean.includes("produtividade")) return "office.local";
     if (clean.includes("netflix")) return "netflix.com";
+    if (clean.includes("facebook")) return "facebook.com";
     if (clean.includes("meu ip") || clean.includes("meuip")) return "meuip.com";
     if (clean.includes("speed")) return "speedtest.os";
     if (clean.includes("empresa")) return "portal.empresa.local";
@@ -153,7 +154,7 @@
   function searchResults(record) {
     const query = String(record.googleQuery || "").trim();
     // drivers antes da Vida Digital: "driver" contém "drive" e cairia no Google Drive
-    const drivers = OSLab.audioSites?.searchResults(query) || OSLab.driverSites?.searchResults(query);
+    const drivers = OSLab.zapSites?.searchResults(query) || OSLab.audioSites?.searchResults(query) || OSLab.driverSites?.searchResults(query);
     if (drivers) return drivers;
     const digital = OSLab.digitalSites?.searchResult(query);
     if (digital) return digital;
@@ -237,6 +238,7 @@
     if (["wikipedia.org", "youtube.com", "hardware.oslab.local", "componentes.oslab.local", "falha.oslab.local"].includes(record.browserHost)) return educationalPage(record);
     if (record.browserHost === "appjavafx.local") return appJavaFxSite();
     if (record.browserHost === "office.local") return officeSite();
+    if (OSLab.zapSites?.isHost(record.browserHost)) return OSLab.zapSites.render(record);
     if (record.browserHost === "netflix.com") return netflix(record, state);
     if (record.browserHost === "portal.empresa.local") return portal(record, state);
     if (record.browserHost === "meuip.com") return myIp(record, state);
@@ -308,7 +310,7 @@
       record.toolbar.addEventListener("focusin", (event) => { if (event.target.matches("[name='address']")) changed(record, "focus-address"); });
       record.content.addEventListener("click", (event) => {
         navigateClick(event);
-        if (OSLab.audioSites?.click(record, event) || OSLab.driverSites?.click(record, event)) return;
+        if (OSLab.zapSites?.click(record, event) || OSLab.audioSites?.click(record, event) || OSLab.driverSites?.click(record, event)) return;
         const go = event.target.closest("[data-browser-go]")?.dataset.browserGo; if (go) { load(record, go, { source: "page" }); if (event.target.closest("[data-browser-first-result]")) changed(record, "first-result", { value: go }); }
         const tabUrl = event.target.closest("[data-browser-open-tab]")?.dataset.browserOpenTab; if (tabUrl) { const tab = OSLab.browserState.open(record.browserState, tabUrl); load(record, tabUrl, { push: false }); changed(record, "open-tab", { value: tabUrl, openedTabId: tab.id }); }
         const historyGo = event.target.closest("[data-browser-history-go]")?.dataset.browserHistoryGo; if (historyGo) { record.browserState.historyOpen = false; load(record, historyGo, { source: "history" }); changed(record, "history-select", { value: historyGo }); }
@@ -335,7 +337,7 @@
       });
       record.content.addEventListener("change", (event) => OSLab.audioSites?.change(record, event) || OSLab.driverSites?.change(record, event));
       record.content.addEventListener("submit", (event) => {
-        if (OSLab.audioSites?.submit(record, event) || OSLab.driverSites?.submit(record, event)) return;
+        if (OSLab.zapSites?.submit(record, event) || OSLab.audioSites?.submit(record, event) || OSLab.driverSites?.submit(record, event)) return;
         const googleForm = event.target.closest("[data-google-search]");
         const netflixForm = event.target.closest("[data-netflix-search]");
         const ipQuiz = event.target.closest("[data-myip-quiz]");

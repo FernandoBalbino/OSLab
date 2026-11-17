@@ -48,6 +48,11 @@ test("trilha de Som tem 12 missões e separa driver, desabilitado e mudo", () =>
   assert.equal(focused.status, 0, focused.stderr || focused.stdout);
 });
 
+test("trilha WhatsApp libera 20 contatos, confere as tarefas e ensina com os golpes", () => {
+  const focused = spawnSync(process.execPath, ["--test", path.join(root, "tests/zap-trail.test.mjs")], { encoding: "utf8" });
+  assert.equal(focused.status, 0, focused.stderr || focused.stdout);
+});
+
 test("todas as referências de assets estáticos existem", () => {
   const sources = [path.join(root, "index.html"), path.join(root, "styles.css"), ...filesIn(path.join(root, "css"), ".css"), path.join(root, "script.js"), ...filesIn(path.join(root, "js"), ".js")];
   const missing = new Set();

@@ -6,7 +6,6 @@
   window.addEventListener("error", (event) => runtimeErrors.push(event.message || "Erro de execução"));
   window.addEventListener("unhandledrejection", (event) => runtimeErrors.push(String(event.reason || "Promessa rejeitada")));
 
-  const WELCOME_DELAY = 850;
   const STORAGE_KEY = "oslab-state-v1";
   const LEGACY_WALLPAPER_STORAGE_KEY = "oslab-wallpaper";
 
@@ -19,7 +18,6 @@
   const passwordInput = $("#password");
   const loginMessage = $("#login-message");
   const passwordRow = $(".password-row");
-  const welcomeState = $("#welcome-state");
   const fullscreenLoginButton = $("#fullscreen-login-button");
   const loginUserList = $("#login-user-list");
   const loginUserName = $("#login-user-name");
@@ -301,10 +299,28 @@
 
   let currentWallpaperId = state.wallpaperId;
 
+  // Como os temas do Windows 11: papel de parede escuro pede barra e Iniciar escuros; claro pede claros.
+  function applyShellTone(src) {
+    const image = new Image();
+    image.onload = () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = 24;
+      canvas.height = 14;
+      const context = canvas.getContext("2d", { willReadFrequently: true });
+      context.drawImage(image, 0, 0, 24, 14);
+      const pixels = context.getImageData(0, 0, 24, 14).data;
+      let luminance = 0;
+      for (let index = 0; index < pixels.length; index += 4) luminance += 0.2126 * pixels[index] + 0.7152 * pixels[index + 1] + 0.0722 * pixels[index + 2];
+      document.documentElement.dataset.shellTone = luminance / (pixels.length / 4) > 150 ? "light" : "dark";
+    };
+    image.src = src;
+  }
+
   function applyWallpaper(id, persist = true) {
     const wallpaper = wallpapers.find((item) => item.id === id) || wallpapers[0];
     currentWallpaperId = wallpaper.id;
     document.documentElement.style.setProperty("--wallpaper-image", `url("${wallpaper.src}")`);
+    applyShellTone(wallpaper.src);
 
     if (persist) {
       state.wallpaperId = wallpaper.id;
@@ -546,7 +562,6 @@
     loginForm.reset();
     passwordInput.disabled = false;
     passwordRow.classList.remove("is-hidden");
-    welcomeState.classList.add("is-hidden");
     fullscreenLoginButton.classList.remove("is-hidden");
     loginMessage.classList.remove("is-hidden", "is-error");
     loginMessage.textContent = "Digite sua senha para entrar.";
@@ -599,12 +614,7 @@
     }
 
     void requestFullscreen();
-    passwordInput.disabled = true;
-    passwordRow.classList.add("is-hidden");
-    fullscreenLoginButton.classList.add("is-hidden");
-    loginMessage.classList.add("is-hidden");
-    welcomeState.classList.remove("is-hidden");
-    window.setTimeout(showDesktop, WELCOME_DELAY);
+    showDesktop();
   });
 
   function sidebarMarkup(active) {
@@ -1316,6 +1326,7 @@
     if (OSLab.audioApps?.ids.has(record.appId)) OSLab.audioApps.render(record);
     if (record.appId === "browsertrail") OSLab.browserTrailsApp.renderTrail(record);
     if (record.appId === "browsermuseum") OSLab.browserTrailsApp.renderMuseum(record);
+    if (record.appId === "whatsapp") OSLab.zapApp.render(record);
     if (OSLab.softwareApps?.appIds?.has(record.appId)) OSLab.softwareApps.render(record);
     if (record.appId === "texteditor") renderTextEditor(record);
   }
@@ -1391,7 +1402,7 @@
     record.address.textContent = definition.address;
     record.toolbar.classList.toggle("browser-toolbar", ["google", "edge", "firefox", "brave", "opera"].includes(appId));
     element.classList.toggle("settings-window", appId === "settings");
-    record.toolbar.classList.toggle("is-hidden", ["settings", "taskmanager", "missions", "exercises", "vpn", "vpnlab", "installlab", "browsertrail", "digitallife", "userspermissions", "wifilab", "driverslab", "printer", "devicemanager", "sysinfo", "driverinstaller", "audiolab", "aulaonline", "audioinstaller", "browsermuseum", "controlpanel", "installer", "appjavafx", "word", "excel", "slides", "texteditor"].includes(appId));
+    record.toolbar.classList.toggle("is-hidden", ["settings", "taskmanager", "missions", "exercises", "vpn", "vpnlab", "installlab", "browsertrail", "digitallife", "userspermissions", "wifilab", "driverslab", "printer", "devicemanager", "sysinfo", "driverinstaller", "audiolab", "aulaonline", "audioinstaller", "browsermuseum", "controlpanel", "installer", "appjavafx", "word", "excel", "slides", "texteditor", "whatsapp"].includes(appId));
     record.settingsSearch.classList.toggle("is-hidden", appId !== "settings" && appId !== "taskmanager");
     element.classList.toggle("taskmanager-window", appId === "taskmanager");
     element.classList.toggle("missions-window", appId === "missions");
@@ -1405,6 +1416,7 @@
     element.classList.toggle("drivers-window", Boolean(OSLab.driversApps?.ids.has(appId) || OSLab.audioApps?.ids.has(appId)));
     element.classList.toggle("driverslab-window", appId === "driverslab" || appId === "audiolab");
     element.classList.toggle("browser-museum-window", appId === "browsermuseum");
+    element.classList.toggle("zap-window", appId === "whatsapp");
     element.classList.toggle("software-window", OSLab.softwareApps?.appIds?.has(appId));
     element.classList.toggle("texteditor-window", appId === "texteditor");
     if (appId === "taskmanager") {
@@ -1423,7 +1435,7 @@
     positionWindow(record);
     wireWindow(record);
     renderApp(record);
-    if (["settings", "taskmanager", "missions", "exercises", "vpnlab", "installlab", "browsertrail", "digitallife", "userspermissions", "wifilab", "driverslab", "audiolab", "browsermuseum"].includes(appId)) {
+    if (["settings", "taskmanager", "missions", "exercises", "vpnlab", "installlab", "browsertrail", "digitallife", "userspermissions", "wifilab", "driverslab", "audiolab", "browsermuseum", "whatsapp"].includes(appId)) {
       element.classList.add("is-maximized");
       record.maximizeIcon.src = "assets/icons/ui/restore.png";
       record.maximizeIcon.closest("button").setAttribute("aria-label", "Restaurar");

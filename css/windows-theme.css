@@ -88,9 +88,6 @@
 .start-footer .profile-button { min-width: 0; max-width: 100%; text-align: left; }
 .start-footer .profile-button img { flex: 0 0 30px; }
 .start-footer .profile-button span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.start-footer [data-pwa-install] { min-width: 0; white-space: normal; min-height: 38px; font-size: 11px; }
-.start-footer [data-pwa-install] span { white-space: normal; text-overflow: clip; }
-.start-footer [data-pwa-install] img { width: 18px; height: 18px; flex-basis: 18px; }
 .power-button img, .start-search img { filter: var(--win-icon-filter); }
 .profile-menu { z-index: 160; overflow-y: auto; background: var(--glass-strong); color: var(--win-text); border-color: var(--win-border); }
 .profile-menu button { color: var(--win-text); }

@@ -82,6 +82,20 @@ Peças novas:
 
 Vertex (notebook) e Sonora (chip de som) são marcas fictícias. Rota direta: `index.html?app=audiolab`. Código: `js/audio/`, `js/apps/audio-app.js` e `css/audio.css`; testes em `tests/audio-lab.test.mjs`.
 
+## Segurança Digital no WhatsApp
+
+A trilha começa quando o aluno abre o **WhatsApp** na área de trabalho. Na primeira vez, um modal pede o tema (claro ou escuro) com uma miniatura de cada; dá para trocar depois na engrenagem ⚙️. A interface segue o padrão do WhatsApp Web.
+
+A cada **60 segundos** chega uma pessoa nova (20 no total), com animação de "digitando…", notificação do Windows e selo de não lidas. O aluno sempre escolhe entre **3 respostas**, e a escolha é "digitada" na caixa de mensagem. O robô **OSLab Dicas** comenta cada conversa encerrada e, no fim, mostra um relatório com medalha.
+
+| Pedem ajuda no computador (11) | Inesperados e golpes (9) |
+| --- | --- |
+| Rafael: senha do Wi-Fi conectado · Dona Marta: planilha na Lixeira · Prof. Tadeu: arquivo perdido (pesquisa do Explorador) · Bia: imagem de capivara do Google · Tia Rose: lista no Word (.docx) · Davi: espaço livre do disco · Carol: trocar a senha da Netflix e sair de todos os aparelhos · Seu Antônio: criar perfil na Netflix · Fernanda: pasta Currículos e mover arquivo · Lucas: Win+Shift+S e Ctrl+Shift+Esc · Júnior: Facebook hackeado (apagar post, trocar senha, dois fatores) | Hacker que diz ter fotos da webcam e pede PIX de R$ 100 · Cleiton querendo o número da amiga · golpe do número novo da "mãe" · corrente falsa da vovó · prêmio falso com link · perfil falso pedindo localização · falso suporte pedindo código · número errado da pamonharia · vaga que cobra taxa |
+
+As tarefas são conferidas no estado do OSLab: anexos pelo seletor "Abrir" (arquivos reais do Explorador), senha do Wi-Fi conectado, espaço do disco, pasta criada, contas da Netflix (`netflix.com/login`) e do Facebook (`facebook.com`) simuladas no Chrome e a busca de imagens do Google ("capivara"). O Word agora salva um `.docx` em Documentos.
+
+Para testar sem esperar um minuto por pessoa, abra `index.html?zapintervalo=5` (segundos, de 3 a 600). O menu ⋮ do WhatsApp reinicia a trilha para o próximo aluno. Código: `js/zap/`, `js/apps/zap-app.js` e `css/zap.css`; testes em `tests/zap-trail.test.mjs`. Créditos das fotos em `THIRD_PARTY_NOTICES.md`.
+
 ## Missões
 
 As 12 missões cobrem abertura de aplicativos, controle de janelas, criação/renomeação/movimentação/cópia/restauração/pesquisa de arquivos, personalização, volume, encerramento de aplicativo travado e organização integrada do computador.
@@ -207,9 +221,9 @@ O projeto usa somente caminhos relativos e não exige etapa de compilação. A r
 
 O OSLab é uma PWA instalável. Após o primeiro acesso completo, o Service Worker salva localmente a interface, scripts, estilos, papéis de parede, ícones, imagens de configurações, missões e demais recursos internos.
 
-No Chrome ou Chromebook, use **Instalar para usar offline** na tela de login ou no menu Iniciar. O progresso das missões, dos exercícios e as preferências continuam salvos no `localStorage` do dispositivo. O navegador, o Terminal e todas as funções internas usam dados simulados locais e continuam disponíveis sem internet.
+No Chrome ou Chromebook, use o menu do navegador → **Instalar OSLab** (ou **Criar atalho**). O progresso das missões, dos exercícios e as preferências continuam salvos no `localStorage` do dispositivo. O navegador, o Terminal e todas as funções internas usam dados simulados locais e continuam disponíveis sem internet.
 
-O cache atual é `oslab-offline-v33`. Ao alterar recursos, incremente `CACHE_VERSION` em `service-worker.js`; versões antigas são excluídas automaticamente e o site oferece a atualização quando a nova versão está pronta.
+O cache atual é `oslab-offline-v50`. Ao alterar recursos, incremente `CACHE_VERSION` em `service-worker.js`; versões antigas são excluídas automaticamente e o site oferece a atualização quando a nova versão está pronta.
 
 ## Créditos
 
