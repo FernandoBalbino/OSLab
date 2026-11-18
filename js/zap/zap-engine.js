@@ -374,7 +374,7 @@
   }
   function frozenCheck() {
     if (!state.flags.freezeAt) return ["Você ainda nem abriu o arquivo 😅", "Clica em “Abrir o arquivo que ela mandou”"];
-    if (O.shell?.isWindowOpen?.("texteditor")) return ["O Editor de Texto continua aberto aqui 👀", "Ctrl + Shift + Esc → Editor de Texto → Finalizar tarefa"];
+    if (O.shell?.isWindowOpen?.("texteditor")) return ["O Editor de Texto continua aberto aqui 👀", "Botão direito na barra de tarefas (a faixa lá embaixo) → Gerenciador de Tarefas → Editor de Texto → Finalizar tarefa"];
     return null;
   }
   function vpnCheck() {

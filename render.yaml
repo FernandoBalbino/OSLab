@@ -4,9 +4,9 @@ services:
     name: oslab-zap-grupo
     runtime: node
     plan: free
-    rootDir: server/zap-group
-    buildCommand: npm ci --omit=dev
-    startCommand: node server.js
+    region: virginia
+    buildCommand: cd server/zap-group && npm ci --omit=dev
+    startCommand: node server/zap-group/server.js
     healthCheckPath: /
     autoDeploy: true
     envVars:

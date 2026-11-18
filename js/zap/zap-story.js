@@ -385,7 +385,7 @@
         frozen: {
           say: [],
           options: [
-            { text: "Ctrl + Shift + Esc, seleciona o programa e clica em Finalizar tarefa", reply: ["Abriu o Gerenciador de Tarefas e fechou o programa travado! 🙌", "Você devia dar aula kkkk valeu!"], end: "good", lesson: "lucas" },
+            { text: "Ctrl + Shift + Esc, seleciona o programa e clica em Finalizar tarefa", reply: ["Abriu o Gerenciador de Tarefas e fechou o programa travado! 🙌", "Você devia dar aula kkkk valeu!", "(Aqui no OSLab, que roda no navegador, o Gerenciador abre com o botão direito na barra de tarefas)"], end: "good", lesson: "lucas" },
             { text: "Tira o computador da tomada", reply: ["Aí desliga TUDO e pode perder arquivo 😱", "Tem jeito melhor, né?"], stay: true },
             { text: "Dá um tapa no monitor", reply: ["Kkkkkk isso só funcionava na TV da vó 📺", "Fala sério, qual é o atalho?"], stay: true },
           ],
@@ -493,7 +493,7 @@
         start: {
           say: ["Oi, {nome}! Aqui é a Ana Clara, estagiária do suporte 👩‍💻", "Te mandei um arquivo de anotações GIGANTE que trava o Editor de Texto quando abre 😅", { t: "file", name: "anotacoes-gigantes.txt", size: "48 MB", mime: "text/plain" }, "Abre aí e me diz o que acontece?"],
           options: [
-            { label: "📂 Abrir o arquivo que ela mandou", run: (ctx) => ctx.freeze(), reply: ["E aí? Travou, né? 😬", "Agora fecha ele SEM desligar o computador. Dá pra fazer pelo Gerenciador de Tarefas"], go: "task" },
+            { label: "📂 Abrir o arquivo que ela mandou", run: (ctx) => ctx.freeze(), reply: ["E aí? Travou, né? 😬", "Agora fecha ele SEM desligar o computador. Dá pra fazer pelo Gerenciador de Tarefas, que abre pela barra de tarefas"], go: "task" },
             { text: "48 MB de texto? Isso vai travar 😅", reply: ["Vai mesmo kkk, é de propósito pra você treinar!", "Abre e depois fecha do jeito certo"], stay: true },
             { text: "Por que um programa trava?", reply: ["Ele fica tentando carregar tudo e para de responder", "Aí nem o X da janela funciona. Abre pra ver!"], stay: true },
           ],
@@ -501,9 +501,9 @@
         task: {
           say: [],
           options: [
-            { text: "Pronto! Finalizei pelo Gerenciador de Tarefas ✅", verify: (ctx) => ctx.frozenCheck(), okReply: ["Isso! Sem perder nada e sem desligar o PC 🙌", "Vou anotar no meu caderno de suporte: Ctrl + Shift + Esc → Finalizar tarefa"], end: "good", lesson: "anaclara" },
-            { text: "O X da janela não funciona 😩", reply: ["Normal quando trava!", "Aperta Ctrl + Shift + Esc, procura o Editor de Texto (Não respondendo) e clica em Finalizar tarefa"], stay: true },
-            { text: "Vou desligar o computador na tomada", reply: ["NÃÃÃO 😱 pode corromper arquivos!", "Usa o Gerenciador de Tarefas: Ctrl + Shift + Esc"], stay: true },
+            { text: "Pronto! Finalizei pelo Gerenciador de Tarefas ✅", verify: (ctx) => ctx.frozenCheck(), okReply: ["Isso! Sem perder nada e sem desligar o PC 🙌", "Vou anotar no meu caderno de suporte: botão direito na barra de tarefas → Gerenciador de Tarefas → Finalizar tarefa"], end: "good", lesson: "anaclara" },
+            { text: "O X da janela não funciona 😩", reply: ["Normal! Quando trava, nem o X responde 😅", "Faz assim, passo a passo 👇", "1️⃣ Olha lá embaixo da tela: a faixa com o botão Iniciar e os ícones é a BARRA DE TAREFAS", "2️⃣ Clica com o botão DIREITO num espaço vazio dela", "3️⃣ No menu, escolhe “Gerenciador de Tarefas”", "4️⃣ Clica em “Editor de Texto” (vai estar escrito Não respondendo)", "5️⃣ Clica em “Finalizar tarefa”"], stay: true },
+            { text: "Vou desligar o computador na tomada", reply: ["NÃÃÃO 😱 pode corromper arquivos!", "Faz assim, passo a passo 👇", "1️⃣ Olha lá embaixo da tela: a faixa com o botão Iniciar e os ícones é a BARRA DE TAREFAS", "2️⃣ Clica com o botão DIREITO num espaço vazio dela", "3️⃣ No menu, escolhe “Gerenciador de Tarefas”", "4️⃣ Clica em “Editor de Texto” (vai estar escrito Não respondendo)", "5️⃣ Clica em “Finalizar tarefa”"], stay: true },
           ],
         },
       },
@@ -636,7 +636,7 @@
     "tigrinho-good": { tone: "good", title: "Você não caiu no golpe da aposta 🛡️", text: "Aposta online é proibida para menores de 18 anos. Influenciador que mostra print de ganho e pede depósito quase sempre ganha comissão quando você PERDE.", tips: ["Print de saldo pode ser montado em qualquer editor", "“Horário pagante” não existe: o jogo é programado para a casa ganhar"] },
     "tigrinho-bad": { tone: "bad", title: "Você depositou na plataforma falsa 😬", text: "Bônus que não pode ser sacado e “deposite mais para liberar” são o padrão desse golpe. E aposta é proibida para menores.", tips: ["Converse com um adulto de confiança", "Denuncie o perfil e o número"] },
     paulo: { tone: "good", title: "Você reconheceu um .exe disfarçado", text: "“.pdf.exe” é um PROGRAMA, não um PDF. Ao abrir, ele pode instalar um vírus. Apague e nunca abra executáveis de origem desconhecida." },
-    anaclara: { tone: "good", title: "Você finalizou um programa travado", text: "Ctrl + Shift + Esc abre o Gerenciador de Tarefas. Selecionar o programa “Não respondendo” e clicar em Finalizar tarefa fecha só ele, sem desligar o PC." },
+    anaclara: { tone: "good", title: "Você finalizou um programa travado", text: "Botão direito na barra de tarefas → Gerenciador de Tarefas. Selecionar o programa “Não respondendo” e clicar em Finalizar tarefa fecha só ele, sem desligar o PC. Num Windows de verdade, o atalho Ctrl + Shift + Esc também abre o Gerenciador." },
     marcos: { tone: "good", title: "Você descobriu o IP com ipconfig", text: "No Terminal, ipconfig mostra o Endereço IPv4 (o PC na rede), a Máscara de Sub-rede e o Gateway Padrão (o roteador)." },
     "thiago-good": { tone: "good", title: "Você não espalhou bullying 🛡️", text: "Repassar foto para zoar um colega é cyberbullying, que tem lei no Brasil (Lei 14.811/2024). Quem só repassa também participa.", tips: ["Não compartilhe, peça para apagar", "Avise um adulto da escola se continuar"] },
     "thiago-bad": { tone: "bad", title: "Você espalhou uma foto para zoar um colega 😬", text: "Para quem é exposto, a zoeira não termina quando o grupo para de rir. Cyberbullying é crime no Brasil (Lei 14.811/2024).", tips: ["Apague a mensagem e peça desculpas", "Converse com a coordenação"] },
