@@ -1,0 +1,16 @@
+{
+  "name": "oslab-zap-grupo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Grupo da turma em tempo real do WhatsApp simulado do OSLab",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "ws": "8.18.0"
+  }
+}

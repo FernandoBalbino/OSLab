@@ -1,0 +1,14 @@
+services:
+  # Só o grupo da turma do WhatsApp roda aqui; o OSLab continua no GitHub Pages e funciona sem este servidor.
+  - type: web
+    name: oslab-zap-grupo
+    runtime: node
+    plan: free
+    rootDir: server/zap-group
+    buildCommand: npm ci --omit=dev
+    startCommand: node server.js
+    healthCheckPath: /
+    autoDeploy: true
+    envVars:
+      - key: ALLOWED_ORIGINS
+        value: https://fernandobalbino.github.io

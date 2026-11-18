@@ -9,6 +9,10 @@
   const records = new Set();
   const reduceMotion = () => global.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
   let selected = null;
+  const GROUP = "grupo";
+  const G = () => O.zapGroup;
+  const GROUP_AVATAR = "assets/whatsapp/people/turma.svg";
+  const SENDER_COLORS = ["#e542a3", "#1f7aec", "#c88a00", "#02a698", "#ff6b2b", "#a35ef2", "#2c9be5", "#d1477a"];
   let filter = "all";
   let typingOut = false;
 
@@ -84,7 +88,7 @@
     const me = O.users?.getCurrent?.() || O.users?.getSelected?.();
     record.content.innerHTML = `<section class="zap" data-zap-root data-theme="${Z().theme() || "dark"}">
       <nav class="zap-rail" aria-label="Navegação do WhatsApp">
-        <button type="button" class="zap-iconbtn is-active" title="Conversas" aria-label="Conversas">${svg("chatsq")}<b class="zap-rail-badge" data-zap-total hidden></b></button>
+        <button type="button" class="zap-iconbtn is-active" title="Conversas" aria-label="Conversas" data-zap-tab="chats">${svg("chatsq")}<b class="zap-rail-badge" data-zap-total hidden></b></button>
         <button type="button" class="zap-iconbtn" title="Ligações" aria-label="Ligações" data-zap-soon>${svg("phone")}</button>
         <button type="button" class="zap-iconbtn zap-rail-dot" title="Status" aria-label="Status" data-zap-soon>${svg("status")}</button>
         <button type="button" class="zap-iconbtn" title="Comunidades" aria-label="Comunidades" data-zap-soon>${svg("communities")}</button>
@@ -92,7 +96,7 @@
         <button type="button" class="zap-iconbtn" title="Canais" aria-label="Canais" data-zap-soon>${svg("channels")}</button>
         <span class="zap-rail-space"></span>
         <button type="button" class="zap-iconbtn" title="Mídia, links e docs" aria-label="Mídia, links e docs" data-zap-soon>${svg("images")}</button>
-        <button type="button" class="zap-iconbtn" title="Configurações: tema claro ou escuro" aria-label="Configurações" data-zap-settings>${svg("gear")}</button>
+        <button type="button" class="zap-iconbtn" title="Configurações" aria-label="Configurações" data-zap-tab="settings">${svg("gear")}</button>
         <img class="zap-rail-me" src="${safe(me?.avatar || "assets/icons/avatar.webp")}" alt="Seu perfil" />
       </nav>
       <aside class="zap-list">
@@ -101,6 +105,7 @@
         <div class="zap-chips" role="tablist" data-zap-chips></div>
         <div class="zap-trail" data-zap-trail></div>
         <ul class="zap-chats" data-zap-chats aria-label="Lista de conversas"></ul>
+        <div class="zap-panel" data-zap-panel hidden></div>
       </aside>
       <main class="zap-conv" data-zap-conv></main>
       <div class="zap-layer" data-zap-layer></div>
@@ -114,7 +119,7 @@
     const s = Z().summary();
     const next = Z().nextReleaseIn();
     record.zapRoot.querySelector("[data-zap-trail]").innerHTML = `<span class="zap-trail-icon">${svg("shield")}</span><div><strong>Trilha Segurança Digital · ${s.done} de ${s.total}</strong><small>✅ ${s.helped} ajudas · 🛡️ ${s.avoided} golpes evitados${s.fell ? ` · ⚠️ caiu em ${s.fell}` : ""}</small><i style="--p:${(s.done / s.total) * 100}%"></i></div>${next !== null && s.released < s.total ? `<em title="Próxima mensagem chega em">${Math.ceil(next / 1000)}s</em>` : ""}`;
-    const total = chats().reduce((sum, chat) => sum + chat.unread, 0);
+    const total = chats().reduce((sum, chat) => sum + chat.unread, 0) + G().get().unread;
     const badge = record.zapRoot.querySelector("[data-zap-total]");
     badge.textContent = total ? String(total) : "";
     badge.hidden = !total;
@@ -138,7 +143,7 @@
       .map(([key, label, count]) => `<button type="button" class="${filter === key ? "is-on" : ""}" data-zap-filter="${key}">${label}${count ? ` <small>${count}</small>` : ""}</button>`).join("") + `<button type="button" class="is-plus" aria-label="Nova lista" data-zap-soon>${svg("plus")}</button>`;
     const chipBox = record.zapRoot.querySelector("[data-zap-chips]");
     if (record.zapChipsHtml !== chips) { chipBox.innerHTML = chips; record.zapChipsHtml = chips; }
-    const html = list.length ? list.map((chat) => {
+    const rows = list.map((chat) => {
       const p = person(chat.id);
       const last = chat.messages[chat.messages.length - 1];
       return `<li><button type="button" class="zap-row${chat.id === selected ? " is-selected" : ""}${chat.unread ? " is-unread" : ""}" data-zap-chat="${safe(chat.id)}">
@@ -146,10 +151,90 @@
         <span class="zap-row-main"><span class="zap-row-top"><strong>${safe(displayName(chat.id))}</strong>${p.unknown && displayName(chat.id) !== p.name ? `<small class="zap-push">~${safe(p.name)}</small>` : ""}<time>${last ? time(last.at) : ""}</time></span>
         <span class="zap-row-bottom"><span class="zap-row-preview">${preview(chat)}</span>${chat.id === GUIDE ? `<em class="zap-pin" title="Fixada">${svg("pinned")}</em>` : ""}${chat.status === "done" && chat.id !== GUIDE ? `<em class="zap-done is-${safe(chat.outcome)}" title="Conversa concluída">${chat.outcome === "bad" ? "!" : "✓"}</em>` : ""}${chat.unread ? `<b class="zap-unread">${chat.unread}</b>` : ""}</span></span>
       </button></li>`;
-    }).join("") : `<li class="zap-empty-list">${term ? "Nenhuma conversa encontrada." : "Nenhuma conversa aqui ainda."}</li>`;
+    });
+    const group = groupRow(term);
+    if (group) rows.splice(rows.length && list[0].id === GUIDE ? 1 : 0, 0, group);
+    const html = rows.length ? rows.join("") : `<li class="zap-empty-list">${term ? "Nenhuma conversa encontrada." : "Nenhuma conversa aqui ainda."}</li>`;
     // Redesenhar a lista no meio de um clique faria o clique se perder: só troca quando mudou.
     const box = record.zapRoot.querySelector("[data-zap-chats]");
     if (record.zapListHtml !== html) { box.innerHTML = html; record.zapListHtml = html; }
+  }
+
+  function groupPreview(g) {
+    if (g.status === "connecting") return "conectando ao grupo da turma…";
+    if (g.status !== "online") return "sem conexão · o grupo precisa de internet";
+    const last = g.messages[g.messages.length - 1];
+    if (!last) return `${g.members.length} online · diga oi para a turma 👋`;
+    return `${last.from?.id === G().clientId ? "Você" : String(last.from?.name || "").split(" ")[0]}: ${last.text}`;
+  }
+  function groupRow(term) {
+    if (!Z().profile()) return "";
+    const g = G().get();
+    if (term && !G().NAME.toLocaleLowerCase("pt-BR").includes(term)) return "";
+    if (filter === "unread" && !g.unread) return "";
+    if (filter === "done" || filter === "unknown") return "";
+    const last = g.messages[g.messages.length - 1];
+    return `<li><button type="button" class="zap-row${selected === GROUP ? " is-selected" : ""}${g.unread ? " is-unread" : ""}" data-zap-chat="${GROUP}">
+        <img src="${GROUP_AVATAR}" alt="" />
+        <span class="zap-row-main"><span class="zap-row-top"><strong>${safe(G().NAME)}</strong><time>${last ? time(last.at) : ""}</time></span>
+        <span class="zap-row-bottom"><span class="zap-row-preview"><span>${safe(groupPreview(g))}</span></span><em class="zap-live is-${g.status}" title="Grupo em tempo real"></em>${g.unread ? `<b class="zap-unread">${g.unread}</b>` : ""}</span></span>
+      </button></li>`;
+  }
+
+  // ---------- Grupo da turma (tempo real) ----------
+  const senderColor = (id) => SENDER_COLORS[Array.from(String(id)).reduce((sum, char) => (sum * 31 + char.charCodeAt(0)) >>> 0, 7) % SENDER_COLORS.length];
+  function groupStatus(g) {
+    if (g.status === "connecting") return "conectando ao grupo…";
+    if (g.status !== "online") return "sem conexão · o grupo precisa de internet (a trilha continua normal)";
+    const others = g.members.filter((member) => member.id !== G().clientId).map((member) => String(member.name).split(" ")[0]);
+    if (!others.length) return "só você por enquanto · chame a turma 👋";
+    return `${others.slice(0, 6).join(", ")}${others.length > 6 ? ` e mais ${others.length - 6}` : ""} e você`;
+  }
+  function groupMessageHtml(m, previous) {
+    const mine = m.from?.id === G().clientId;
+    const first = !previous || previous.from?.id !== m.from?.id;
+    const sender = !mine && first ? `<span class="zap-sender" style="color:${senderColor(m.from?.id)}">${safe(m.from?.name)}<small>${safe(m.from?.phone)}</small></span>` : "";
+    return `<div class="zap-msg ${mine ? "is-out" : "is-in"}${first ? " is-first" : ""}"><div class="zap-bubble zap-t-text">${sender}<p>${safe(m.text)}</p><span class="zap-meta"><time>${time(m.at)}</time>${mine ? svg("checks", "zap-tick") : ""}</span></div></div>`;
+  }
+  function renderGroupConv(record) {
+    const conv = record.zapRoot.querySelector("[data-zap-conv]");
+    record.zapRoot.classList.add("has-chat");
+    conv.innerHTML = `<header class="zap-conv-head">
+        <button type="button" class="zap-back zap-iconbtn" aria-label="Voltar para a lista" data-zap-back>${svg("back")}</button>
+        <img src="${GROUP_AVATAR}" alt="" />
+        <div class="zap-conv-title"><strong>${safe(G().NAME)}</strong><small data-zap-group-status></small></div>
+        <div class="zap-conv-actions"><button type="button" class="zap-iconbtn" aria-label="Chamada de vídeo" data-zap-soon>${svg("video")}</button><button type="button" class="zap-iconbtn" aria-label="Chamada de voz" data-zap-soon>${svg("phone")}</button><button type="button" class="zap-iconbtn" aria-label="Pesquisar na conversa" data-zap-soon>${svg("search")}</button></div>
+      </header>
+      <div class="zap-messages" data-zap-scroll>
+        <div class="zap-day"><span>HOJE</span></div>
+        <div class="zap-system is-lock"><span>${svg("lock")} Grupo em tempo real da turma. As mensagens ficam só enquanto o servidor estiver ligado.</span></div>
+        <div class="zap-msg is-in is-first"><div class="zap-bubble"><span class="zap-sender" style="color:#1daa61">OSLab Dicas 🤖</span><p>Bem-vindos ao grupo da turma! 👋 Aqui vocês podem se ajudar nas missões do WhatsApp. Regras: respeito sempre, nada de ofensas e nada de dados pessoais (endereço, senha, documentos). Bons estudos! 🛡️</p><span class="zap-meta"><time>${time(Z().get().startedAt || Date.now())}</time></span></div></div>
+        <div data-zap-group-feed></div>
+      </div>
+      <div class="zap-emoji-row" data-zap-emojis hidden>${["👋", "😂", "👍", "❤️", "🙏", "😮", "🔥", "✅"].map((emoji) => `<button type="button" data-zap-emoji="${emoji}">${emoji}</button>`).join("")}</div>
+      <footer class="zap-composer"><form class="zap-composer-pill" data-zap-group-form><button type="button" class="zap-iconbtn" aria-label="Emojis" data-zap-emoji-toggle>${svg("sticker")}</button><input class="zap-group-input" name="text" maxlength="500" autocomplete="off" aria-label="Mensagem para o grupo" /><button type="submit" class="zap-iconbtn" aria-label="Enviar">${svg("send")}</button></form></footer>`;
+    record.zapShown = { chatId: GROUP, count: 0 };
+    record.zapGroupCount = 0;
+    appendGroup(record, false);
+  }
+  function appendGroup(record, animate = true) {
+    if (selected !== GROUP) return;
+    const feed = record.zapRoot.querySelector("[data-zap-group-feed]");
+    if (!feed) return;
+    const g = G().get();
+    if (record.zapGroupCount > g.messages.length) { feed.innerHTML = ""; record.zapGroupCount = 0; }
+    const fresh = g.messages.slice(record.zapGroupCount);
+    if (fresh.length) {
+      feed.insertAdjacentHTML("beforeend", fresh.map((m, index) => groupMessageHtml(m, g.messages[record.zapGroupCount + index - 1])).join(""));
+      if (animate && !reduceMotion()) feed.querySelectorAll(".zap-msg:not(.is-seen)").forEach((node) => node.classList.add("is-new"));
+      feed.querySelectorAll(".zap-msg").forEach((node) => node.classList.add("is-seen"));
+      record.zapGroupCount = g.messages.length;
+      scrollDown(record);
+    }
+    record.zapRoot.querySelector("[data-zap-group-status]").textContent = groupStatus(g);
+    const input = record.zapRoot.querySelector(".zap-group-input");
+    input.disabled = g.status !== "online";
+    input.placeholder = g.status === "online" ? "Digite uma mensagem" : g.status === "connecting" ? "Conectando ao grupo…" : "Sem conexão com o grupo…";
   }
 
   // ---------- Conversa ----------
@@ -192,11 +277,12 @@
     return "online";
   }
   function renderConv(record) {
+    if (selected === GROUP && Z().profile()) { renderGroupConv(record); return; }
     const conv = record.zapRoot.querySelector("[data-zap-conv]");
     const chat = selected ? Z().chat(selected) : null;
     record.zapRoot.classList.toggle("has-chat", Boolean(chat));
     if (!chat) {
-      conv.innerHTML = `<div class="zap-welcome"><div class="zap-welcome-card">${ART}<h2>Segurança Digital no WhatsApp</h2><p>Uma pessoa nova manda mensagem a cada minuto. Ajude quem precisa no computador e cuidado com os golpes.</p><button type="button" data-zap-open="${GUIDE}">Abrir OSLab Dicas</button></div>
+      conv.innerHTML = `<div class="zap-welcome"><div class="zap-welcome-card">${ART}<h2>Segurança Digital no WhatsApp</h2><p>Uma pessoa nova manda mensagem a cada minuto. Ajude quem precisa no computador e cuidado com os golpes.</p><button type="button" data-zap-goto="${GUIDE}">Abrir OSLab Dicas</button></div>
         <div class="zap-welcome-actions">${[["doc", "Enviar documento"], ["userplus", "Adicionar contato"], ["mail", "Convidar amigos"], ["video", "Nova ligação"]].map(([icon, label]) => `<button type="button" data-zap-soon><span>${svg(icon)}</span>${label}</button>`).join("")}</div></div>`;
       record.zapShown = { chatId: null, count: 0 };
       return;
@@ -398,7 +484,8 @@
       if (chat.messages[index].from === "them" && --left === 0) record.zapUnreadAt = index;
     }
     selected = id;
-    Z().setFocus(id);
+    Z().setFocus(id === GROUP ? null : id);
+    G().setFocus(id === GROUP);
     renderList(record);
     renderConv(record);
   }
@@ -417,9 +504,16 @@
       if (root.querySelector(".zap-theme")) return;
       const action = event.target.closest("[data-zap-action]")?.dataset.zapAction;
       if (action) { root.querySelector("[data-zap-layer]").innerHTML = ""; if (action === "theme") showTheme(record); if (action === "reset") void resetTrail(); return; }
-      if (event.target.closest("[data-zap-settings]")) { showTheme(record); return; }
-      const open = event.target.closest("[data-zap-open]")?.dataset.zapOpen;
-      if (open) { select(record, open); return; }
+      const tab = event.target.closest("[data-zap-tab]")?.dataset.zapTab;
+      if (tab) { record.zapPanel = tab === "settings" && record.zapPanel !== "settings" ? "settings" : null; renderPanel(record); return; }
+      const panelGo = event.target.closest("[data-zap-panel-go]");
+      if (panelGo) { record.zapPanel = panelGo.dataset.zapPanelGo || null; renderPanel(record); return; }
+      if (event.target.closest("[data-zap-twostep-off]")) { Z().setSetting("twoStep", false); renderPanel(record); return; }
+      if (event.target.closest("[data-zap-emoji-toggle]")) { const row = root.querySelector("[data-zap-emojis]"); row.hidden = !row.hidden; return; }
+      const emoji = event.target.closest("[data-zap-emoji]")?.dataset.zapEmoji;
+      if (emoji) { const input = root.querySelector(".zap-group-input"); if (input && !input.disabled) { input.value += emoji; input.focus(); } return; }
+      const goto = event.target.closest("[data-zap-goto]")?.dataset.zapGoto;
+      if (goto) { select(record, goto); return; }
       if (root.querySelector(".zap-menu") && !event.target.closest(".zap-menu, [data-zap-menu]")) root.querySelector("[data-zap-layer]").innerHTML = "";
       if (event.target.closest("[data-zap-close]") && (event.target.closest("[data-zap-close]") === event.target || event.target.closest("button[data-zap-close]"))) { root.querySelector("[data-zap-layer]").innerHTML = ""; return; }
       const chatId = event.target.closest("[data-zap-chat]")?.dataset.zapChat;
@@ -428,7 +522,7 @@
       if (reply) { void pick(record, Number(reply.dataset.zapReply)); return; }
       const chip = event.target.closest("[data-zap-filter]")?.dataset.zapFilter;
       if (chip) { filter = chip; renderList(record); return; }
-      if (event.target.closest("[data-zap-back]")) { selected = null; Z().setFocus(null); renderList(record); renderConv(record); return; }
+      if (event.target.closest("[data-zap-back]")) { selected = null; Z().setFocus(null); G().setFocus(false); renderList(record); renderConv(record); return; }
       const photo = event.target.closest("[data-zap-photo]")?.dataset.zapPhoto;
       if (photo) { showPhoto(record, photo); return; }
       const play = event.target.closest("[data-zap-play]");
@@ -453,6 +547,31 @@
       }
       if (event.target.closest("[data-zap-soon]")) O.ui.notify("WhatsApp", "Nesta trilha, use a aba Conversas 💬", "info", 2600);
     });
+    root.addEventListener("submit", (event) => {
+      const form = event.target;
+      if (form.matches("[data-zap-onboard]")) { event.preventDefault(); finishWelcome(record, form); }
+      if (form.matches("[data-zap-group-form]")) {
+        event.preventDefault();
+        const input = form.querySelector("input");
+        if (G().send(input.value)) input.value = "";
+        root.querySelector("[data-zap-emojis]")?.setAttribute("hidden", "");
+        input.focus();
+      }
+      if (form.matches("[data-zap-pin]")) {
+        event.preventDefault();
+        const data = new FormData(form);
+        const error = form.querySelector("[data-zap-pin-error]");
+        const pin = String(data.get("pin") || "");
+        if (!/^\d{6}$/.test(pin)) { error.textContent = "O PIN precisa ter 6 números."; error.hidden = false; return; }
+        if (pin !== String(data.get("confirm") || "")) { error.textContent = "Os PINs não são iguais. Digite de novo."; error.hidden = false; return; }
+        Z().setSetting("twoStep", true);
+        renderPanel(record);
+      }
+    });
+    root.addEventListener("change", (event) => {
+      const setting = event.target.closest("[data-zap-setting]");
+      if (setting) { Z().setSetting(setting.dataset.zapSetting, setting.value); renderPanel(record); }
+    });
     root.addEventListener("input", (event) => {
       if (event.target.matches("[data-zap-search]")) renderList(record);
       if (event.target.matches("[data-pick-search]")) {
@@ -468,6 +587,72 @@
       if (event.key === "Escape" && root.querySelector("[data-zap-layer]").innerHTML && !root.querySelector(".zap-theme[data-required]")) { record.zapPicker = null; root.querySelector("[data-zap-layer]").innerHTML = ""; }
     });
   }
+  const PRIVACY = [["all", "Todos"], ["contacts", "Meus contatos"], ["nobody", "Ninguém"]];
+  function letter(name) { return `<span class="zap-letter">${safe(String(name || "?").trim().charAt(0).toUpperCase())}</span>`; }
+  function renderPanel(record) {
+    const panel = record.zapRoot.querySelector("[data-zap-panel]");
+    const view = record.zapPanel;
+    record.zapRoot.querySelectorAll("[data-zap-tab]").forEach((tab) => tab.classList.toggle("is-active", tab.dataset.zapTab === (view ? "settings" : "chats")));
+    panel.hidden = !view;
+    if (!view) { panel.innerHTML = ""; return; }
+    const profile = Z().profile() || { name: "", phone: Z().phone() };
+    const set = Z().settings();
+    const back = (to, title) => `<header class="zap-panel-head"><button type="button" class="zap-iconbtn" aria-label="Voltar" data-zap-panel-go="${to}">${svg("back")}</button><h1>${title}</h1></header>`;
+    if (view === "settings") {
+      panel.innerHTML = `<header class="zap-panel-head"><h1>Configurações</h1></header>
+        <div class="zap-panel-profile">${letter(profile.name)}<span><strong>${safe(profile.name)}</strong><small>${safe(profile.phone)} · Maceió (AL)</small></span></div>
+        <button type="button" class="zap-panel-row" data-zap-panel-go="account">${svg("lock")}<span><strong>Conta</strong><small>Confirmação em duas etapas ${set.twoStep ? "· ativada ✅" : "· desativada"}</small></span></button>
+        <button type="button" class="zap-panel-row" data-zap-panel-go="privacy">${svg("shield")}<span><strong>Privacidade</strong><small>Visto por último, foto do perfil</small></span></button>
+        <button type="button" class="zap-panel-row" data-zap-action="theme">${svg(Z().theme() === "dark" ? "moon" : "sun")}<span><strong>Tema</strong><small>${Z().theme() === "dark" ? "Escuro" : "Claro"}</small></span></button>
+        <button type="button" class="zap-panel-row is-danger" data-zap-action="reset">${svg("reset")}<span><strong>Reiniciar a trilha</strong><small>Para o próximo aluno usar este computador</small></span></button>`;
+    } else if (view === "account") {
+      panel.innerHTML = `${back("settings", "Conta")}<section class="zap-panel-section"><h2>Confirmação em duas etapas</h2><p>Crie um PIN de 6 números. Ele será pedido sempre que alguém tentar registrar o seu número em outro celular.</p>
+        ${set.twoStep ? `<p class="zap-panel-ok">${svg("check")} Ativada</p><button type="button" class="zap-panel-btn" data-zap-twostep-off>Desativar</button>` : `<form class="zap-panel-form" data-zap-pin><label>Crie um PIN<input name="pin" type="password" inputmode="numeric" maxlength="6" autocomplete="off" /></label><label>Confirme o PIN<input name="confirm" type="password" inputmode="numeric" maxlength="6" autocomplete="off" /></label><p class="zap-panel-error" data-zap-pin-error hidden></p><button type="submit" class="zap-panel-btn is-primary">Ativar</button></form>`}</section>`;
+    } else if (view === "privacy") {
+      const group = (key, title, help) => `<fieldset class="zap-panel-section"><legend>${title}</legend><p>${help}</p>${PRIVACY.map(([value, label]) => `<label class="zap-radio"><input type="radio" name="${key}" value="${value}" data-zap-setting="${key}" ${set[key] === value ? "checked" : ""} />${label}</label>`).join("")}</fieldset>`;
+      panel.innerHTML = `${back("settings", "Privacidade")}${group("lastSeen", "Visto por último e online", "Quem pode ver quando você esteve no WhatsApp pela última vez.")}${group("photo", "Foto do perfil", "Quem pode ver a sua foto.")}<p class="zap-panel-note">${svg("lock")} Mensagens com desconhecidos ficam mais seguras quando eles não veem sua foto nem quando você está online.</p>`;
+    }
+  }
+
+  // ---------- Boas-vindas: nome, número de Maceió e tema ----------
+  function showWelcome(record) {
+    const phone = Z().phone();
+    const me = O.users?.getCurrent?.();
+    const suggestion = me && me.displayName !== "Aluno" ? me.displayName : "";
+    const theme = Z().theme() || "dark";
+    overlay(record, `<div class="zap-modal-backdrop"><form class="zap-theme zap-onboard" data-zap-onboard data-required role="dialog" aria-modal="true" aria-labelledby="zap-onboard-title">
+      <img src="assets/icons/trails/whatsapp.svg" alt="" />
+      <h2 id="zap-onboard-title">Bem-vindo(a) ao WhatsApp</h2>
+      <p>Seu número: <b>${safe(phone)}</b> · Maceió (AL)</p>
+      <label class="zap-onboard-name"><span>Como você quer aparecer para a turma?</span><input name="name" maxlength="30" autocomplete="off" placeholder="Seu nome" value="${safe(suggestion)}" /></label>
+      <p class="zap-onboard-label">Escolha o tema</p>
+      <div class="zap-theme-options">
+        <label class="zap-theme-card"><input type="radio" name="theme" value="light" ${theme === "light" ? "checked" : ""} />${mini("light")}<strong>${svg("sun")}Claro</strong></label>
+        <label class="zap-theme-card"><input type="radio" name="theme" value="dark" ${theme === "dark" ? "checked" : ""} />${mini("dark")}<strong>${svg("moon")}Escuro</strong></label>
+      </div>
+      <p class="zap-panel-error" data-zap-onboard-error hidden></p>
+      <button type="submit" class="zap-start">Começar</button>
+    </form></div>`);
+    global.setTimeout(() => record.zapRoot.querySelector('[data-zap-onboard] input[name="name"]')?.focus(), 60);
+  }
+  function finishWelcome(record, form) {
+    const data = new FormData(form);
+    if (!Z().setProfile(data.get("name"))) {
+      const error = form.querySelector("[data-zap-onboard-error]");
+      error.textContent = "Digite seu nome (pelo menos 2 letras).";
+      error.hidden = false;
+      return;
+    }
+    Z().setTheme(data.get("theme") || "dark");
+    records.forEach((item) => item.zapRoot?.setAttribute("data-theme", Z().theme()));
+    record.zapRoot.querySelector("[data-zap-layer]").innerHTML = "";
+    if (Z().start()) selected = GUIDE;
+    if (!selected) selected = GUIDE;
+    Z().setFocus(selected);
+    G().connect(Z().profile());
+    renderAll();
+  }
+
   function mini(theme) {
     return `<span class="zap-mini" data-mini="${theme}" aria-hidden="true"><span class="zap-mini-rail"><i></i><i></i><i></i></span><span class="zap-mini-list"><b></b><span></span><span></span><span></span><span></span></span><span class="zap-mini-chat"><i></i><i class="is-out"></i><i></i><i class="is-out"></i><em></em></span></span>`;
   }
@@ -497,8 +682,9 @@
     const ok = await O.ui.confirm({ title: "Reiniciar a trilha Segurança Digital?", message: "Todas as conversas do WhatsApp, as contas de Netflix e Facebook dos amigos e os arquivos criados pela trilha serão apagados. As outras trilhas continuam como estão.", confirmLabel: "Reiniciar trilha" });
     if (!ok) return;
     selected = null;
+    G().stop();
     Z().reset();
-    records.forEach((record) => { if (record.element?.isConnected) { record.zapListHtml = null; renderConv(record); showTheme(record); } });
+    records.forEach((record) => { if (record.element?.isConnected) { record.zapListHtml = null; record.zapPanel = null; renderPanel(record); renderConv(record); showWelcome(record); } });
     renderAll();
   }
 
@@ -557,7 +743,7 @@
     return { text: m.text, image: "📷 Foto", audio: "🎤 Mensagem de voz", file: `📄 ${m.name}`, link: m.url, pix: `💸 PIX ${m.amount}`, location: "📍 Localização", deleted: "🚫 Mensagem apagada", sticker: m.emoji, lesson: m.title, report: "🏆 Trilha concluída!" }[m.t] || "";
   }
   function updateBadges() {
-    const total = Z().isStarted() ? chats().reduce((sum, chat) => sum + chat.unread, 0) : 0;
+    const total = Z().isStarted() ? chats().reduce((sum, chat) => sum + chat.unread, 0) + G().get().unread : 0;
     document.querySelectorAll('.desktop-shortcut[data-app="whatsapp"], .taskbar [data-app="whatsapp"]').forEach((node) => {
       if (total) node.dataset.zapBadge = total > 9 ? "9+" : String(total);
       else delete node.dataset.zapBadge;
@@ -580,15 +766,20 @@
     record.address.textContent = "WhatsApp";
     if (!record.zapRoot || !record.zapRoot.isConnected) shell(record);
     record.zapListHtml = record.zapChipsHtml = null;
-    if (Z().theme()) {
+    const ready = Boolean(Z().profile() && Z().theme());
+    if (ready) {
       if (Z().start()) selected = GUIDE;
       if (!selected) selected = GUIDE;
-      Z().setFocus(selected);
+      Z().setFocus(selected === GROUP ? null : selected);
+      G().setFocus(selected === GROUP);
+      // O grupo só fica conectado enquanto o WhatsApp está aberto: poupa o servidor.
+      G().connect(Z().profile());
     }
     renderTrail(record);
     renderList(record);
     renderConv(record);
-    if (!Z().theme()) showTheme(record);
+    renderPanel(record);
+    if (!ready) showWelcome(record);
     updateBadges();
   }
 
@@ -613,9 +804,28 @@
   });
   // Contador da próxima mensagem e selo de não lidas.
   global.setInterval(() => { if (Z().isStarted()) records.forEach((record) => { if (record.element?.isConnected) renderTrail(record); }); }, 1000);
-  O.events?.subscribe?.("window:minimized", (event) => { if (event.detail?.appId === "whatsapp") Z().setFocus(null); });
-  document.addEventListener("oslab:window-focused", (event) => { if (event.detail?.appId === "whatsapp" && Z().theme()) Z().setFocus(selected); updateBadges(); });
-  O.events?.subscribe?.("app:closed", (event) => { if (event.detail?.appId === "whatsapp") Z().setFocus(null); });
+  O.events?.subscribe?.("window:minimized", (event) => { if (event.detail?.appId === "whatsapp") { Z().setFocus(null); G().setFocus(false); } });
+  document.addEventListener("oslab:window-focused", (event) => {
+    if (event.detail?.appId === "whatsapp" && Z().profile()) { Z().setFocus(selected === GROUP ? null : selected); G().setFocus(selected === GROUP); }
+    updateBadges();
+  });
+  O.events?.subscribe?.("app:closed", (event) => { if (event.detail?.appId === "whatsapp") { Z().setFocus(null); G().setFocus(false); G().stop(); } });
+  G().subscribe((type, detail) => {
+    if (type === "message" && !detail.mine) {
+      const record = visibleRecord();
+      const looking = record && selected === GROUP && record.element.classList.contains("is-focused");
+      if (!looking) toast(G().NAME, `${String(detail.message.from?.name || "").split(" ")[0]}: ${detail.message.text}`, GROUP_AVATAR, GROUP);
+    }
+    if (type === "slow") O.ui.notify("Grupo da turma", "Calma! Espere um pouquinho antes de mandar outra mensagem.", "info", 3000);
+    records.forEach((record) => {
+      if (!record.element?.isConnected) return;
+      if (type === "history") { record.zapGroupCount = 0; record.zapRoot.querySelector("[data-zap-group-feed]")?.replaceChildren(); }
+      renderTrail(record);
+      renderList(record);
+      appendGroup(record);
+    });
+    updateBadges();
+  });
   document.addEventListener("DOMContentLoaded", updateBadges);
 
   O.zapApp = { render, select: (id) => { selected = id; renderAll(); } };

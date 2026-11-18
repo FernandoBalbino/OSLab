@@ -9,6 +9,7 @@
   const M = "assets/whatsapp/media/";
   const norm = (value) => String(value || "").toLocaleLowerCase("pt-BR").normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/\s+/g, " ").trim();
   const ATTACH = "📎 Anexar arquivo do computador";
+  const MARTA_FILE = { parent: "documents", name: "Orçamento 2026.xlsx", mime: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", sizeBytes: 48128, content: "Planilha de orçamento 2026 · OSLab" };
 
   const contacts = [
     {
@@ -16,7 +17,7 @@
       skill: "Encontrar a senha do Wi-Fi conectado nas Configurações do Windows",
       steps: {
         start: {
-          say: ["Fala! Tudo certo? 😅", "Tô na sala de reunião e meu notebook não quer conectar no Wi-Fi do escritório", "Você que já tá conectado aí: consegue ver a senha da rede no seu Windows e me passar?"],
+          say: ["Fala, {nome}! Tudo certo? 😅", "Tô na sala de reunião e meu notebook não quer conectar no Wi-Fi do escritório", "Você que já tá conectado aí: consegue ver a senha da rede no seu Windows e me passar?"],
           options: [
             { text: "Claro! Vou procurar aqui nas Configurações", reply: ["Valeu!! Fico no aguardo 🙏"], go: "task" },
             { text: "Pergunta pro pessoal do TI", reply: ["O TI só volta amanhã 😩", "Dá uma olhada aí, vai! Deve estar nas Configurações de rede"], go: "task" },
@@ -40,13 +41,13 @@
     {
       id: "marta", name: "Dona Marta (Chefe)", avatar: P + "marta.webp", about: "Gerente administrativa", phone: "+55 11 99760-1188", kind: "learn",
       skill: "Restaurar um arquivo da Lixeira e enviar um anexo",
-      seed: (ctx) => ctx.seedTrashedFile("marta", { parent: "documents", name: "Orçamento 2026.xlsx", mime: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", sizeBytes: 48128, content: "Planilha de orçamento 2026 · OSLab" }),
+      seed: (ctx) => ctx.seedTrashedFile("marta", MARTA_FILE),
       steps: {
         start: {
           say: ["Bom dia! Preciso URGENTE da planilha “Orçamento 2026” para a reunião das 10h", "Ela estava na pasta Documentos do seu computador, mas acho que alguém apagou sem querer 😬", "Recupera e me manda aqui, por favor"],
           options: [
             { label: ATTACH, attach: { check: (file) => norm(file.name) === norm("Orçamento 2026.xlsx") ? { ok: true, reply: ["Isso! Era essa mesma 🙌", "Você salvou minha reunião. Obrigada!"], end: "good", lesson: "marta" } : { ok: false, reply: [`Esse aí é “${file.name}” 🤔`, "Preciso da planilha Orçamento 2026. Se ela foi apagada, deve estar na Lixeira!"] } } },
-            { text: "Onde ela pode estar?", reply: ["Quando a gente apaga um arquivo, ele vai para a Lixeira 🗑️", "Abre a Lixeira na Área de Trabalho, clica no arquivo e escolhe Restaurar. Ele volta para Documentos"], stay: true },
+            { text: "Onde ela pode estar?", run: (ctx) => ctx.seedTrashedFile("marta", MARTA_FILE), reply: ["Quando a gente apaga um arquivo, ele vai para a Lixeira 🗑️", "Abre a Lixeira na Área de Trabalho, clica no arquivo e escolhe Restaurar. Ele volta para Documentos"], stay: true },
             { text: "Agora não posso, tô ocupado(a)", reply: ["Ocupado com o quê? 🤨", "A reunião é daqui a pouco! Por favor"], stay: true },
           ],
         },
@@ -143,7 +144,7 @@
       id: "mae", name: "Mãe ❤️ (número novo)", avatar: P + "mae.webp", about: "Deus é fiel 🙏", phone: "+55 11 93120-5544", kind: "scam", unknown: true,
       steps: {
         start: {
-          say: ["Oi, meu amor! Esse é meu número novo, salva aí ❤️", "O outro celular caiu na pia 😩", "Tô com um problema no banco e preciso pagar um boleto HOJE. Faz um PIX de R$ 1.250 pra mim? Amanhã te devolvo", "Chave: maria.pagamentos2026@email.com"],
+          say: ["Oi, {nome}, meu amor! Esse é meu número novo, salva aí ❤️", "O outro celular caiu na pia 😩", "Tô com um problema no banco e preciso pagar um boleto HOJE. Faz um PIX de R$ 1.250 pra mim? Amanhã te devolvo", "Chave: maria.pagamentos2026@email.com"],
           options: [
             { label: "📞 Ligar para o número antigo da mãe", effect: ["call", "block"], reply: [{ t: "call", text: "Você ligou para Mãe (número antigo) · 0:14" }, { t: "system", text: "Mãe no telefone: “PIX? Que PIX?! Eu tô na feira comprando banana 🍌 Meu celular está aqui comigo. NÃO MANDA NADA!”" }], end: "good", lesson: "mae-good" },
             { label: "💸 Fazer o PIX de R$ 1.250", send: { t: "pix", amount: "R$ 1.250,00", to: "maria.pagamentos2026@email.com" }, reply: ["Obrigada, filho(a) ❤️", "Faz mais um de R$ 800? É a segunda parcela"], go: "paid" },
@@ -165,7 +166,7 @@
       skill: "Criar e salvar um documento no Word e enviá-lo",
       steps: {
         start: {
-          say: ["Oi, querido(a)! 🌷", "O chá de bebê da sua prima é sábado 👶🎀", "Faz pra tia uma lista de presentes no WORD e me manda o arquivo? Tem que ter: fraldas, lenço umedecido e mamadeira"],
+          say: ["Oi, {nome}, querido(a)! 🌷", "O chá de bebê da sua prima é sábado 👶🎀", "Faz pra tia uma lista de presentes no WORD e me manda o arquivo? Tem que ter: fraldas, lenço umedecido e mamadeira"],
           options: [
             { label: ATTACH, attach: { check: (file) => {
               const text = norm(file.content);
@@ -434,6 +435,174 @@
         },
       },
     },
+    // ---------- Segunda leva: 8 pedidos de conhecimento e 2 surpresas ----------
+    {
+      id: "gabriel", name: "Gabriel (TI da escola)", avatar: P + "gabriel.webp", about: "Suporte de TI 👨‍💻", phone: "+55 82 99631-2045", kind: "learn",
+      skill: "Proteger a conta do WhatsApp: confirmação em duas etapas e privacidade",
+      steps: {
+        start: {
+          say: ["Oi, {nome}! Aqui é o Gabriel, do TI da escola 👨‍💻", "Essa semana dois alunos perderam o WhatsApp para o golpe do código 😬", "Faz isso no seu: Configurações ⚙️ → Conta → Confirmação em duas etapas (crie um PIN de 6 números). E em Privacidade deixe a foto do perfil e o visto por último só para “Meus contatos”"],
+          options: [
+            { text: "Pronto! Ativei as duas etapas e ajustei a privacidade ✅", verify: (ctx) => ctx.zapSecurityCheck(), okReply: ["Perfeito! Agora, mesmo que alguém pegue o código do SMS, vai precisar do seu PIN 🔐", "E desconhecidos não veem sua foto nem quando você está online 👍"], end: "good", lesson: "gabriel" },
+            { text: "Onde ficam essas opções?", reply: ["Na barra da esquerda do WhatsApp, lá embaixo, tem a engrenagem ⚙️ Configurações", "Dentro dela: Conta → Confirmação em duas etapas, e Privacidade → Visto por último e Foto do perfil"], stay: true },
+            { text: "Pra que serve esse PIN?", reply: ["Se alguém tentar registrar o seu número em outro celular, o WhatsApp pede o PIN 🔢", "Sem ele o golpista não entra, mesmo com o código do SMS"], stay: true },
+          ],
+        },
+      },
+    },
+    {
+      id: "tigrinho", name: "Rei do Tigrinho 🐯💰", avatar: P + "tigrinho.webp", about: "💸 Plataforma que PAGA · link na bio", phone: "+55 71 98880-7777", kind: "scam", unknown: true,
+      steps: {
+        start: {
+          say: ["E aí, {nome}! 🐯💰", { t: "image", src: M + "tigrinho-print.svg", caption: "Saquei R$ 5.000 HOJE no jogo do tigrinho 🤑🤑" }, "Tenho o link da plataforma que PAGA. Deposita R$ 30 e eu te passo o horário pagante 🔥", "Vagas limitadas, só pros meus seguidores 😎"],
+          options: [
+            { label: "💸 Depositar R$ 30", send: { t: "pix", amount: "R$ 30,00", to: "plataforma-tigre-vip.bet" }, reply: ["Bora! 🐯 Você ganhou R$ 300 de bônus!", "Pra sacar, deposita mais R$ 150 🔒"], go: "more" },
+            { text: "Aposta é proibida para menor de idade, e isso é golpe. Não!", reply: ["Fica aí na pobreza então 😤🐯"], effect: "block", end: "good", lesson: "tigrinho-good" },
+            { text: "Se paga tanto, por que você precisa do MEU dinheiro? 🤔", reply: ["…", "É que a plataforma paga mais quando entra mais gente 😅", "Deposita logo!"], stay: true },
+          ],
+        },
+        more: {
+          say: [],
+          options: [
+            { label: "💸 Depositar mais R$ 150", send: { t: "pix", amount: "R$ 150,00", to: "plataforma-tigre-vip.bet" }, reply: [{ t: "system", text: "O site da plataforma saiu do ar." }], effect: "block", end: "bad", lesson: "tigrinho-bad" },
+            { text: "Quero sacar meus R$ 300 agora", reply: ["Saque só a partir de R$ 1.000 😇 deposita mais"], effect: "block", end: "bad", lesson: "tigrinho-bad" },
+            { label: "🚫 Bloquear e denunciar", effect: "block", end: "bad", lesson: "tigrinho-bad" },
+          ],
+        },
+      },
+    },
+    {
+      id: "paulo", name: "Seu Paulo (vizinho do 104)", avatar: P + "paulo.webp", about: "Bom dia! ☀️", phone: "+55 82 98813-4410", kind: "learn",
+      skill: "Reconhecer um programa .exe disfarçado e apagá-lo sem abrir",
+      seed: (ctx) => ctx.seedFile("paulo", { parent: "downloads", name: "comprovante_pix.pdf.exe", mime: "application/x-msdownload", sizeBytes: 912384, content: "Programa desconhecido · simulação OSLab" }),
+      steps: {
+        start: {
+          say: ["Bom dia, {nome}! Aqui é o Paulo, do 104 🙋‍♂️", "Chegou um “comprovante de PIX” no meu e-mail e eu salvei no seu computador pelo pendrive, está em Downloads", "Abre lá pra mim e vê se o dinheiro caiu? O nome é comprovante_pix.pdf"],
+          options: [
+            { text: "Seu Paulo, isso é um programa .exe disfarçado! Apaguei ✅", verify: (ctx) => ctx.exeCheck(), okReply: ["Nossa! Eu nem reparei nesse .exe no final 😱", "Ainda bem que você não abriu. Obrigado, viu!"], end: "good", lesson: "paulo" },
+            { text: "Abri e não aconteceu nada…", reply: ["Ué… 😬", { t: "system", text: "Simulação: um .exe disfarçado pode instalar um vírus sem mostrar nada na tela." }, "Olha de novo o nome COMPLETO do arquivo em Downloads"], stay: true },
+            { text: "Qual é o nome completo do arquivo?", reply: ["No meu e-mail aparecia comprovante_pix.pdf", "Confere no Explorador de Arquivos, pasta Downloads, como está escrito aí"], stay: true },
+          ],
+        },
+      },
+    },
+    {
+      id: "anaclara", name: "Ana Clara (estágio)", avatar: P + "anaclara.webp", about: "Estagiária do suporte 💻", phone: "+55 82 99102-7731", kind: "learn",
+      skill: "Finalizar um programa travado pelo Gerenciador de Tarefas",
+      steps: {
+        start: {
+          say: ["Oi, {nome}! Aqui é a Ana Clara, estagiária do suporte 👩‍💻", "Te mandei um arquivo de anotações GIGANTE que trava o Editor de Texto quando abre 😅", { t: "file", name: "anotacoes-gigantes.txt", size: "48 MB", mime: "text/plain" }, "Abre aí e me diz o que acontece?"],
+          options: [
+            { label: "📂 Abrir o arquivo que ela mandou", run: (ctx) => ctx.freeze(), reply: ["E aí? Travou, né? 😬", "Agora fecha ele SEM desligar o computador. Dá pra fazer pelo Gerenciador de Tarefas"], go: "task" },
+            { text: "48 MB de texto? Isso vai travar 😅", reply: ["Vai mesmo kkk, é de propósito pra você treinar!", "Abre e depois fecha do jeito certo"], stay: true },
+            { text: "Por que um programa trava?", reply: ["Ele fica tentando carregar tudo e para de responder", "Aí nem o X da janela funciona. Abre pra ver!"], stay: true },
+          ],
+        },
+        task: {
+          say: [],
+          options: [
+            { text: "Pronto! Finalizei pelo Gerenciador de Tarefas ✅", verify: (ctx) => ctx.frozenCheck(), okReply: ["Isso! Sem perder nada e sem desligar o PC 🙌", "Vou anotar no meu caderno de suporte: Ctrl + Shift + Esc → Finalizar tarefa"], end: "good", lesson: "anaclara" },
+            { text: "O X da janela não funciona 😩", reply: ["Normal quando trava!", "Aperta Ctrl + Shift + Esc, procura o Editor de Texto (Não respondendo) e clica em Finalizar tarefa"], stay: true },
+            { text: "Vou desligar o computador na tomada", reply: ["NÃÃÃO 😱 pode corromper arquivos!", "Usa o Gerenciador de Tarefas: Ctrl + Shift + Esc"], stay: true },
+          ],
+        },
+      },
+    },
+    {
+      id: "marcos", name: "Marcos (Redes)", avatar: P + "marcos.webp", about: "Analista de redes 🌐", phone: "+55 82 98740-1199", kind: "learn",
+      skill: "Descobrir o endereço IPv4 com o comando ipconfig",
+      steps: {
+        start: {
+          say: ["Opa, {nome}! Marcos aqui, do setor de redes 🌐", "Preciso liberar o seu computador no firewall da empresa", "Qual é o endereço IPv4 do seu PC? Botão direito na Área de Trabalho → Abrir no Terminal, e digita ipconfig"],
+          options: (ctx) => {
+            const net = ctx.net();
+            return ctx.shuffle([
+              { text: `É ${net.ip}`, reply: ["Isso! Liberado no firewall ✅", "Agora você sabe achar o IP de qualquer PC com ipconfig 😉"], end: "good", lesson: "marcos" },
+              { text: `É ${net.gateway}`, reply: ["Esse é o Gateway Padrão: o endereço do roteador 📡", "Preciso do Endereço IPv4, que aparece na linha de cima"], stay: true },
+              { text: `É ${net.mask}`, reply: ["Isso é a Máscara de Sub-rede 😅", "Procura a linha “Endereço IPv4”"], stay: true },
+            ], "marcos");
+          },
+        },
+      },
+    },
+    {
+      id: "thiago", name: "Thiago (2º B)", avatar: P + "thiago.webp", about: "🛹", phone: "+55 82 99977-3080", kind: "scam",
+      steps: {
+        start: {
+          say: ["KKKKKKKK olha isso 😂😂", { t: "image", src: M + "meme-blur.svg", caption: "o Matheus dormindo de boca aberta na aula 💤 kkkk" }, "Repassa no grupo da sala, vai ser o meme do ano 🤣", "Coloca uma legenda zoando ele!"],
+          options: [
+            { text: "Repassei no grupo com legenda 😂", reply: ["KKKKKK vai viralizar 🔥", "…", "Eita… o Matheus saiu do grupo e não veio pra aula hoje 😶"], end: "bad", lesson: "thiago-bad" },
+            { text: "Não vou repassar. Isso é bullying, apaga essa foto", reply: ["Ah, é só zoeira… 🙄", "…tá bom, apaguei. Foi mal"], end: "good", lesson: "thiago-good" },
+            { text: "Vou avisar o Matheus e a coordenação", reply: ["Ei, calma! Já apaguei 😳", "Não precisa contar não… foi mal mesmo"], end: "good", lesson: "thiago-good" },
+          ],
+        },
+      },
+    },
+    {
+      id: "julia", name: "Júlia", avatar: P + "julia.webp", about: "☕📚", phone: "+55 82 98105-6643", kind: "learn",
+      skill: "Usar VPN para se proteger em Wi-Fi público",
+      steps: {
+        start: {
+          say: ["Oi, {nome}! É a Júlia 👋 (o Cleiton me contou que você não passou meu número pra ele. Valeu, viu? kkkk)", "Tô num café usando o Wi-Fi “Cafe_Free”, que não tem senha, e preciso entrar no app do banco 🏦", "Meu irmão disse que com VPN fica mais seguro. Testa aí no seu PC: liga a VPN e me diz se deu certo?"],
+          options: [
+            { text: "Liguei a VPN aqui ✅", verify: (ctx) => ctx.vpnCheck(), okReply: ["Boa! Com a VPN a conexão vai criptografada até o servidor 🔐", "Vou ligar no meu também. Mas banco mesmo eu deixo pra fazer no 4G 😉"], end: "good", lesson: "julia" },
+            { text: "Onde fica a VPN?", reply: ["Tem um ícone “VPN” na sua Área de Trabalho 🛡️", "Abre, escolhe um servidor e clica em Conectar"], stay: true },
+            { text: "Wi-Fi sem senha é perigoso?", reply: ["Meu irmão disse que numa rede aberta outras pessoas podem bisbilhotar o que passa por ela 👀", "Por isso a VPN: ela cria um túnel criptografado"], stay: true },
+          ],
+        },
+      },
+    },
+    {
+      id: "celia", name: "Madrinha Célia", avatar: P + "celia.webp", about: "Família ❤️", phone: "+55 82 99318-2257", kind: "learn",
+      skill: "Criar uma conta de usuário padrão para outra pessoa",
+      steps: {
+        start: {
+          say: ["Oi, {nome}, meu afilhado(a) querido(a) ❤️", "Seu primo Pedro vai passar a semana aí e usar seu computador pra estudar", "Cria uma conta só pra ele, chamada Pedro, como USUÁRIO PADRÃO, pra ele não mexer nas suas coisas nem instalar joguinho 😅"],
+          options: [
+            { text: "Criei a conta “Pedro” como usuário padrão ✅", verify: (ctx) => ctx.userCheck(), okReply: ["Ótimo! Assim ele não vê seus arquivos e não instala nada sem a senha de um administrador 👏", "Você é muito responsável ❤️"], end: "good", lesson: "celia" },
+            { text: "Onde eu crio outra conta?", reply: ["No Windows: Configurações ⚙️ → Contas → Outros usuários → Adicionar conta", "No tipo da conta, deixa “Usuário padrão”"], stay: true },
+            { text: "Por que ele não usa a minha conta?", reply: ["Porque aí ele mexe em tudo seu: arquivos, senhas salvas, redes sociais 😬", "Cada pessoa com a sua conta é mais seguro"], stay: true },
+          ],
+        },
+      },
+    },
+    {
+      id: "kaua", name: "Kauã 🎮 (streamer)", avatar: P + "kaua.webp", about: "🔴 live toda noite", phone: "+55 82 98226-9015", kind: "learn",
+      skill: "Esvaziar a Lixeira para liberar espaço no disco",
+      seed: (ctx) => { ctx.seedTrashedFile("kaua", { parent: "downloads", name: "gravacao-live-antiga.mp4", mime: "video/mp4", sizeBytes: 3.8 * 1024 ** 3, content: "Vídeo antigo · OSLab" }); ctx.seedTrashedFile("kaua-2", { parent: "downloads", name: "jogo-antigo-setup.exe", mime: "application/x-msdownload", sizeBytes: 2.1 * 1024 ** 3, content: "Instalador antigo · OSLab" }); },
+      steps: {
+        start: {
+          say: ["Salve, {nome}! Kauã aqui 🎮", "Vou te mandar a gravação da minha live (5 GB) pra você editar", "Mas seu PC tá cheio: tem coisa GIGANTE parada na sua Lixeira. Esvazia ela pra liberar espaço?"],
+          options: [
+            { text: "Esvaziei a Lixeira ✅", verify: (ctx) => ctx.recycleCheck(), okReply: ["Boa! Agora liberou espaço de verdade 💾", "Lembra: só apagar não libera espaço. O arquivo fica na Lixeira até você esvaziar"], end: "good", lesson: "kaua" },
+            { text: "Mas apagar já não libera espaço?", reply: ["Não! O que você apaga vai pra Lixeira e continua ocupando o disco 🗑️", "Só esvaziando a Lixeira o espaço volta"], stay: true },
+            { text: "Como eu esvazio?", reply: ["Abre a Lixeira na Área de Trabalho", "Lá tem o botão Esvaziar Lixeira. Confere antes se não tem nada importante!"], stay: true },
+          ],
+        },
+      },
+    },
+    {
+      id: "osvaldo", name: "Seu Osvaldo (cliente)", avatar: P + "osvaldo.webp", about: "Osvaldo Materiais de Construção", phone: "+55 82 3326-4471", kind: "learn",
+      skill: "Atender com calma, falar de forma clara e diagnosticar o problema",
+      steps: {
+        start: {
+          say: ["BOA TARDE. A IMPRESSORA DA MINHA LOJA NÃO IMPRIME NADA 😡😡", "Paguei caro nesse equipamento e NADA FUNCIONA", "Me disseram que você é do suporte. Resolve AGORA!"],
+          options: [
+            { text: "Calma, Seu Osvaldo, vou te ajudar. A impressora está ligada? Aparece alguma luz?", reply: ["…tá ligada sim.", "Tem uma luz LARANJA piscando ⚠️"], go: "diagnose" },
+            { text: "Deve ser o spooler do driver PCL, reinstala o firmware", reply: ["SPOOLER? FIRMWARE??? 🤬", "Fala a minha língua, rapaz!"], stay: true },
+            { text: "Não é comigo, procura a loja onde comprou", reply: ["É ASSIM QUE VOCÊS ATENDEM?! 😤", "Vou dar 1 estrela!"], stay: true },
+          ],
+        },
+        diagnose: {
+          say: [],
+          options: [
+            { text: "Luz laranja piscando costuma ser papel preso ou sem papel. Pode olhar a bandeja?", reply: ["…", "TINHA UMA FOLHA AMASSADA LÁ DENTRO 😳", "Tirei e imprimiu! Desculpa os gritos. Nota 10 pro atendimento ⭐⭐⭐⭐⭐"], end: "good", lesson: "osvaldo" },
+            { text: "Formata o computador que resolve", reply: ["FORMATAR?! E OS ARQUIVOS DA MINHA LOJA? 😱", "Pensa em algo mais simples, por favor"], stay: true },
+            { text: "Compra uma impressora nova", reply: ["Tá de brincadeira? 😤 Essa tem 2 meses!", "Me ajuda a descobrir o problema primeiro"], stay: true },
+          ],
+        },
+      },
+    },
   ];
 
   const lessons = {
@@ -463,13 +632,26 @@
     "larissa-bad": { tone: "bad", title: "Você mandou sua localização para um perfil falso 😬", text: "A “Larissa” era o Marquinho (ou alguém pior). Localização em tempo real mostra onde você está agora.", tips: ["Pare de compartilhar a localização na hora", "Bloqueie, denuncie e conte para um adulto de confiança"] },
     "suporte-good": { tone: "good", title: "Você protegeu sua conta 🛡️", text: "O código do SMS é a chave da sua conta. O WhatsApp de verdade nunca pede esse código por mensagem.", tips: ["Ative a confirmação em duas etapas: Configurações → Conta", "Ninguém precisa do seu código: nem suporte, nem amigo"] },
     "suporte-bad": { tone: "bad", title: "Você entregou o código da sua conta 😬", text: "Com o código, o golpista abre o seu WhatsApp no celular dele e pede PIX para todos os seus contatos.", tips: ["Nunca passe códigos recebidos por SMS", "Ative a confirmação em duas etapas", "Se acontecer, reinstale o WhatsApp e avise seus contatos"] },
+    gabriel: { tone: "good", title: "Você blindou a sua conta do WhatsApp", text: "Com a confirmação em duas etapas, o golpista precisa do seu PIN além do código do SMS. Na Privacidade, desconhecidos deixam de ver sua foto e quando você está online." },
+    "tigrinho-good": { tone: "good", title: "Você não caiu no golpe da aposta 🛡️", text: "Aposta online é proibida para menores de 18 anos. Influenciador que mostra print de ganho e pede depósito quase sempre ganha comissão quando você PERDE.", tips: ["Print de saldo pode ser montado em qualquer editor", "“Horário pagante” não existe: o jogo é programado para a casa ganhar"] },
+    "tigrinho-bad": { tone: "bad", title: "Você depositou na plataforma falsa 😬", text: "Bônus que não pode ser sacado e “deposite mais para liberar” são o padrão desse golpe. E aposta é proibida para menores.", tips: ["Converse com um adulto de confiança", "Denuncie o perfil e o número"] },
+    paulo: { tone: "good", title: "Você reconheceu um .exe disfarçado", text: "“.pdf.exe” é um PROGRAMA, não um PDF. Ao abrir, ele pode instalar um vírus. Apague e nunca abra executáveis de origem desconhecida." },
+    anaclara: { tone: "good", title: "Você finalizou um programa travado", text: "Ctrl + Shift + Esc abre o Gerenciador de Tarefas. Selecionar o programa “Não respondendo” e clicar em Finalizar tarefa fecha só ele, sem desligar o PC." },
+    marcos: { tone: "good", title: "Você descobriu o IP com ipconfig", text: "No Terminal, ipconfig mostra o Endereço IPv4 (o PC na rede), a Máscara de Sub-rede e o Gateway Padrão (o roteador)." },
+    "thiago-good": { tone: "good", title: "Você não espalhou bullying 🛡️", text: "Repassar foto para zoar um colega é cyberbullying, que tem lei no Brasil (Lei 14.811/2024). Quem só repassa também participa.", tips: ["Não compartilhe, peça para apagar", "Avise um adulto da escola se continuar"] },
+    "thiago-bad": { tone: "bad", title: "Você espalhou uma foto para zoar um colega 😬", text: "Para quem é exposto, a zoeira não termina quando o grupo para de rir. Cyberbullying é crime no Brasil (Lei 14.811/2024).", tips: ["Apague a mensagem e peça desculpas", "Converse com a coordenação"] },
+    julia: { tone: "good", title: "Você ligou a VPN", text: "Em Wi-Fi aberto (sem senha), outras pessoas da rede podem tentar ver o tráfego. A VPN cria um túnel criptografado. Para banco, prefira os dados móveis (4G/5G)." },
+    celia: { tone: "good", title: "Você criou uma conta de usuário padrão", text: "Usuário padrão usa o computador, mas não instala programas nem muda configurações importantes sem a senha de um administrador. Cada pessoa com sua conta protege os arquivos de todos." },
+    kaua: { tone: "good", title: "Você liberou espaço no disco", text: "Arquivo apagado vai para a Lixeira e ainda ocupa espaço. Esvaziar a Lixeira apaga de vez e devolve o espaço ao disco." },
+    osvaldo: { tone: "good", title: "Você fez um ótimo atendimento", text: "Calma, linguagem simples e perguntas sobre o que a pessoa vê (luzes, mensagens) resolvem mais do que palavras técnicas. Comece sempre pelo mais simples." },
     jorge: { tone: "info", title: "Número errado acontece 🌽", text: "Responder com educação está ótimo. Só não passe dados pessoais para quem você não conhece." },
     "jorge-cpf": { tone: "bad", title: "Você passou seu CPF para um desconhecido 😬", text: "Com CPF e nome completo, golpistas fazem cadastros e compras em seu nome.", tips: ["CPF só em sites oficiais e quando for realmente necessário"] },
     "vaga-good": { tone: "good", title: "Golpe da tarefa: você não caiu! 🛡️", text: "Emprego de verdade não cobra taxa. “Ganhe muito curtindo vídeos” é isca.", tips: ["Desconfie de dinheiro fácil", "Pesquise o nome da empresa e o CNPJ"] },
     "vaga-bad": { tone: "bad", title: "Você caiu no golpe da tarefa 😬", text: "O bônus que não pode ser sacado e o “nível VIP” servem para tirar cada vez mais dinheiro.", tips: ["Empresa séria não cobra para você trabalhar", "Se pagou, avise o banco e registre ocorrência"] },
   };
 
-  const order = ["rafael", "marta", "hacker", "tadeu", "cleiton", "bia", "mae", "rose", "vovo", "davi", "promo", "carol", "larissa", "antonio", "suporte", "fernanda", "jorge", "lucas", "vaga", "junior"];
+  const order = ["rafael", "marta", "hacker", "tadeu", "cleiton", "bia", "mae", "rose", "vovo", "davi", "promo", "carol", "larissa", "antonio", "suporte", "fernanda", "jorge", "lucas", "vaga", "junior",
+    "gabriel", "tigrinho", "paulo", "anaclara", "marcos", "thiago", "julia", "celia", "kaua", "osvaldo"];
 
   const guide = {
     id: "oslab", name: "OSLab Dicas 🤖", avatar: "assets/learning/mascot/oslab-mascot-neutral.png", about: "Sua trilha de Segurança Digital", phone: "OSLab",
@@ -478,6 +660,8 @@
       "Esta é a trilha Segurança Digital. A cada minuto, uma pessoa nova vai te mandar mensagem.",
       "Algumas precisam da sua ajuda no Windows e na internet. Outras… não são quem dizem ser 👀",
       "Você sempre terá 3 respostas para escolher. Leia com calma antes de responder. Boa sorte! 🛡️",
+      "👥 Tem também o grupo da turma, “2º Técnico em Manutenção e Suporte de Informática”, logo abaixo desta conversa. Ele é em tempo real: todo colega que abrir o WhatsApp aparece lá!",
+      "Use o grupo para pedir e dar dicas. Respeito sempre e nada de dados pessoais 🙏 Manda um “oi” para a turma agora 👋",
     ],
   };
 

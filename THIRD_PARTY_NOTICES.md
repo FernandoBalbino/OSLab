@@ -128,3 +128,19 @@ O OSLab não é afiliado nem endossado pelo WhatsApp ou pela Meta. A interface �
 | `assets/whatsapp/media/webcam-pug.webp` | [@charlesdeluvio](https://unsplash.com/@charlesdeluvio) | `https://images.unsplash.com/photo-1541364983171-a8ba01e95cfc` |
 | `assets/whatsapp/media/bomdia.webp` | [@aaronburden](https://unsplash.com/@aaronburden) | `https://images.unsplash.com/photo-1533523611631-15e4ef69be08` |
 | `assets/whatsapp/media/milho.webp` | [@bamin](https://unsplash.com/@bamin) | `https://images.unsplash.com/photo-1623066798929-946425dbe1b0` |
+| `assets/whatsapp/people/gabriel.webp` | [@josiasegl](https://unsplash.com/@josiasegl) | `https://images.unsplash.com/photo-1757744705465-ea08b0ddc38a` |
+| `assets/whatsapp/people/marcos.webp` | [@dmnphoto](https://unsplash.com/@dmnphoto) | `https://images.unsplash.com/photo-1583692331507-fc0bd348695d` |
+| `assets/whatsapp/people/kaua.webp` | [@lauraintacoma](https://unsplash.com/@lauraintacoma) | `https://images.unsplash.com/photo-1602896441343-ed0dc62ed65e` |
+| `assets/whatsapp/people/anaclara.webp` | [@nolanrmanning](https://unsplash.com/@nolanrmanning) | `https://images.unsplash.com/photo-1662850886700-4ec19bd30d11` |
+| `assets/whatsapp/people/julia.webp` | [@ritamalcok](https://unsplash.com/@ritamalcok) | `https://images.unsplash.com/photo-1595085610896-fb31cfd5d4b7` |
+| `assets/whatsapp/people/celia.webp` | [@michaelrmims](https://unsplash.com/@michaelrmims) | `https://images.unsplash.com/photo-1526080652727-5b77f74eacd2` |
+| `assets/whatsapp/people/osvaldo.webp` | [@popovski](https://unsplash.com/@popovski) | `https://images.unsplash.com/photo-1468218457742-ee484fe2fe4c` |
+| `assets/whatsapp/people/paulo.webp` | [@epartner](https://unsplash.com/@epartner) | `https://images.unsplash.com/photo-1687377559195-87aa52e57acb` |
+| `assets/whatsapp/people/thiago.webp` | [@i_bekkers](https://unsplash.com/@i_bekkers) | `https://images.unsplash.com/photo-1515349541556-ef8cc276e382` |
+| `assets/whatsapp/people/tigrinho.webp` | [@yapics](https://unsplash.com/@yapics) | `https://images.unsplash.com/photo-1627667928346-5fc86d099a5c` |
+
+Também são desenhos próprios do OSLab: `assets/whatsapp/media/tigrinho-print.svg`, `assets/whatsapp/media/meme-blur.svg` (sem foto de pessoa) e `assets/whatsapp/people/turma.svg`.
+
+## Servidor do grupo da turma
+
+- `server/zap-group/` usa a biblioteca [ws](https://github.com/websockets/ws) (licença MIT) para o WebSocket.

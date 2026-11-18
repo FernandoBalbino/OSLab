@@ -499,5 +499,19 @@
   "./assets/whatsapp/people/vaga.svg",
   "./assets/whatsapp/people/vovo.webp",
   "./assets/whatsapp/doodle-light.svg",
-  "./assets/whatsapp/doodle-dark.svg"
+  "./assets/whatsapp/doodle-dark.svg",
+  "./js/zap/zap-group.js",
+  "./assets/whatsapp/media/meme-blur.svg",
+  "./assets/whatsapp/media/tigrinho-print.svg",
+  "./assets/whatsapp/people/anaclara.webp",
+  "./assets/whatsapp/people/celia.webp",
+  "./assets/whatsapp/people/gabriel.webp",
+  "./assets/whatsapp/people/julia.webp",
+  "./assets/whatsapp/people/kaua.webp",
+  "./assets/whatsapp/people/marcos.webp",
+  "./assets/whatsapp/people/osvaldo.webp",
+  "./assets/whatsapp/people/paulo.webp",
+  "./assets/whatsapp/people/thiago.webp",
+  "./assets/whatsapp/people/tigrinho.webp",
+  "./assets/whatsapp/people/turma.svg"
 ]

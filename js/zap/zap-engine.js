@@ -31,7 +31,8 @@
       facebook: { session: null, email: "junior.silva@gmail.com", password: "junior123", passwordChanged: false, spamDeleted: false, twoFactor: false, pendingCode: null },
     };
   }
-  const blank = () => ({ version: 1, theme: null, startedAt: null, released: 0, lastReleaseAt: 0, chats: {}, sites: initialSites(), seq: 0, finished: false });
+  const SETTINGS = () => ({ twoStep: false, lastSeen: "all", photo: "all" });
+  const blank = () => ({ version: 1, theme: null, profile: null, phone: null, settings: SETTINGS(), flags: {}, startedAt: null, released: 0, lastReleaseAt: 0, chats: {}, sites: initialSites(), seq: 0, finished: false });
 
   let state = blank();
   try {
@@ -39,6 +40,8 @@
     if (saved?.version === 1) state = saved;
   } catch (_) { /* armazenamento indisponível: a trilha roda só nesta sessão */ }
   Object.values(state.chats).forEach((chat) => { chat.typing = null; });
+  state.settings = { ...SETTINGS(), ...(state.settings || {}) };
+  state.flags = state.flags || {};
 
   function save() { try { global.localStorage.setItem(KEY, JSON.stringify(state)); } catch (_) { /* sem persistência */ } }
   function emit(type, detail = {}) {
@@ -62,9 +65,12 @@
   function newChat(id) {
     return { id, messages: [], queue: [], view: null, lastView: null, step: null, status: "active", outcome: null, unread: 0, typing: null, blocked: false, lastAt: Date.now() };
   }
+  function firstName() { return String(state.profile?.name || "").split(" ")[0] || "você"; }
+  const fill = (text) => String(text).replace(/\{nome\}/g, firstName());
   function push(id, from, message) {
     const chat = state.chats[id];
     const entry = { id: ++state.seq, from, at: Date.now(), ...asMessage(message) };
+    if (from !== "me") { if (entry.text) entry.text = fill(entry.text); if (entry.caption) entry.caption = fill(entry.caption); }
     if (from === "me") entry.status = "sent";
     chat.messages.push(entry);
     chat.lastAt = entry.at;
@@ -93,27 +99,28 @@
     if (!chat.queue.length) return;
     pumping.add(id);
     const item = chat.queue[0];
-    const finishItem = (pause = 380) => {
-      chat.queue.shift();
-      save();
-      later(() => { pumping.delete(id); pump(id); }, chat.queue.length ? pause : 0);
-    };
+    // Tira o item da fila ANTES de mostrar o efeito dele: a tela consulta a fila para saber se
+    // ainda tem alguém digitando; com o item lá, as respostas só apareciam ao reabrir a conversa.
+    const take = () => { chat.queue.shift(); save(); };
+    const next = (pause = 380) => later(() => { pumping.delete(id); pump(id); }, chat.queue.length ? pause : 0);
     if (item.ctl) {
+      if (item.ctl === "wait") { later(() => { take(); next(0); }, item.ms || 0); return; }
+      take();
       runControl(id, item);
-      if (item.ctl === "wait") { later(() => finishItem(0), item.ms || 0); return; }
-      finishItem(0);
+      next(0);
       return;
     }
     const message = asMessage(item);
     const delay = typingDelay(message);
     chat.messages.forEach((entry) => { if (entry.from === "me") entry.status = "read"; });
-    if (!delay) { push(id, message.t === "system" || message.t === "call" ? "system" : "them", message); finishItem(); return; }
+    if (!delay) { take(); push(id, message.t === "system" || message.t === "call" ? "system" : "them", message); next(); return; }
     chat.typing = message.t === "audio" ? "audio" : "text";
     emit("typing", { chatId: id, typing: chat.typing });
     later(() => {
       chat.typing = null;
+      take();
       push(id, "them", message);
-      finishItem();
+      next();
     }, delay);
   }
   function runControl(id, item) {
@@ -152,7 +159,17 @@
         }
         return result;
       },
+      net() {
+        const net = O.network?.getSnapshot?.() || {};
+        return { ip: net.ip || "192.168.1.100", gateway: net.gateway || "192.168.1.1", mask: net.mask || "255.255.255.0" };
+      },
+      freeze() {
+        state.flags.freezeAt = Date.now();
+        save();
+        O.shell?.openTextEditor?.({ frozen: true, missionId: "zap-travado" });
+      },
       seedFile, seedTrashedFile, seedNestedFile, folderCheck, netflixCheck, facebookCheck,
+      zapSecurityCheck, exeCheck, frozenCheck, vpnCheck, userCheck, recycleCheck,
       sms(text) { emit("sms", { text }); },
     };
   }
@@ -200,6 +217,7 @@
     chat.view = null;
     // Bloquear, ligar e clicar em link são ações: só "envia" mensagem quem tem texto ou anexo.
     if (def.send || def.text) push(id, "me", def.send || { t: "text", text: def.text });
+    def.run?.(ctx());
     if (def.verify) {
       const failures = def.verify(ctx());
       if (failures?.length) { followUp(id, { stay: true }, failures); return { ok: true, verified: false }; }
@@ -344,6 +362,34 @@
     return missing.length ? ["Olhei aqui e ainda falta 👀", ...missing] : null;
   }
 
+  function zapSecurityCheck() {
+    const missing = [];
+    if (!state.settings.twoStep) missing.push("• a confirmação em duas etapas ainda está desligada");
+    if (state.settings.lastSeen === "all") missing.push("• o visto por último ainda aparece para todos");
+    if (state.settings.photo === "all") missing.push("• sua foto do perfil ainda aparece para todos");
+    return missing.length ? ["Conferi aqui e ainda falta 👀", ...missing] : null;
+  }
+  function exeCheck() {
+    return zapItems("paulo").some((item) => !item.trashedAt) ? ["O arquivo ainda está em Downloads 👀", "Clica com o botão direito em comprovante_pix.pdf.exe e escolhe Excluir"] : null;
+  }
+  function frozenCheck() {
+    if (!state.flags.freezeAt) return ["Você ainda nem abriu o arquivo 😅", "Clica em “Abrir o arquivo que ela mandou”"];
+    if (O.shell?.isWindowOpen?.("texteditor")) return ["O Editor de Texto continua aberto aqui 👀", "Ctrl + Shift + Esc → Editor de Texto → Finalizar tarefa"];
+    return null;
+  }
+  function vpnCheck() {
+    return O.vpn?.getSnapshot?.()?.connected ? null : ["Aqui ainda aparece que a sua VPN está desligada 🤔", "Abre o app VPN na Área de Trabalho e clica em Conectar"];
+  }
+  function userCheck() {
+    const pedro = (O.users?.list?.() || []).find((account) => norm(account.displayName) === "pedro" || norm(account.username) === "pedro");
+    if (!pedro) return ["Não achei nenhuma conta chamada Pedro no seu computador 🤔", "Configurações ⚙️ → Contas → Outros usuários → Adicionar conta"];
+    if (pedro.role === "administrator") return ["A conta do Pedro está como Administrador 😬", "Tem que ser Usuário padrão, senão ele instala o que quiser"];
+    return null;
+  }
+  function recycleCheck() {
+    return [...zapItems("kaua"), ...zapItems("kaua-2")].length ? ["Ainda tem a gravação antiga ocupando espaço na sua Lixeira 👀", "Abre a Lixeira e clica em Esvaziar Lixeira"] : null;
+  }
+
   function reset() {
     timers.forEach((id) => global.clearTimeout(id));
     timers.clear();
@@ -362,6 +408,31 @@
     isStarted: () => Boolean(state.startedAt),
     // Tema escolhido pelo aluno no modal de boas-vindas ("light" | "dark"); reiniciar a trilha pergunta de novo.
     theme: () => state.theme || null,
+    // Perfil do aluno no WhatsApp: nome escolhido e número aleatório de Maceió (DDD 82).
+    profile: () => (state.profile ? clone(state.profile) : null),
+    phone() {
+      if (!state.phone) {
+        const digits = (count) => Array.from({ length: count }, () => Math.floor(Math.random() * 10)).join("");
+        state.phone = `+55 82 9${digits(4)}-${digits(4)}`;
+        save();
+      }
+      return state.phone;
+    },
+    setProfile(name) {
+      const clean = String(name || "").replace(/[<>]/g, "").replace(/\s+/g, " ").trim().slice(0, 30);
+      if (clean.length < 2) return false;
+      state.profile = { name: clean, phone: this.phone() };
+      emit("profile", { profile: clone(state.profile) });
+      return true;
+    },
+    settings: () => clone(state.settings),
+    setSetting(key, value) {
+      if (key === "twoStep") state.settings.twoStep = Boolean(value);
+      else if (["lastSeen", "photo"].includes(key) && ["all", "contacts", "nobody"].includes(value)) state.settings[key] = value;
+      else return false;
+      emit("settings", { key, value });
+      return true;
+    },
     setTheme(theme) { state.theme = theme === "dark" ? "dark" : "light"; emit("theme", { theme: state.theme }); },
     setFocus(id) {
       focusedChat = id || null;

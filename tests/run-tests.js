@@ -53,6 +53,11 @@ test("trilha WhatsApp libera 20 contatos, confere as tarefas e ensina com os gol
   assert.equal(focused.status, 0, focused.stderr || focused.stdout);
 });
 
+test("grupo da turma (servidor do Render) recusa origens estranhas e repassa mensagens", () => {
+  const focused = spawnSync(process.execPath, ["--test", path.join(root, "tests/zap-group-server.test.mjs")], { encoding: "utf8" });
+  assert.equal(focused.status, 0, focused.stderr || focused.stdout);
+});
+
 test("todas as referências de assets estáticos existem", () => {
   const sources = [path.join(root, "index.html"), path.join(root, "styles.css"), ...filesIn(path.join(root, "css"), ".css"), path.join(root, "script.js"), ...filesIn(path.join(root, "js"), ".js")];
   const missing = new Set();

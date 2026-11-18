@@ -84,17 +84,25 @@ Vertex (notebook) e Sonora (chip de som) são marcas fictícias. Rota direta: `i
 
 ## Segurança Digital no WhatsApp
 
-A trilha começa quando o aluno abre o **WhatsApp** na área de trabalho. Na primeira vez, um modal pede o tema (claro ou escuro) com uma miniatura de cada; dá para trocar depois na engrenagem ⚙️. A interface segue o padrão do WhatsApp Web.
+A trilha começa quando o aluno abre o **WhatsApp** na área de trabalho. Na primeira vez ele digita o **nome** que vai aparecer para a turma, recebe um **número aleatório de Maceió** (+55 82 9XXXX-XXXX) e escolhe o tema (claro ou escuro), com uma miniatura de cada. A interface segue o padrão do WhatsApp Web.
 
-A cada **60 segundos** chega uma pessoa nova (20 no total), com animação de "digitando…", notificação do Windows e selo de não lidas. O aluno sempre escolhe entre **3 respostas**, e a escolha é "digitada" na caixa de mensagem. O robô **OSLab Dicas** comenta cada conversa encerrada e, no fim, mostra um relatório com medalha.
+A cada **60 segundos** chega uma pessoa nova (30 no total), com animação de "digitando…", notificação do Windows e selo de não lidas. Algumas falas usam o nome do aluno. Ele sempre escolhe entre **3 respostas**, e a escolha é "digitada" na caixa de mensagem. O robô **OSLab Dicas** comenta cada conversa encerrada e, no fim, mostra um relatório com medalha.
 
-| Pedem ajuda no computador (11) | Inesperados e golpes (9) |
+| Pedem ajuda no computador (19) | Inesperados e golpes (11) |
 | --- | --- |
-| Rafael: senha do Wi-Fi conectado · Dona Marta: planilha na Lixeira · Prof. Tadeu: arquivo perdido (pesquisa do Explorador) · Bia: imagem de capivara do Google · Tia Rose: lista no Word (.docx) · Davi: espaço livre do disco · Carol: trocar a senha da Netflix e sair de todos os aparelhos · Seu Antônio: criar perfil na Netflix · Fernanda: pasta Currículos e mover arquivo · Lucas: Win+Shift+S e Ctrl+Shift+Esc · Júnior: Facebook hackeado (apagar post, trocar senha, dois fatores) | Hacker que diz ter fotos da webcam e pede PIX de R$ 100 · Cleiton querendo o número da amiga · golpe do número novo da "mãe" · corrente falsa da vovó · prêmio falso com link · perfil falso pedindo localização · falso suporte pedindo código · número errado da pamonharia · vaga que cobra taxa |
+| Rafael: senha do Wi-Fi conectado · Dona Marta: planilha na Lixeira · Prof. Tadeu: arquivo perdido (pesquisa do Explorador) · Bia: imagem de capivara do Google · Tia Rose: lista no Word (.docx) · Davi: espaço livre do disco · Carol: trocar a senha da Netflix e sair de todos os aparelhos · Seu Antônio: criar perfil na Netflix · Fernanda: pasta Currículos e mover arquivo · Lucas: Win+Shift+S e Ctrl+Shift+Esc · Júnior: Facebook hackeado (apagar post, trocar senha, dois fatores) · Gabriel: confirmação em duas etapas e privacidade no próprio WhatsApp · Seu Paulo: `comprovante_pix.pdf.exe` disfarçado · Ana Clara: programa travado no Gerenciador de Tarefas · Marcos: IPv4 pelo `ipconfig` · Júlia: ligar a VPN em Wi-Fi público · Madrinha Célia: conta "Pedro" como usuário padrão · Kauã: esvaziar a Lixeira · Seu Osvaldo: atender um cliente irritado com calma e diagnóstico simples | Hacker que diz ter fotos da webcam e pede PIX · Cleiton querendo o número da amiga · golpe do número novo da "mãe" · corrente falsa da vovó · prêmio falso com link · perfil falso pedindo localização · falso suporte pedindo código · número errado da pamonharia · vaga que cobra taxa · "Rei do Tigrinho" (aposta) · colega pedindo para espalhar meme de outro aluno (cyberbullying) |
 
-As tarefas são conferidas no estado do OSLab: anexos pelo seletor "Abrir" (arquivos reais do Explorador), senha do Wi-Fi conectado, espaço do disco, pasta criada, contas da Netflix (`netflix.com/login`) e do Facebook (`facebook.com`) simuladas no Chrome e a busca de imagens do Google ("capivara"). O Word agora salva um `.docx` em Documentos.
+As tarefas são conferidas no estado do OSLab: anexos pelo seletor "Abrir" (arquivos reais do Explorador), senha do Wi-Fi, espaço do disco, pastas, Lixeira, contas de usuário, VPN, Gerenciador de Tarefas, `ipconfig`, as Configurações do próprio WhatsApp, contas da Netflix (`netflix.com/login`) e do Facebook (`facebook.com`) simuladas no Chrome e a busca de imagens do Google ("capivara"). O Word salva um `.docx` em Documentos.
 
-Para testar sem esperar um minuto por pessoa, abra `index.html?zapintervalo=5` (segundos, de 3 a 600). O menu ⋮ do WhatsApp reinicia a trilha para o próximo aluno. Código: `js/zap/`, `js/apps/zap-app.js` e `css/zap.css`; testes em `tests/zap-trail.test.mjs`. Créditos das fotos em `THIRD_PARTY_NOTICES.md`.
+### Grupo da turma em tempo real (Render)
+
+Na lista aparece o grupo **2º Técnico em Manutenção e Suporte de Informática**: um chat de verdade entre todos os alunos que estão com o WhatsApp aberto, com nome e número de cada um. O robô avisa que o grupo existe e convida a mandar um "oi". É o único pedaço que usa internet: o servidor fica em `server/zap-group/` (Node + `ws`, sem banco de dados, guarda só as últimas 60 mensagens na memória) e é publicado no Render pelo `render.yaml`. Sem internet ou com o servidor dormindo, o grupo aparece como "sem conexão" e a trilha continua igual.
+
+- O navegador só conecta enquanto a janela do WhatsApp está aberta e reconecta sozinho com espera crescente.
+- No plano gratuito do Render o servidor dorme após 15 minutos sem uso; o primeiro aluno pode esperar cerca de 1 minuto até o grupo ficar online.
+- O servidor só aceita a página publicada no GitHub Pages (e localhost/rede local para testes), limita o tamanho das mensagens e o ritmo de envio.
+
+Para testar sem esperar um minuto por pessoa, abra `index.html?zapintervalo=5` (segundos, de 3 a 600). Para testar o grupo com um servidor local: `cd server/zap-group && npm install && npm start` e abra `index.html?zapgrupo=ws://localhost:8787`. As Configurações ⚙️ do WhatsApp têm "Reiniciar a trilha" para o próximo aluno. Código: `js/zap/`, `js/apps/zap-app.js` e `css/zap.css`; testes em `tests/zap-trail.test.mjs` e `tests/zap-group-server.test.mjs`. Créditos das fotos em `THIRD_PARTY_NOTICES.md`.
 
 ## Missões
 
@@ -223,7 +231,7 @@ O OSLab é uma PWA instalável. Após o primeiro acesso completo, o Service Work
 
 No Chrome ou Chromebook, use o menu do navegador → **Instalar OSLab** (ou **Criar atalho**). O progresso das missões, dos exercícios e as preferências continuam salvos no `localStorage` do dispositivo. O navegador, o Terminal e todas as funções internas usam dados simulados locais e continuam disponíveis sem internet.
 
-O cache atual é `oslab-offline-v50`. Ao alterar recursos, incremente `CACHE_VERSION` em `service-worker.js`; versões antigas são excluídas automaticamente e o site oferece a atualização quando a nova versão está pronta.
+O cache atual é `oslab-offline-v51`. Ao alterar recursos, incremente `CACHE_VERSION` em `service-worker.js`; versões antigas são excluídas automaticamente e o site oferece a atualização quando a nova versão está pronta.
 
 ## Créditos
 
