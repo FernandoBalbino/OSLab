@@ -639,7 +639,8 @@
     screen.classList.add("is-boot");
     loginScreen.classList.add("is-booting");
     const status = screen.querySelector("[data-boot-status]");
-    const percent = (done, total) => (total ? Math.min(100, Math.round(done / total * 100)) : 0);
+    let shown = 0; // a porcentagem só sobe (mensagens podem chegar fora de ordem)
+    const percent = (done, total) => (shown = Math.max(shown, total ? Math.min(100, Math.round(done / total * 100)) : 0));
     const progress = ({ phase, done = 0, total = 0 }) => {
       if (phase === "update") { screen.classList.add("is-updating"); status.innerHTML = `Trabalhando nas atualizações<br>${percent(done, total)}% concluído<br>Não desligue o computador.`; }
       else status.textContent = `Preparando o OSLab ${percent(done, total)}%`;
