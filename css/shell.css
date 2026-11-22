@@ -122,3 +122,42 @@
 @media (prefers-reduced-motion: reduce) {
   .taskbar-button.is-open::after { transition: none; }
 }
+
+/* Energia no padrão do Windows 11: Suspender, Desligar e Reiniciar com ícones */
+.power-menu { width: 168px; }
+.power-menu button { display: flex; align-items: center; gap: 12px; padding: 9px 12px; font-size: 13px; }
+.power-menu .tm-ic { width: 16px; height: 16px; background: currentColor; -webkit-mask-size: contain; mask-size: contain; -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; -webkit-mask-position: center; mask-position: center; }
+
+/* telas de Reiniciando, Desligando e inicialização: fundo preto e pontinhos brancos girando */
+.power-screen { position: fixed; inset: 0; z-index: 10000; display: grid; place-content: center; justify-items: center; gap: 22px; background: #000; color: #fff; font: 300 22px "Segoe UI Variable Display", "Segoe UI", system-ui, sans-serif; animation: power-fade .35s ease-out; }
+.power-screen.is-hidden { display: none; }
+.power-screen p { margin: 0; }
+.power-screen.is-boot { gap: 0; }
+.boot-logo { width: 150px; height: 150px; object-fit: contain; margin-bottom: 30vh; }
+.power-screen.is-boot .win-spinner { position: absolute; bottom: 18vh; left: 50%; transform: translateX(-50%); }
+.power-screen.is-off { cursor: default; }
+.power-screen.is-off small { color: rgba(255,255,255,.55); font-size: 14px; }
+.power-screen.is-sleep small { opacity: 0; transition: opacity .6s .8s; }
+.power-screen.is-sleep:hover small { opacity: 1; }
+.power-on { display: grid; width: 92px; height: 92px; place-items: center; border: 2px solid rgba(255,255,255,.35); border-radius: 50%; background: transparent; color: #fff; cursor: pointer; transition: border-color .2s, transform .2s; }
+.power-on:hover { border-color: #4cc2ff; color: #4cc2ff; transform: scale(1.05); }
+.power-on .tm-ic { width: 38px; height: 38px; background: currentColor; -webkit-mask-size: contain; mask-size: contain; -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; }
+.win-spinner { position: relative; width: 48px; height: 48px; }
+.win-spinner i { position: absolute; inset: 0; animation: win-orbit 4.2s infinite; }
+.win-spinner i::before { position: absolute; top: 0; left: 50%; width: 5px; height: 5px; border-radius: 50%; background: #fff; content: ""; transform: translateX(-50%); }
+.win-spinner i:nth-child(2) { animation-delay: .24s; }
+.win-spinner i:nth-child(3) { animation-delay: .48s; }
+.win-spinner i:nth-child(4) { animation-delay: .72s; }
+.win-spinner i:nth-child(5) { animation-delay: .96s; }
+@keyframes win-orbit {
+  0% { transform: rotate(225deg); opacity: 1; animation-timing-function: ease-out; }
+  7% { transform: rotate(345deg); animation-timing-function: linear; }
+  30% { transform: rotate(455deg); animation-timing-function: ease-in-out; }
+  39% { transform: rotate(690deg); animation-timing-function: linear; }
+  70% { transform: rotate(815deg); opacity: 1; animation-timing-function: ease-out; }
+  75% { transform: rotate(945deg); animation-timing-function: ease-out; }
+  76%, 100% { transform: rotate(945deg); opacity: 0; }
+}
+@keyframes power-fade { from { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .win-spinner i { animation-duration: 8s; } .power-screen { animation: none; } }
+.power-screen.is-boot { animation: none; }

@@ -20,7 +20,7 @@ Laboratório virtual estático para alunos praticarem conceitos de Sistemas Oper
 - aplicativo Exercícios com 10 diagnósticos de Sistema e Rede, progressão sequencial, ajudante robô, dicas passo a passo sob demanda, testes finais e restauração segura do ambiente;
 - laboratório VPN com sete missões práticas, servidores comerciais e corporativos, indicador global, sites simulados, dicas progressivas, revisão final e modo professor;
 - trilha **Instalação e Desinstalação** com 12 missões, Google local, downloads `.exe` de 60 segundos, instaladores em etapas, atalhos sincronizados, pacote Office fictício e Painel de Controle clássico;
-- Gerenciador de Tarefas inspirado no Windows 11, com processos dinâmicos, pesquisa por nome/PID, seleção, ordenação, grupos, modo de eficiência e encerramento de tarefas;
+- Gerenciador de Tarefas no padrão do Windows 11 (tema escuro), com Processos agrupados, Desempenho, Aplicativos de inicialização, Detalhes, Serviços, pesquisa por nome/PID, modo de eficiência e Reiniciar tarefa;
 - menu de contexto inspirado no Windows 11, com submenus de exibição, classificação e criação;
 - menu de contexto próprio para arquivos e pastas, com ações de abrir, renomear, copiar caminho e excluir;
 - sistema de arquivos hierárquico em Área de Trabalho, Documentos, Downloads e Imagens, com criar, renomear, recortar, copiar, colar, mover e pesquisa recursiva;
@@ -81,6 +81,30 @@ Peças novas:
 - dispositivos de som e câmera no Gerenciador, com Habilitar e Desabilitar.
 
 Vertex (notebook) e Sonora (chip de som) são marcas fictícias. Rota direta: `index.html?app=audiolab`. Código: `js/audio/`, `js/apps/audio-app.js` e `css/audio.css`; testes em `tests/audio-lab.test.mjs`.
+
+## Gerenciador de Tarefas
+
+Trilha com 12 missões práticas, do básico ao intermediário. O robô mostra em todas as missões uma animação curta de como abrir o Gerenciador: botão direito (toque com dois dedos no touchpad do Chromebook) em um **espaço vazio** da barra de tarefas › **Gerenciador de Tarefas**. No navegador, Ctrl+Shift+Esc abre o gerenciador do próprio Chrome, por isso a trilha ensina o caminho pela barra.
+
+| Unidade | Missões |
+| --- | --- |
+| Abrir e entender | 1. Abrir pela barra de tarefas · 2. Aplicativos, segundo plano e processos do Windows |
+| Programas travados | 3. Cinco programas abertos: o Editor de Texto trava no X (Não respondendo) e tudo é finalizado pelo Gerenciador · 4. Achar o processo certo pelo PID · 5. Menu Iniciar parado: Reiniciar o Windows Explorer |
+| Computador lento | 6. CPU em 100% · 7. Memória cheia (o Chrome não abre) · 8. Modo de eficiência sem fechar o download · 9. Ler processador, memória e disco em Desempenho |
+| Inicialização | 10. O Discord abre sozinho: reiniciar, ver, desabilitar e reiniciar de novo · 11. Inicialização lenta (impacto Alto) · 12. Desafio final: o chamado da secretaria |
+
+Peças novas:
+- Gerenciador de Tarefas refeito no padrão do Windows 11 (tema escuro ou claro): Processos agrupados, mapa de calor, Desempenho com gráficos, Histórico de aplicativos, Aplicativos de inicialização (Editor, Status, Impacto), Usuários, Detalhes com PID, Serviços, Executar nova tarefa, menu do botão direito, Modo de eficiência e Reiniciar tarefa no Windows Explorer;
+- menu Energia igual ao do Windows 11 (Suspender, Desligar, Reiniciar) com as telas pretas de "Reiniciando", "Desligando" e o logotipo com os pontinhos ao ligar. Reiniciar e Desligar recarregam o OSLab; a missão ativa e os programas de inicialização ficam salvos e continuam depois de entrar com a senha;
+- programas de inicialização de verdade: os habilitados abrem ao entrar na conta (o Discord abre uma janela; os outros rodam em segundo plano);
+- qualquer janela pode travar: título "(Não respondendo)", janela esbranquiçada e o X sem efeito;
+- botão direito em um ícone da barra de tarefas abre a lista do aplicativo (como no Windows 11); o Gerenciador só aparece no espaço vazio.
+
+Se o aluno usar Sair ou Suspender quando a missão pede para reiniciar, o robô explica a diferença. Reiniciar no meio das missões 3 a 8 recria o problema e avisa por quê. Rota direta: `index.html?app=tasklab`. Código: `js/taskmgr/`, `js/apps/taskmgr-app.js`, `js/apps/task-manager.js`, `js/core/process-manager.js`, `css/taskmgr.css` e `css/task-manager.css`; testes em `tests/taskmgr-lab.test.mjs`.
+
+## Google Chrome
+
+A Nova guia segue o Chrome atual: logotipo oficial do Google, caixa de pesquisa com microfone e Lens, atalhos com os ícones reais dos sites simulados (Gmail, YouTube, Netflix, Drive, Spotify, Discord, Outlook e Yahoo) e o botão **Personalizar o Chrome**. Na primeira vez que o Chrome abre, o aluno escolhe o tema claro ou escuro (com miniaturas), e a escolha fica salva. Todas as páginas de resultados usam o cabeçalho do Google (logotipo, caixa com limpar, teclado, microfone e Lens, abas Tudo, Imagens, Vídeos…). Os botões de pesquisa pronta foram retirados: o aluno digita a própria pesquisa.
 
 ## Segurança Digital no WhatsApp
 
@@ -187,7 +211,7 @@ As preferências, a árvore de arquivos e a Lixeira ficam reunidas na chave vers
 
 ## Gerenciador de Tarefas
 
-Clique com o botão direito na barra de tarefas e escolha **Gerenciador de Tarefas**. A lista usa processos fictícios do Windows com consumo baixo e adiciona em tempo real os aplicativos abertos. Processos essenciais são protegidos; aplicativos podem ser finalizados e têm sua janela encerrada pelo controlador central.
+Clique com o botão direito em um espaço vazio da barra de tarefas e escolha **Gerenciador de Tarefas**. A lista usa processos fictícios do Windows com consumo baixo e adiciona em tempo real os aplicativos abertos. Processos essenciais são protegidos; aplicativos podem ser finalizados e têm sua janela encerrada pelo controlador central.
 
 ## Arquitetura
 

@@ -48,6 +48,11 @@ test("trilha de Som tem 12 missões e separa driver, desabilitado e mudo", () =>
   assert.equal(focused.status, 0, focused.stderr || focused.stdout);
 });
 
+test("trilha do Gerenciador de Tarefas tem 12 missões, reinício e programas de inicialização", () => {
+  const focused = spawnSync(process.execPath, ["--test", path.join(root, "tests/taskmgr-lab.test.mjs")], { encoding: "utf8" });
+  assert.equal(focused.status, 0, focused.stderr || focused.stdout);
+});
+
 test("trilha WhatsApp libera 20 contatos, confere as tarefas e ensina com os golpes", () => {
   const focused = spawnSync(process.execPath, ["--test", path.join(root, "tests/zap-trail.test.mjs")], { encoding: "utf8" });
   assert.equal(focused.status, 0, focused.stderr || focused.stdout);
@@ -125,7 +130,8 @@ test("processos essenciais são protegidos e aplicativos podem encerrar", () => 
   } } };
   vm.runInNewContext(fs.readFileSync(path.join(root, "js/core/process-manager.js"), "utf8"), context);
   const api = context.window.OSLab.processManager;
-  assert.ok(api.getProcesses().every((entry) => entry.icon && entry.memory < 100));
+  // processos do sistema com consumo realista do Windows 11, mas nenhum parece "culpado" (< 400 MB, < 1% de CPU)
+  assert.ok(api.getProcesses().every((entry) => entry.icon && entry.memory < 400 && entry.cpu < 1));
   assert.equal(api.endProcess(136).reason, "protected");
   const app = api.createProcess({ appId: "texteditor", windowId: "texteditor", name: "Editor de Texto" });
   assert.equal(api.endProcess(app.pid, { reason: "task-manager" }).ok, true);

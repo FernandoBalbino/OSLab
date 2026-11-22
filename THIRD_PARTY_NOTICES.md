@@ -23,6 +23,15 @@ O OSLab não é afiliado à Microsoft. A interface é uma simulação educaciona
 - Licença: MIT
 - Arquivo de licença incluído: `assets/learning/icons/LICENSE.txt`
 - Uso no OSLab: ícones específicos das trilhas de Missões e Exercícios, estados de progresso e ações do assistente educacional.
+- Também em `assets/icons/taskmanager/fluent/` (cópia do pacote `@fluentui/svg-icons` 1.1.347, licença em `assets/icons/taskmanager/fluent/LICENSE.txt`): menu lateral e comandos do Gerenciador de Tarefas, cursor da animação "como abrir o Gerenciador" e ícones do menu Energia.
+
+## Google Material Symbols
+
+- Projeto original: https://github.com/google/material-design-icons (pacote `@material-symbols/svg-400` 0.49.0)
+- Autor/equipe: Google
+- Licença: Apache 2.0
+- Arquivo de licença incluído: `assets/browser/google/LICENSE-material-symbols.txt`
+- Uso no OSLab: ícones da barra do Chrome, da Nova guia e da página de resultados do Google (voltar, avançar, recarregar, estrela, aplicativos, teclado, fechar, temas).
 
 ## Nunito Sans
 
@@ -86,6 +95,8 @@ O OSLab apresenta interfaces educacionais simuladas. Não é afiliado nem endoss
 | `assets/browser/firefox.png` | [Mozilla Firefox favicon](https://www.mozilla.org/media/img/favicons/firefox/browser/favicon-196x196.png) | Firefox é marca da Mozilla. Consulte as [diretrizes de marcas](https://www.mozilla.org/en-US/foundation/trademarks/policy/). A biblioteca de assets Mozilla Protocol é distribuída sob MPL 2.0, mas este arquivo foi obtido diretamente do site Mozilla. |
 | `assets/browser/brave-icon.png` | [Brave favicon](https://brave.com/static-assets/images/brave-favicon.png) | Brave é marca da Brave Software. |
 | `assets/browser/brave.png` | [Pacote oficial Brave](https://brave.com/static-assets/files/BrandBrave.zip), arquivo `Brave-Logos/light background/PNG/brave_color_lightbackground.png` | Logotipo completo para o card do museu. Consulte a [página de branding](https://brave.com/brave-branding-assets/). |
+| `assets/browser/google/googlelogo_color_272x92dp.png` e `googlelogo_light_color_272x92dp.png` | [Logotipo do Google](https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png) (versão clara e versão para fundo escuro) | Logotipo da página inicial e dos resultados do Google simulados. Google é marca do Google. |
+| `assets/browser/google/googlemic_color_24dp.png` e `lens_2023q2_48dp.png` | [Microfone](https://www.gstatic.com/images/branding/googlemic/2x/googlemic_color_24dp.png) e [Google Lens](https://www.gstatic.com/images/branding/product/2x/lens_2023q2_48dp.png) do gstatic | Ícones da caixa de pesquisa (apenas visuais). |
 | `assets/browser/opera.png` | [Pacote oficial Opera One 2026](https://media-production-opera-website.operacdn.com/media/documents/Opera_Logo.zip), arquivo `2. Marque/For Screen/PNG/Medium/Opera_Marque_med.png` | Opera é marca da Opera Norway AS. Consulte as [diretrizes Opera](https://brand.opera.com/opera-product-logos). |
 
 As marcas são usadas apenas para identificar os navegadores na atividade comparativa. As páginas visitadas, telas e dados exibidos no OSLab são simulações locais.

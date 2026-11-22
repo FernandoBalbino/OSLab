@@ -534,6 +534,7 @@
     renderDesktopFolders();
     renderInstalledStartApps();
     updateClock();
+    launchStartupApps();
     if (!missionsResumed) {
       missionsResumed = true;
       OSLab.missions.resumeAfterBoot();
@@ -581,10 +582,72 @@
     OSLab.events.emit("computer:locked", {}, "session");
   }
 
+  // ---------- energia: telas do Windows 11 (fundo preto, pontinhos girando) ----------
+  const BOOT_KEY = "oslab.boot.v1";
+  function powerScreen(markup) {
+    let screen = $("#power-screen");
+    if (!screen) { screen = document.createElement("div"); screen.id = "power-screen"; screen.className = "power-screen"; screen.setAttribute("role", "status"); document.body.appendChild(screen); }
+    screen.innerHTML = markup;
+    screen.classList.remove("is-hidden");
+    return screen;
+  }
+  const spinner = '<div class="win-spinner" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>';
+  /** Reiniciar e Desligar recarregam a página: a trilha ativa fica salva e continua depois de entrar de novo */
+  function powerOff(kind) {
+    closeFlyouts();
+    saveState();
+    OSLab.events.emit(kind === "restart" ? "power:restart" : "power:shutdown", {}, "powerMenu");
+    desktop.classList.add("is-hidden");
+    powerScreen(`${spinner}<p>${kind === "restart" ? "Reiniciando" : "Desligando"}</p>`);
+    window.setTimeout(() => {
+      if (kind === "restart") { sessionStorage.setItem(BOOT_KEY, JSON.stringify({ reason: "restart" })); window.location.reload(); return; }
+      const screen = powerScreen('<button type="button" class="power-on" data-power-on aria-label="Ligar o computador"><i class="tm-ic" style="-webkit-mask-image:url(assets/icons/taskmanager/fluent/power.svg);mask-image:url(assets/icons/taskmanager/fluent/power.svg)"></i></button><small>Computador desligado. Clique no botão para ligar.</small>');
+      screen.classList.add("is-off");
+      screen.querySelector("[data-power-on]").addEventListener("click", () => { sessionStorage.setItem(BOOT_KEY, JSON.stringify({ reason: "shutdown" })); window.location.reload(); }, { once: true });
+    }, 2600);
+  }
+  function sleepComputer() {
+    closeFlyouts();
+    OSLab.events.emit("power:sleep", {}, "powerMenu");
+    const screen = powerScreen("<small>Suspenso. Clique ou aperte uma tecla para acordar.</small>");
+    screen.classList.add("is-off", "is-sleep");
+    const wake = () => { screen.classList.add("is-hidden"); screen.classList.remove("is-off", "is-sleep"); document.removeEventListener("keydown", wake); lockSession(); };
+    window.setTimeout(() => { screen.addEventListener("click", wake, { once: true }); document.addEventListener("keydown", wake, { once: true }); }, 400);
+  }
+  /** tela de inicialização: logotipo do Windows e os pontinhos; demora mais com muitos programas de inicialização */
+  let bootInfo = null;
+  function bootScreen() {
+    try { bootInfo = JSON.parse(sessionStorage.getItem(BOOT_KEY) || "null"); } catch (_) { bootInfo = null; }
+    sessionStorage.removeItem(BOOT_KEY);
+    if (!bootInfo) return;
+    bootInfo.seconds = OSLab.processManager.estimateBootTime();
+    const screen = powerScreen(`<img class="boot-logo" src="logow11.png" alt="Windows" />${spinner}`);
+    screen.classList.add("is-boot");
+    loginScreen.classList.add("is-booting");
+    window.setTimeout(() => { screen.classList.add("is-hidden"); screen.classList.remove("is-boot"); loginScreen.classList.remove("is-booting"); passwordInput.focus(); }, Math.min(6500, 1400 + bootInfo.seconds * 90));
+  }
+  /** programas de inicialização abrem ao entrar na conta (não ao desbloquear) */
+  let sessionStarted = false;
+  function launchStartupApps() {
+    if (sessionStarted) return;
+    sessionStarted = true;
+    const enabled = OSLab.processManager.getStartupApps().filter((app) => app.enabled && !app.protected);
+    window.setTimeout(() => {
+      enabled.forEach((app) => {
+        if (app.launch && appDefinitions[app.launch]) openApp(app.launch, { fromStartup: true });
+        else OSLab.processManager.createProcess({ appId: `startup-${app.id}`, name: app.name, exe: `${app.id}.exe`, icon: app.icon, kind: "background", cpu: 0.4, memory: 64 + app.seconds * 9, publisher: app.publisher });
+      });
+      OSLab.events.emit("system:booted", { reason: bootInfo?.reason || "reload", startupApps: enabled.map((app) => app.id), seconds: OSLab.processManager.estimateBootTime(), restarted: Boolean(bootInfo) }, "session");
+      bootInfo = null;
+    }, 1200);
+  }
+
   function signOutSession(nextUserId = null) {
     closeFlyouts();
     Array.from(windows.values()).forEach((record) => closeWindow(record, { force: true, sessionSwitch: true }));
     fileClipboard = null;
+    sessionStarted = false;
+    OSLab.events.emit("session:signed-out", {}, "session");
     OSLab.users.signOut();
     if (nextUserId) OSLab.users.selectUser(nextUserId);
     desktop.classList.add("is-hidden");
@@ -933,11 +996,12 @@
 
   function renderTextEditor(record) {
     const title = record.options?.title || "Editor de Texto";
-    record.title.textContent = record.frozen ? `${title} — Não respondendo` : title;
+    record.title.textContent = record.frozen ? `${title} (Não respondendo)` : title;
+    record.element.classList.toggle("is-not-responding", Boolean(record.frozen));
     record.address.textContent = record.frozen ? "Não respondendo" : "Documento sem título";
     record.content.innerHTML = `<section class="editor-app ${record.frozen ? "is-frozen" : ""}">
       <header><button type="button" ${record.frozen ? "disabled" : ""}>Arquivo</button><button type="button" ${record.frozen ? "disabled" : ""}>Editar</button><span>${record.frozen ? "O aplicativo não está respondendo" : "Salvo localmente no simulador"}</span></header>
-      <textarea ${record.frozen ? "disabled" : ""} aria-label="Editor de texto" placeholder="Digite seu texto aqui...">${record.frozen ? "O Editor de Texto parou de responder. Use o Gerenciador de Tarefas para encerrar este processo." : ""}</textarea>
+      <textarea ${record.frozen ? "disabled" : ""} aria-label="Editor de texto" placeholder="Digite seu texto aqui...">${escapeHtml(record.options?.text || (record.frozen ? "O Editor de Texto parou de responder. Use o Gerenciador de Tarefas para encerrar este processo." : ""))}</textarea>
     </section>`;
   }
 
@@ -1324,6 +1388,7 @@
     if (record.appId === "wifilab") OSLab.wifiLabApp.render(record);
     if (OSLab.driversApps?.ids.has(record.appId)) OSLab.driversApps.render(record);
     if (OSLab.audioApps?.ids.has(record.appId)) OSLab.audioApps.render(record);
+    if (OSLab.taskLabApps?.ids.has(record.appId)) OSLab.taskLabApps.render(record);
     if (record.appId === "browsertrail") OSLab.browserTrailsApp.renderTrail(record);
     if (record.appId === "browsermuseum") OSLab.browserTrailsApp.renderMuseum(record);
     if (record.appId === "whatsapp") OSLab.zapApp.render(record);
@@ -1402,7 +1467,7 @@
     record.address.textContent = definition.address;
     record.toolbar.classList.toggle("browser-toolbar", ["google", "edge", "firefox", "brave", "opera"].includes(appId));
     element.classList.toggle("settings-window", appId === "settings");
-    record.toolbar.classList.toggle("is-hidden", ["settings", "taskmanager", "missions", "exercises", "vpn", "vpnlab", "installlab", "browsertrail", "digitallife", "userspermissions", "wifilab", "driverslab", "printer", "devicemanager", "sysinfo", "driverinstaller", "audiolab", "aulaonline", "audioinstaller", "browsermuseum", "controlpanel", "installer", "appjavafx", "word", "excel", "slides", "texteditor", "whatsapp"].includes(appId));
+    record.toolbar.classList.toggle("is-hidden", ["settings", "taskmanager", "missions", "exercises", "vpn", "vpnlab", "installlab", "browsertrail", "digitallife", "userspermissions", "wifilab", "driverslab", "printer", "devicemanager", "sysinfo", "driverinstaller", "audiolab", "aulaonline", "audioinstaller", "tasklab", "discord", "browsermuseum", "controlpanel", "installer", "appjavafx", "word", "excel", "slides", "texteditor", "whatsapp"].includes(appId));
     record.settingsSearch.classList.toggle("is-hidden", appId !== "settings" && appId !== "taskmanager");
     element.classList.toggle("taskmanager-window", appId === "taskmanager");
     element.classList.toggle("missions-window", appId === "missions");
@@ -1414,7 +1479,8 @@
     element.classList.toggle("userspermissions-window", appId === "userspermissions");
     element.classList.toggle("wifilab-window", appId === "wifilab");
     element.classList.toggle("drivers-window", Boolean(OSLab.driversApps?.ids.has(appId) || OSLab.audioApps?.ids.has(appId)));
-    element.classList.toggle("driverslab-window", appId === "driverslab" || appId === "audiolab");
+    element.classList.toggle("driverslab-window", appId === "driverslab" || appId === "audiolab" || appId === "tasklab");
+    element.classList.toggle("discord-window", appId === "discord");
     element.classList.toggle("browser-museum-window", appId === "browsermuseum");
     element.classList.toggle("zap-window", appId === "whatsapp");
     element.classList.toggle("software-window", OSLab.softwareApps?.appIds?.has(appId));
@@ -1435,7 +1501,7 @@
     positionWindow(record);
     wireWindow(record);
     renderApp(record);
-    if (["settings", "taskmanager", "missions", "exercises", "vpnlab", "installlab", "browsertrail", "digitallife", "userspermissions", "wifilab", "driverslab", "audiolab", "browsermuseum", "whatsapp"].includes(appId)) {
+    if (["settings", "taskmanager", "missions", "exercises", "vpnlab", "installlab", "browsertrail", "digitallife", "userspermissions", "wifilab", "driverslab", "audiolab", "tasklab", "browsermuseum", "whatsapp"].includes(appId)) {
       element.classList.add("is-maximized");
       record.maximizeIcon.src = "assets/icons/ui/restore.png";
       record.maximizeIcon.closest("button").setAttribute("aria-label", "Restaurar");
@@ -1454,14 +1520,7 @@
     });
     record.pid = process.pid;
     OSLab.events.emit("app:opened", { appId, windowId: record.windowId, pid: process.pid }, "windowManager");
-    if (options.frozen) {
-      window.setTimeout(() => {
-        if (!record.element.isConnected) return;
-        record.frozen = true;
-        OSLab.processManager.updateProcess(process.pid, { status: "Não respondendo", cpu: 0 });
-        renderTextEditor(record);
-      }, 1000);
-    }
+    if (options.frozen) window.setTimeout(() => freezeWindow(record), 1000);
     return record;
   }
 
@@ -1491,10 +1550,23 @@
     return record;
   }
 
+  /** "(Não respondendo)": título, janela esbranquiçada e status no Gerenciador, como no Windows */
+  function freezeWindow(record) {
+    if (!record?.element.isConnected || record.frozen) return;
+    record.frozen = true;
+    record.element.classList.add("is-not-responding");
+    OSLab.processManager.updateProcess(record.pid, { status: "Não respondendo", cpu: 0, fixed: true });
+    if (record.appId === "texteditor") renderTextEditor(record);
+    else record.title.textContent = `${record.definition.title} (Não respondendo)`;
+    OSLab.events.emit("window:frozen", { windowId: record.windowId, appId: record.appId, pid: record.pid }, "windowManager");
+  }
+
   function closeWindow(record, options = {}) {
     if (!record) return;
+    // hangOnClose: o programa trava justamente quando o aluno tenta fechar pelo X
+    if (record.options?.hangOnClose && !record.frozen && !options.force) freezeWindow(record);
     if (record.frozen && !options.force) {
-      OSLab.ui.notify("O aplicativo não está respondendo", "Use o Gerenciador de Tarefas para finalizar o Editor de Texto.", "warning", 6000);
+      OSLab.ui.notify(`${record.options?.title || record.definition.title} não está respondendo`, "O X não funciona com o programa travado.", "warning", 5000);
       OSLab.events.emit("window:close-blocked", { windowId: record.windowId, appId: record.appId }, "windowManager");
       return;
     }
@@ -2066,6 +2138,8 @@
 
   startButton.addEventListener("click", (event) => {
     event.stopPropagation();
+    // Windows Explorer com defeito (missão do Gerenciador): o botão Iniciar não responde até reiniciar o Explorer
+    if (document.documentElement.classList.contains("is-start-glitch")) { OSLab.events.emit("start:glitch-click", {}, "startMenu"); return; }
     const wasHidden = startMenu.classList.contains("is-hidden");
     toggleFlyout(startMenu, startButton);
     if (wasHidden && !startMenu.classList.contains("is-hidden")) OSLab.events.emit("start:opened", {}, "startMenu");
@@ -2116,10 +2190,13 @@
 
   powerMenu.addEventListener("click", (event) => {
     const action = event.target.closest("[data-power-action]")?.dataset.powerAction;
+    if (action) closeFlyouts();
     if (action === "restart") {
       if (OSLab.exercises.getSession()?.id === "slow-startup") OSLab.exercises.runTest();
-      else window.location.reload();
+      else powerOff("restart");
     }
+    if (action === "shutdown") powerOff("shutdown");
+    if (action === "sleep") sleepComputer();
     if (action === "lock") lockSession();
     if (action === "signout") signOutSession();
   });
@@ -2299,7 +2376,8 @@
   $("#volume-slider").previousElementSibling?.addEventListener("click", () => setVolume(state.volume, !state.muted));
 
   desktop.addEventListener("contextmenu", (event) => {
-    if (event.target.closest(".app-window") || event.target.closest(".taskbar")) return;
+    // composedPath guarda o caminho do clique: se a janela redesenhou o alvo (Gerenciador), ele já saiu do DOM e closest() não acharia a janela
+    if (event.composedPath().some((node) => node.classList?.contains("app-window") || node.classList?.contains("taskbar"))) return;
     event.preventDefault();
     closeFlyouts(contextMenu);
     const maxX = window.innerWidth - 246;
@@ -2347,10 +2425,19 @@
     contextMenu.classList.add("is-hidden");
   });
 
+  // como no Windows 11: espaço vazio = Gerenciador de Tarefas; em cima de um ícone = lista de atalhos do aplicativo
   taskbar.addEventListener("contextmenu", (event) => {
     event.preventDefault();
     event.stopPropagation();
     closeFlyouts(taskbarContextMenu);
+    const appButton = event.target.closest(".taskbar-button, .system-tray, .task-clock, .vpn-indicator");
+    const appId = appButton?.classList.contains("task-app") ? appButton.dataset.app : null;
+    const app = appId ? appDefinitions[appId] || appDefinitions[taskGroup(appId)[0]?.appId] : null;
+    taskbarContextMenu.dataset.jump = appId || "";
+    taskbarContextMenu.innerHTML = app
+      ? `<button type="button" role="menuitem" data-taskbar-action="open-app"><img src="${escapeHtml(app.icon)}" alt="" /><span>${escapeHtml(app.title)}</span></button>${taskGroup(appId).length ? '<button type="button" role="menuitem" data-taskbar-action="close-app"><img src="assets/icons/ui/close.png" alt="" /><span>Fechar janela</span></button>' : ""}`
+      : '<button type="button" role="menuitem" data-taskbar-action="task-manager"><img src="assets/icons/taskmanager.png" alt="" /><span>Gerenciador de Tarefas</span></button><button type="button" role="menuitem" data-taskbar-action="taskbar-settings"><img src="assets/icons/settings.png" alt="" /><span>Configurações da barra de tarefas</span></button>';
+    OSLab.events.emit("taskbar:context-menu", { empty: !appButton, appId }, "taskbar");
     const maxX = window.innerWidth - 286;
     taskbarContextMenu.style.left = `${Math.max(8, Math.min(event.clientX, maxX))}px`;
     taskbarContextMenu.style.bottom = `${window.innerHeight - event.clientY + 8}px`;
@@ -2360,7 +2447,10 @@
   taskbarContextMenu.addEventListener("click", (event) => {
     event.stopPropagation();
     const action = event.target.closest("[data-taskbar-action]")?.dataset.taskbarAction;
-    if (action === "task-manager") openApp("taskmanager");
+    const jumpApp = taskbarContextMenu.dataset.jump;
+    if (action === "task-manager") { OSLab.events.emit("taskbar:task-manager", {}, "taskbar"); openApp("taskmanager"); }
+    if (action === "open-app" && jumpApp) activateTaskGroup(jumpApp, jumpApp);
+    if (action === "close-app" && jumpApp) taskGroup(jumpApp).forEach((record) => closeWindow(record));
     if (action === "taskbar-settings") {
       const record = openApp("settings");
       renderSettings(record, "personalization");
@@ -2422,7 +2512,14 @@
     renderDesktopFolders();
     renderInstalledStartApps();
   });
+  // rede de segurança: sem Gerenciador aberto não há como trazer o Explorer de volta (Ctrl+Shift+Esc é do navegador)
+  OSLab.events.subscribe("app:closed", ({ detail }) => {
+    if (detail?.appId !== "taskmanager" || OSLab.processManager.isExplorerRunning()) return;
+    window.setTimeout(() => { if (OSLab.processManager.startExplorer("safety").ok) OSLab.ui.notify("Windows Explorer reiniciado", "A barra de tarefas voltou. Para trazê-la de volta sozinho, use Executar nova tarefa › explorer.exe.", "info", 6000); }, 1500);
+  });
   applyLightAppearance();
+  window.OSLabBootAt = Date.now();
+  bootScreen();
   OSLab.wifiLab.initialize();
   saveState();
   updateClock();

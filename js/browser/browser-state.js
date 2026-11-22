@@ -3,7 +3,7 @@
   const OSLab = global.OSLab = global.OSLab || {};
   let nextId = 1;
   const copy = (value) => JSON.parse(JSON.stringify(value));
-  const label = (url) => ({ gmail: "Gmail", outlook: "Outlook", yahoo: "Yahoo Mail", netflix: "Netflix", spotify: "Spotify", discord: "Discord", youtube: "YouTube", drive: "Google Drive" })[String(url).match(/^([a-z]+)\.oslab\.local(?:\/|$)/)?.[1]] || ({ "newtab": "Nova aba", "google.com": "Google", "www.google.com": "Google", "wikipedia.org": "Wikipédia", "youtube.com": "YouTube", "hardware.oslab.local": "Hardware — Guia Básico", "componentes.oslab.local": "Componentes internos", "falha.oslab.local": "Página de estudo" })[url] || (url.startsWith("search:") ? "Resultados da pesquisa" : url);
+  const label = (url) => ({ gmail: "Gmail", outlook: "Outlook", yahoo: "Yahoo Mail", netflix: "Netflix", spotify: "Spotify", discord: "Discord", youtube: "YouTube", drive: "Google Drive" })[String(url).match(/^([a-z]+)\.oslab\.local(?:\/|$)/)?.[1]] || ({ "newtab": "Nova guia", "google.com": "Google", "www.google.com": "Google", "wikipedia.org": "Wikipédia", "youtube.com": "YouTube", "hardware.oslab.local": "Hardware — Guia Básico", "componentes.oslab.local": "Componentes internos", "falha.oslab.local": "Página de estudo" })[url] || (url.startsWith("search:") ? `${decodeURIComponent(url.slice(7))} - Pesquisa Google` : url);
   function tab(url = "google.com") {
     return { id: `tab-${nextId++}`, title: label(url), url, page: url, history: [url], historyIndex: 0 };
   }

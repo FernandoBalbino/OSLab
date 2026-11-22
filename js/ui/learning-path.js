@@ -34,7 +34,7 @@
           ? "data-install-mission-select"
           : kind === "browser-mission"
             ? "data-browser-mission-select"
-        : kind === "digital-mission" ? "data-digital-mission-select" : kind === "users-mission" ? "data-users-mission-select" : kind === "wifi-mission" ? "data-wifi-mission-select" : kind === "drivers-mission" ? "data-drivers-mission-select" : kind === "audio-mission" ? "data-audio-mission-select" : "data-exercise-select";
+        : kind === "digital-mission" ? "data-digital-mission-select" : kind === "users-mission" ? "data-users-mission-select" : kind === "wifi-mission" ? "data-wifi-mission-select" : kind === "drivers-mission" ? "data-drivers-mission-select" : kind === "audio-mission" ? "data-audio-mission-select" : kind === "task-mission" ? "data-task-mission-select" : "data-exercise-select";
     const connector = !hasNext ? "" : `<img class="learning-connector lane-${lane} ${connectorDirection(lane, nextLane)}" src="${icon("arrow_right")}" alt="" aria-hidden="true" />`;
     return `<div class="learning-step lane-${lane}">
       <button type="button" class="learning-node is-${item.status} ${item.id === selectedId ? "is-selected" : ""}" ${selectAttr}="${safe(item.id)}" ${item.status === "locked" ? "disabled" : ""} ${item.status === "active" ? 'aria-current="step"' : ""} aria-label="${safe(`${isMission ? "Missão" : "Exercício"} ${item.order}: ${item.title}. ${statusLabel(item.status, feminine)}`)}">

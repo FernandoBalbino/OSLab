@@ -30,6 +30,8 @@
     audiolab: { title: "Som: sem áudio na aula", shortTitle: "Som", icon: "assets/audio/trail-icon.svg", address: "Som", task: "audiolab", pinned: true },
     aulaonline: { title: "Aula On-line", icon: "assets/audio/aula-icon.svg", address: "Aula On-line", task: "aulaonline" },
     audioinstaller: { title: "Instalação do driver de áudio", shortTitle: "Driver de áudio", icon: "assets/drivers/driver-file.svg", address: "Instalação do driver de áudio", task: "audioinstaller" },
+    tasklab: { title: "Trilha: Gerenciador de Tarefas", shortTitle: "Trilha do Gerenciador", icon: "assets/taskmgr/trail-icon.svg", address: "Gerenciador de Tarefas", task: "tasklab", pinned: true },
+    discord: { title: "Discord", icon: "assets/digital/brands/discord.svg", address: "Discord", task: "discord" },
     browsertrail: { title: "Navegadores e Internet", icon: "assets/icons/trails/browsertrail.svg", address: "Navegadores e Internet", task: "browsertrail", pinned: true },
     browsermuseum: { title: "Conhecendo os Navegadores", shortTitle: "Navegadores", icon: "assets/icons/trails/browsermuseum.svg", address: "Conhecendo os Navegadores", task: "browsermuseum", pinned: true },
     whatsapp: { title: "WhatsApp", icon: "assets/icons/trails/whatsapp.svg", address: "WhatsApp", task: "whatsapp", pinned: true },

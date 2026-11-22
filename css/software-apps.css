@@ -10,35 +10,7 @@
 .browser-download-button.has-active > span { color: #0f6cbd; animation: download-pulse 1s ease-in-out infinite; }
 .is-hint-target { position: relative; z-index: 4; outline: 3px solid #ffb900 !important; outline-offset: 3px; animation: hint-pulse 1.2s ease-in-out infinite; }
 
-.google-home-page { display: flex; min-height: 100%; flex: 1 0 auto; flex-direction: column; color: #202124; background: #fff; font-family: Arial, sans-serif; }
-.google-home-page > header { display: flex; height: 58px; padding: 8px 18px; align-items: center; justify-content: flex-end; gap: 14px; font-size: 13px; }
-.google-home-page > header button { width: 34px; height: 34px; padding: 0; border: 0; border-radius: 50%; background: transparent; letter-spacing: -3px; }
-.google-home-page > header img, .google-results-page > header > img { width: 32px; height: 32px; object-fit: cover; border-radius: 50%; }
-.google-home-page > main { display: flex; min-height: 380px; flex: 1; padding: 46px 24px 25px; flex-direction: column; align-items: center; }
-.google-color-logo { display: flex; margin-bottom: 27px; font-size: clamp(55px, 8vw, 82px); font-weight: 600; letter-spacing: -6px; line-height: 1; }
-.google-color-logo i { font-style: normal; }
-.google-color-logo i:nth-child(1), .google-color-logo i:nth-child(4) { color: #4285f4; }
-.google-color-logo i:nth-child(2), .google-color-logo i:nth-child(6) { color: #ea4335; }
-.google-color-logo i:nth-child(3) { color: #fbbc05; }
-.google-color-logo i:nth-child(5) { color: #34a853; }
-.google-modern-search { display: flex; width: min(620px, 92%); min-height: 48px; align-items: center; gap: 10px; border: 1px solid #dfe1e5; border-radius: 25px; padding: 0 7px 0 17px; box-shadow: 0 1px 3px rgba(60, 64, 67, .08); }
-.google-modern-search:hover, .google-modern-search:focus-within { border-color: transparent; box-shadow: 0 1px 7px rgba(32, 33, 36, .23); }
-.google-modern-search > img { width: 18px; height: 18px; opacity: .58; }
-.google-modern-search input { min-width: 0; height: 44px; flex: 1; border: 0; outline: 0; font-size: 16px; }
-.google-modern-search button, .google-home-actions button { min-height: 36px; padding: 0 16px; color: #3c4043; border: 1px solid transparent; border-radius: 5px; background: #f8f9fa; }
-.google-modern-search button:hover, .google-home-actions button:hover { border-color: #dadce0; box-shadow: 0 1px 1px rgba(0, 0, 0, .08); }
-.google-home-actions { display: flex; margin: 23px 0 15px; gap: 10px; }
-.google-home-page main > p { color: #6b7075; font-size: 12px; }
-.google-home-page > footer { display: flex; min-height: 76px; padding: 0 25px; flex-direction: column; justify-content: center; gap: 10px; color: #70757a; background: #f2f2f2; font-size: 13px; }
-.google-home-page > footer div { display: flex; gap: 18px; border-top: 1px solid #dadce0; padding-top: 9px; }
-
 .google-results-page { min-height: 100%; color: #202124; background: #fff; font-family: Arial, sans-serif; }
-.google-results-page > header { display: grid; padding: 18px 24px 10px; grid-template-columns: 92px minmax(0, 600px) 1fr auto; align-items: center; gap: 18px; }
-.google-mini-logo { padding: 0; color: #4285f4; border: 0; background: transparent; font-size: 24px; font-weight: 700; letter-spacing: -1px; }
-.google-results-search { display: flex; min-width: 0; max-width: 100%; height: 43px; align-items: center; padding-right: 4px; border: 1px solid #dfe1e5; border-radius: 22px; background: #fff; box-shadow: 0 1px 4px rgba(32, 33, 36, .12); }
-.google-results-search input { min-width: 0; width: 0; height: 100%; flex: 1 1 0; padding-left: 18px; border: 0; outline: 0; border-radius: inherit; background: transparent; color: #202124; font-size: 15px; }
-.google-results-search button { display: grid; width: auto; min-width: 88px; height: 100%; flex: 0 0 auto; padding: 0 14px; place-items: center; border: 0; border-radius: inherit; background: transparent; color: #3c4043; font-size: 14px; white-space: nowrap; cursor: pointer; }
-.google-results-search img { width: 18px; }
 .google-results-page > nav { display: flex; padding: 0 132px; gap: 22px; color: #5f6368; border-bottom: 1px solid #ebebeb; font-size: 13px; }
 .google-results-page > nav > * { padding: 10px 0; }
 .google-results-page > nav strong { color: #1a73e8; border-bottom: 3px solid #1a73e8; }
