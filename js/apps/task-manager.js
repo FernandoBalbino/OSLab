@@ -19,7 +19,7 @@
     ["WinDefend", "Serviço Microsoft Defender Antivírus", ""], ["WlanSvc", "Configuração Automática de WLAN", "LocalSystemNetworkRestricted"],
     ["wuauserv", "Windows Update", "netsvcs"], ["WSearch", "Windows Search", ""], ["bthserv", "Serviço de Suporte Bluetooth", "LocalService"], ["Fax", "Fax", ""],
   ].map(([name, description, group], index) => ({ name, description, group, running: !["Fax", "bthserv", "wuauserv"].includes(name), pid: 1200 + index * 76 }));
-  let prefs = { theme: "dark", start: "processes", speed: "normal", grouped: true };
+  let prefs = { theme: "system", start: "processes", speed: "normal", grouped: true };
   try { prefs = { ...prefs, ...(JSON.parse(global.localStorage.getItem(PREFS_KEY) || "{}") || {}) }; } catch (_) { /* sem armazenamento */ }
   const savePrefs = () => { try { global.localStorage.setItem(PREFS_KEY, JSON.stringify(prefs)); } catch (_) { /* sem armazenamento */ } };
 
@@ -143,7 +143,7 @@
   }
   function settingsPage() {
     const select = (name, value, options) => `<select data-tm-pref="${name}">${options.map(([v, t]) => `<option value="${v}" ${v === value ? "selected" : ""}>${t}</option>`).join("")}</select>`;
-    return `<div class="tm-settings"><h3>Configurações</h3><section><div><strong>Tema do aplicativo</strong><small>Escolha a aparência do Gerenciador de Tarefas</small></div>${select("theme", prefs.theme, [["dark", "Escuro"], ["light", "Claro"]])}</section><section><div><strong>Página inicial padrão</strong><small>Página que aparece ao abrir o Gerenciador</small></div>${select("start", prefs.start, nav.map(([id, text]) => [id, text]))}</section><section><div><strong>Velocidade de atualização em tempo real</strong><small>Com que frequência os números mudam</small></div>${select("speed", prefs.speed, [["high", "Alta"], ["normal", "Normal"], ["low", "Baixa"], ["paused", "Pausado"]])}</section><section><div><strong>Agrupar por tipo</strong><small>Separa Aplicativos, segundo plano e processos do Windows</small></div>${select("grouped", String(prefs.grouped), [["true", "Ativado"], ["false", "Desativado"]])}</section></div>`;
+    return `<div class="tm-settings"><h3>Configurações</h3><section><div><strong>Tema do aplicativo</strong><small>Escolha a aparência do Gerenciador de Tarefas</small></div>${select("theme", prefs.theme, [["system", "Usar configuração do sistema"], ["light", "Claro"], ["dark", "Escuro"]])}</section><section><div><strong>Página inicial padrão</strong><small>Página que aparece ao abrir o Gerenciador</small></div>${select("start", prefs.start, nav.map(([id, text]) => [id, text]))}</section><section><div><strong>Velocidade de atualização em tempo real</strong><small>Com que frequência os números mudam</small></div>${select("speed", prefs.speed, [["high", "Alta"], ["normal", "Normal"], ["low", "Baixa"], ["paused", "Pausado"]])}</section><section><div><strong>Agrupar por tipo</strong><small>Separa Aplicativos, segundo plano e processos do Windows</small></div>${select("grouped", String(prefs.grouped), [["true", "Ativado"], ["false", "Desativado"]])}</section></div>`;
   }
 
   // ---------------- barra de comandos ----------------
@@ -186,7 +186,7 @@
     record.expanded ||= new Set(); record.collapsedGroups ||= new Set();
     const title = record.taskNav === "settings" ? "Configurações" : nav.find(([id]) => id === record.taskNav)?.[1] || "Processos";
     record.address.textContent = title;
-    record.element.dataset.tmTheme = prefs.theme;
+    record.element.dataset.tmTheme = prefs.theme === "system" ? (document.documentElement.dataset.theme === "dark" ? "dark" : "light") : prefs.theme;
     const page = { processes: processesPage, performance: performancePage, history: historyPage, startup: startupPage, users: usersPage, details: detailsPage, services: servicesPage, settings: settingsPage }[record.taskNav] || processesPage;
     const scroll = record.content.querySelector(".tm-tbody")?.scrollTop || 0;
     record.content.innerHTML = `<section class="tm${record.sideCollapsed ? " is-compact" : ""}"><aside class="tm-side"><button type="button" class="tm-burger" data-task-burger aria-label="Abrir navegação">${ic("menu")}</button><nav aria-label="Páginas do Gerenciador de Tarefas">${nav.map(([id, text, icon]) => `<button type="button" class="${record.taskNav === id ? "is-active" : ""}" data-task-nav="${id}" title="${text}">${ic(icon)}<span>${text}</span></button>`).join("")}</nav><button type="button" class="tm-settings-nav ${record.taskNav === "settings" ? "is-active" : ""}" data-task-nav="settings" title="Configurações">${ic("settings")}<span>Configurações</span></button></aside><main class="tm-main"><header class="tm-head"><h2>${title}</h2><div class="tm-cmds">${commands(record)}</div></header><div class="tm-page tm-page-${record.taskNav}">${page(record)}</div>${overlay(record)}</main></section>`;

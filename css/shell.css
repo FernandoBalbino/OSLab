@@ -161,3 +161,8 @@
 @keyframes power-fade { from { opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .win-spinner i { animation-duration: 8s; } .power-screen { animation: none; } }
 .power-screen.is-boot { animation: none; }
+.boot-status { position: absolute; bottom: 9vh; left: 0; right: 0; margin: 0; color: rgba(255,255,255,.85); font-size: 15px; line-height: 1.6; text-align: center; }
+.power-screen.is-updating .boot-logo { display: none; }
+.power-screen.is-updating .win-spinner { position: static; transform: none; }
+.power-screen.is-updating .boot-status { position: static; font-size: 22px; }
+.power-screen.is-updating { gap: 26px; }

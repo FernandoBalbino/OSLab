@@ -3,9 +3,9 @@
 
   const OSLab = global.OSLab = global.OSLab || {};
   const definitions = {
-    computer: { title: "Computador", icon: "assets/icons/computer.png", address: "Este Computador", task: "explorer", pinned: true },
-    explorer: { title: "Explorador de Arquivos", shortTitle: "Explorador", icon: "assets/icons/explorer.png", address: "Início", task: "explorer", pinned: true },
-    recycle: { title: "Lixeira", icon: "assets/icons/recycle-bin.png", address: "Lixeira", task: "explorer", pinned: true },
+    computer: { title: "Computador", icon: "assets/icons/win11/this-pc-48.png", address: "Este Computador", task: "explorer", pinned: true },
+    explorer: { title: "Explorador de Arquivos", shortTitle: "Explorador", icon: "assets/icons/win11/file-explorer-48.png", address: "Início", task: "explorer", pinned: true },
+    recycle: { title: "Lixeira", icon: "assets/icons/win11/recycle-empty-48.png", address: "Lixeira", task: "explorer", pinned: true },
     google: { title: "Google Chrome", icon: "assets/browser/chrome.svg", address: "https://www.google.com.br", task: "google", pinned: true },
     edge: { title: "Microsoft Edge", icon: "assets/browser/edge.png", address: "Nova aba", task: "edge" },
     firefox: { title: "Mozilla Firefox", icon: "assets/browser/firefox.png", address: "Nova aba", task: "firefox" },
@@ -13,7 +13,7 @@
     opera: { title: "Opera", icon: "assets/browser/opera.png", address: "Nova aba", task: "opera" },
     settings: { title: "Configurações", icon: "assets/icons/settings.png", address: "Configurações", task: "settings", pinned: true },
     terminal: { title: "Terminal", icon: "assets/icons/terminal.png", address: "Terminal", task: "terminal" },
-    taskmanager: { title: "Gerenciador de Tarefas", icon: "assets/icons/taskmanager.png", address: "Processos", task: "taskmanager" },
+    taskmanager: { title: "Gerenciador de Tarefas", icon: "assets/icons/win11/task-manager-48.png", address: "Processos", task: "taskmanager" },
     missions: { title: "Missões", icon: "assets/icons/trails/missions.svg", address: "Trilha de Missões", task: "missions", pinned: true },
     exercises: { title: "Exercícios", icon: "assets/icons/trails/exercises.svg", address: "Trilha de Exercícios", task: "exercises", pinned: true },
     vpn: { title: "VPN", icon: "assets/icons/trails/vpn.svg", address: "VPN do OSLab", task: "vpn", pinned: true },

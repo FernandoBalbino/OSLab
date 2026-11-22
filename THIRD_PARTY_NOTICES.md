@@ -61,6 +61,12 @@ O OSLab não é afiliado à Microsoft. A interface é uma simulação educaciona
 - `assets/drivers/devmgr/*.png`: ícones extraídos dos arquivos do Windows 11 (`setupapi.dll`, `devmgr.dll`, `mmc.exe`, `imageres.dll`, `mmsys.cpl`, `mmres.dll` e `ddores.dll`). A pasta usa os IDs que o registro do Windows indica para cada classe de dispositivo, como `setupapi.dll,-5` para Adaptadores de rede e a sobreposição `setupapi.dll,-500` para o triângulo amarelo. São propriedade da Microsoft e aparecem aqui só para simular fielmente o Gerenciador de Dispositivos em uma atividade educacional sem fins lucrativos.
 - Printix, os modelos InkJet e o site `suporte.printix.com.br` são fictícios. Nenhum arquivo real é baixado.
 
+## Ícones do Windows 11 (Explorador, área de trabalho e Gerenciador)
+
+- `assets/icons/win11/*.png`: ícones extraídos dos arquivos do Windows 11 no computador de desenvolvimento, nos tamanhos 16, 48 e 256 px: `shell32.dll` (Início `317`, Galeria `318`), `imageres.dll` (Área de Trabalho `105`/`174`, Downloads `175`, Documentos `189`/`188`, Imagens `190`/`108`, Músicas `191`/`103`, Vídeos `192`/`178`, Lixeira `50`/`49`, Este Computador `104`, Disco Local (C:) `31`, Rede `20`, pasta `3`, pasta compactada `165`, documento de texto `97`, arquivo `2`, imagem `16`, Usuários `169`), `explorer.exe` (Explorador de Arquivos) e `Taskmgr.exe` (Gerenciador de Tarefas). Os números são os índices de ícone de cada arquivo.
+- São propriedade da Microsoft e aparecem aqui só para simular fielmente o Windows 11 em uma atividade educacional sem fins lucrativos, como os ícones do Gerenciador de Dispositivos.
+- Os botões da barra de comandos do Explorador (`assets/icons/taskmanager/fluent/fx-*.svg`) vêm do pacote Fluent UI System Icons (MIT), listado acima.
+
 ## Trilha de Som
 
 - `assets/drivers/devmgr/camera-*.png`: ícone da classe Câmeras extraído de `ddores.dll,-2555` do Windows 11.

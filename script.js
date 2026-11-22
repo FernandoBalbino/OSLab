@@ -51,12 +51,13 @@
 
   const appDefinitions = OSLab.apps.definitions;
 
+  // small = ícone da barra lateral; big = ícone da pasta (ambos extraídos do Windows 11)
   const folders = [
-    { id: "root-desktop", name: "Área de Trabalho", icon: "assets/icons/win/desktop.png" },
-    { id: "root-documents", name: "Documentos", icon: "assets/icons/win/documents.png" },
-    { id: "root-downloads", name: "Downloads", icon: "assets/icons/win/downloads.png" },
-    { id: "root-pictures", name: "Imagens", icon: "assets/icons/win/pictures.png" },
-    { id: "root-public", name: "Pública", icon: "assets/icons/win/folder.png" },
+    { id: "root-desktop", name: "Área de Trabalho", small: "desktop", big: "desktop-folder", icon: "assets/icons/win11/desktop-folder-48.png" },
+    { id: "root-documents", name: "Documentos", small: "documents", big: "documents-folder", icon: "assets/icons/win11/documents-folder-48.png" },
+    { id: "root-downloads", name: "Downloads", small: "downloads", big: "downloads", icon: "assets/icons/win11/downloads-48.png" },
+    { id: "root-pictures", name: "Imagens", small: "pictures", big: "pictures-folder", icon: "assets/icons/win11/pictures-folder-48.png" },
+    { id: "root-public", name: "Pública", small: "folder", big: "users-folder", icon: "assets/icons/win11/users-folder-48.png" },
   ];
 
   const wallpapers = [
@@ -247,7 +248,7 @@
         ...defaultState,
         ...parsed,
         version: 3,
-        theme: "light",
+        theme: parsed.theme === "dark" ? "dark" : "light",
         wallpaperId,
         desktopFolders,
         desktopFiles,
@@ -267,11 +268,40 @@
 
   const state = loadState();
 
-  function applyLightAppearance() {
-    state.theme = "light";
-    document.documentElement.dataset.theme = "light";
+  // modo do Windows escolhido pelo aluno (claro ou escuro): vale para barra, Iniciar, janelas e menus juntos
+  function applyAppearance() {
+    const theme = state.theme === "dark" ? "dark" : "light";
+    document.documentElement.dataset.theme = theme;
+    document.documentElement.dataset.shellTone = theme;
     delete state.quickSettings.theme;
   }
+  function setSystemTheme(theme) {
+    state.theme = theme === "dark" ? "dark" : "light";
+    state.themeChosen = true;
+    applyAppearance();
+    saveState();
+    document.querySelector(".os-theme-backdrop")?.remove();
+    windows.forEach((record) => { if (record.appId === "settings") renderSettings(record, record.settingsView); });
+    OSLab.taskManagerApp?.renderAll?.();
+    OSLab.events.emit("theme:changed", { theme: state.theme }, "settings");
+  }
+  /** miniaturas do modo claro e escuro com o papel de parede atual (como em Personalização › Cores) */
+  function themeCardsMarkup() {
+    const wallpaper = (wallpapers.find((item) => item.id === currentWallpaperId) || wallpapers[0]).src;
+    const card = (theme, label) => `<button type="button" class="os-theme-card${state.themeChosen && state.theme === theme ? " is-on" : ""}" data-system-theme="${theme}" aria-pressed="${state.themeChosen && state.theme === theme}"><span class="os-mini" data-mini="${theme}" style="background-image:url('${wallpaper}')" aria-hidden="true"><span class="os-mini-window"><i></i><b></b><b></b><b></b></span><span class="os-mini-start"><i></i><i></i><i></i><i></i><i></i><i></i></span><span class="os-mini-bar"><i></i><i></i><i></i><i></i></span></span><strong>${label}</strong></button>`;
+    return `<div class="os-theme-options">${card("light", "Claro")}${card("dark", "Escuro")}</div>`;
+  }
+  function showThemeChooser() {
+    if (document.querySelector(".os-theme-backdrop")) return;
+    const dialog = document.createElement("div");
+    dialog.className = "os-theme-backdrop";
+    dialog.innerHTML = `<section class="os-theme" role="dialog" aria-modal="true" aria-labelledby="os-theme-title"><img src="assets/icons/start.png" alt="" /><h2 id="os-theme-title">Escolha o seu modo</h2><p>Deixe o Windows claro ou escuro. Você pode mudar depois em Configurações › Personalização › Cores.</p>${themeCardsMarkup()}</section>`;
+    document.body.appendChild(dialog);
+  }
+  document.addEventListener("click", (event) => {
+    const theme = event.target.closest("[data-system-theme]")?.dataset.systemTheme;
+    if (theme) setSystemTheme(theme);
+  });
 
   function saveState() {
     if (persistenceSuspended) return;
@@ -287,7 +317,7 @@
   OSLab.fileSystem.bind(state, saveState);
   OSLab.users.bindSystemState(state, () => {
     OSLab.fileSystem.bind(state, saveState);
-    applyLightAppearance();
+    applyAppearance();
     currentWallpaperId = state.wallpaperId || "1";
     applyWallpaper(currentWallpaperId, false);
     fileClipboard = null;
@@ -299,28 +329,10 @@
 
   let currentWallpaperId = state.wallpaperId;
 
-  // Como os temas do Windows 11: papel de parede escuro pede barra e Iniciar escuros; claro pede claros.
-  function applyShellTone(src) {
-    const image = new Image();
-    image.onload = () => {
-      const canvas = document.createElement("canvas");
-      canvas.width = 24;
-      canvas.height = 14;
-      const context = canvas.getContext("2d", { willReadFrequently: true });
-      context.drawImage(image, 0, 0, 24, 14);
-      const pixels = context.getImageData(0, 0, 24, 14).data;
-      let luminance = 0;
-      for (let index = 0; index < pixels.length; index += 4) luminance += 0.2126 * pixels[index] + 0.7152 * pixels[index + 1] + 0.0722 * pixels[index + 2];
-      document.documentElement.dataset.shellTone = luminance / (pixels.length / 4) > 150 ? "light" : "dark";
-    };
-    image.src = src;
-  }
-
   function applyWallpaper(id, persist = true) {
     const wallpaper = wallpapers.find((item) => item.id === id) || wallpapers[0];
     currentWallpaperId = wallpaper.id;
     document.documentElement.style.setProperty("--wallpaper-image", `url("${wallpaper.src}")`);
-    applyShellTone(wallpaper.src);
 
     if (persist) {
       state.wallpaperId = wallpaper.id;
@@ -483,7 +495,7 @@
     OSLab.fileSystem.delete(itemId);
     renderDesktopFolders();
     const recycleRecord = windows.get("recycle");
-    if (recycleRecord) renderRecycleBin(recycleRecord);
+    if (recycleRecord) renderApp(recycleRecord);
   }
 
   function restoreRecycleItem(itemId) {
@@ -535,6 +547,7 @@
     renderInstalledStartApps();
     updateClock();
     launchStartupApps();
+    if (!state.themeChosen) window.setTimeout(showThemeChooser, 600);
     if (!missionsResumed) {
       missionsResumed = true;
       OSLab.missions.resumeAfterBoot();
@@ -614,17 +627,33 @@
     const wake = () => { screen.classList.add("is-hidden"); screen.classList.remove("is-off", "is-sleep"); document.removeEventListener("keydown", wake); lockSession(); };
     window.setTimeout(() => { screen.addEventListener("click", wake, { once: true }); document.addEventListener("keydown", wake, { once: true }); }, 400);
   }
-  /** tela de inicialização: logotipo do Windows e os pontinhos; demora mais com muitos programas de inicialização */
+  /** tela de inicialização em todo acesso: logotipo do Windows e os pontinhos. Enquanto isso o OSLab baixa os arquivos
+   *  e procura a versão mais nova; só libera o login quando estiver atualizado (ou sem internet). */
   let bootInfo = null;
   function bootScreen() {
     try { bootInfo = JSON.parse(sessionStorage.getItem(BOOT_KEY) || "null"); } catch (_) { bootInfo = null; }
     sessionStorage.removeItem(BOOT_KEY);
-    if (!bootInfo) return;
-    bootInfo.seconds = OSLab.processManager.estimateBootTime();
-    const screen = powerScreen(`<img class="boot-logo" src="logow11.png" alt="Windows" />${spinner}`);
+    const seconds = OSLab.processManager.estimateBootTime();
+    if (bootInfo) bootInfo.seconds = seconds;
+    const screen = powerScreen(`<img class="boot-logo" src="logow11.png" alt="Windows" />${spinner}<p class="boot-status" data-boot-status aria-live="polite"></p>`);
     screen.classList.add("is-boot");
     loginScreen.classList.add("is-booting");
-    window.setTimeout(() => { screen.classList.add("is-hidden"); screen.classList.remove("is-boot"); loginScreen.classList.remove("is-booting"); passwordInput.focus(); }, Math.min(6500, 1400 + bootInfo.seconds * 90));
+    const status = screen.querySelector("[data-boot-status]");
+    const percent = (done, total) => (total ? Math.min(100, Math.round(done / total * 100)) : 0);
+    const progress = ({ phase, done = 0, total = 0 }) => {
+      if (phase === "update") { screen.classList.add("is-updating"); status.innerHTML = `Trabalhando nas atualizações<br>${percent(done, total)}% concluído<br>Não desligue o computador.`; }
+      else status.textContent = `Preparando o OSLab ${percent(done, total)}%`;
+    };
+    const minimum = new Promise((resolve) => window.setTimeout(resolve, bootInfo ? Math.min(6500, 1400 + seconds * 90) : 2400));
+    const check = new Promise((resolve) => document.addEventListener("DOMContentLoaded", () => Promise.resolve(window.OSLabPWA?.check?.(progress) || { status: "unsupported" }).then(resolve, () => resolve({ status: "failed" })), { once: true }));
+    const limit = new Promise((resolve) => window.setTimeout(() => resolve({ status: "slow" }), 45000));
+    Promise.all([minimum, Promise.race([check, limit])]).then(([, result]) => {
+      if (result?.status === "updating") { status.textContent = "Reiniciando"; window.setTimeout(() => window.location.reload(), 8000); return; }
+      screen.classList.add("is-hidden");
+      screen.classList.remove("is-boot", "is-updating");
+      loginScreen.classList.remove("is-booting");
+      passwordInput.focus();
+    });
   }
   /** programas de inicialização abrem ao entrar na conta (não ao desbloquear) */
   let sessionStarted = false;
@@ -680,120 +709,203 @@
     showDesktop();
   });
 
-  function sidebarMarkup(active) {
-    return `
-      <aside class="explorer-sidebar" aria-label="Navegação do Explorador">
-        <button type="button" class="${active === "home" ? "is-active" : ""}" data-explorer-view="home">
-          <img src="assets/icons/explorer.png" alt="" />
-          <span>Início</span>
-        </button>
-        <button type="button" class="${active === "computer" ? "is-active" : ""}" data-explorer-view="computer">
-          <img src="assets/icons/computer.png" alt="" />
-          <span>Este Computador</span>
-        </button>
-        ${folders
-          .map(
-            (folder) => `
-              <button type="button" class="${active === folder.id ? "is-active" : ""}" data-folder="${folder.id}">
-                <img src="${folder.icon}" alt="" />
-                <span>${folder.name}</span>
-              </button>`,
-          )
-          .join("")}
-        <button type="button" class="${active === "recycle" ? "is-active" : ""}" data-explorer-view="recycle">
-          <img src="assets/icons/recycle-bin.png" alt="" />
-          <span>Lixeira</span>
-        </button>
-      </aside>`;
+  // ================= Explorador de Arquivos no padrão do Windows 11 =================
+  // Ícones extraídos do Windows 11 (imageres.dll, shell32.dll e explorer.exe); comandos com Fluent UI System Icons.
+  const W11 = "assets/icons/win11/";
+  const HAS_256 = new Set(["folder", "desktop-folder", "documents-folder", "downloads", "pictures-folder", "music-folder", "videos-folder", "recycle-empty", "recycle-full", "this-pc", "drive-c", "zip", "text", "file", "image-file", "users-folder", "file-explorer"]);
+  const winIcon = (name, size = 48) => `${W11}${name}-${size === 256 && !HAS_256.has(name) ? 48 : size}.png`;
+  // ícone de arquivo em tamanho grande: troca -48 por -256 quando o Windows tem a versão grande
+  const sizedIcon = (src, size) => { const name = String(src).startsWith(W11) && String(src).match(/win11\/(.+)-48\.png$/)?.[1]; return name ? winIcon(name, size) : src; };
+  const fxIc = (name) => `<i class="fx-ic" style="-webkit-mask-image:url(assets/icons/taskmanager/fluent/${name}.svg);mask-image:url(assets/icons/taskmanager/fluent/${name}.svg)" aria-hidden="true"></i>`;
+  const EXPLORER_APPS = new Set(["explorer", "computer", "recycle"]);
+  const isExplorerApp = (record) => EXPLORER_APPS.has(record?.appId);
+  const recycleIcon = (size) => winIcon(OSLab.fileSystem.recycleItems().length ? "recycle-full" : "recycle-empty", size);
+  const fxDate = (time) => time ? new Date(time).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" }).replace(",", "") : "";
+  function fileIcon(item, size = 48) {
+    if (item?.kind === "folder") { const root = folders.find((entry) => entry.id === item.id); return winIcon(root?.big || "folder", size); }
+    return sizedIcon(OSLab.icons.file(item), size);
+  }
+  function fileType(item) {
+    if (item.kind === "folder") return "Pasta de arquivos";
+    const ext = String(item.name).split(".").pop().toLocaleLowerCase("pt-BR");
+    return ({ txt: "Documento de Texto", png: "Arquivo PNG", jpg: "Arquivo JPG", jpeg: "Arquivo JPG", webp: "Arquivo WEBP", zip: "Pasta compactada", pdf: "Documento PDF", docx: "Documento do Word", xlsx: "Planilha do Excel", pptx: "Apresentação", exe: "Aplicativo" })[ext] || (ext && ext !== item.name.toLocaleLowerCase("pt-BR") ? `Arquivo ${ext.toUpperCase()}` : "Arquivo");
   }
 
-  function folderTilesMarkup() {
-    return folders
-      .map(
-        (folder) => `
-          <button type="button" class="folder-tile" data-folder="${folder.id}">
-            <img src="${folder.icon}" alt="" />
-            <span>${folder.name}</span>
-          </button>`,
-      )
-      .join("");
+  // histórico de navegação (Voltar/Avançar) por janela
+  function fxTrack(record, key) {
+    if (record.fxCurrent === key) return;
+    if (!record.fxNavigating && record.fxCurrent) { (record.fxBack ||= []).push(record.fxCurrent); record.fxFwd = []; }
+    record.fxCurrent = key;
   }
+  function fxGo(record, key, keepMenu = false) {
+    if (!keepMenu) record.fxMenu = null;
+    if (key === "home") renderExplorerHome(record);
+    else if (key === "computer") renderComputer(record);
+    else if (key === "recycle") renderRecycleBin(record);
+    else if (key === "gallery") { (record.fxView ||= {})[OSLab.fileSystem.roots.pictures] ||= "large"; renderFolder(record, OSLab.fileSystem.roots.pictures); }
+    else if (key.startsWith("folder:")) renderFolder(record, key.slice(7));
+    else if (key.startsWith("file:")) renderTextFile(record, key.slice(5));
+  }
+  function fxStep(record, direction) {
+    const from = direction === "back" ? record.fxBack : record.fxFwd, to = direction === "back" ? (record.fxFwd ||= []) : (record.fxBack ||= []);
+    if (!from?.length) return;
+    to.push(record.fxCurrent);
+    record.fxNavigating = true; record.fxCurrent = null;
+    try { fxGo(record, from.pop()); } finally { record.fxNavigating = false; }
+  }
+
+  function explorerTab(record, title, icon) {
+    record.element.classList.add("fx-window");
+    record.toolbar.classList.add("is-hidden");
+    let strip = record.titlebar.querySelector(".fx-tabs");
+    if (!strip) {
+      strip = document.createElement("div");
+      strip.className = "fx-tabs";
+      record.titlebar.insertBefore(strip, record.titlebar.querySelector(".window-controls"));
+      strip.addEventListener("click", (event) => {
+        if (event.target.closest("[data-fx-tabclose]")) { event.stopPropagation(); closeWindow(record); }
+        if (event.target.closest("[data-fx-newtab]")) { event.stopPropagation(); fxGo(record, "home"); }
+      });
+    }
+    strip.innerHTML = `<div class="fx-tab is-active"><img src="${icon}" alt="" /><span>${escapeHtml(title)}</span><button type="button" data-fx-tabclose aria-label="Fechar guia">${fxIc("fx-dismiss")}</button></div><button type="button" class="fx-newtab" data-fx-newtab aria-label="Nova guia">+</button>`;
+    record.title.textContent = title;
+    record.address.textContent = title;
+  }
+
+  function sidebarMarkup(active) {
+    const item = (key, label, icon, attrs, pin = false) => `<button type="button" class="${active === key ? "is-active" : ""}" ${attrs}><img src="${icon}" alt="" /><span>${label}</span>${pin ? fxIc("fx-pin") : ""}</button>`;
+    return `<aside class="fx-side" aria-label="Navegação do Explorador">
+      ${item("home", "Início", winIcon("home", 16), 'data-explorer-view="home"')}
+      ${item("gallery", "Galeria", winIcon("gallery", 16), 'data-fx-go="gallery"')}
+      <hr />
+      ${folders.map((folder) => item(folder.id, folder.name, winIcon(folder.small, 16), `data-folder="${folder.id}"`, true)).join("")}
+      ${item("recycle", "Lixeira", recycleIcon(16), 'data-explorer-view="recycle"', true)}
+      <hr />
+      <button type="button" class="fx-tree ${active === "computer" ? "is-active" : ""}" data-explorer-view="computer">${fxIc("chevron-down")}<img src="${winIcon("this-pc", 16)}" alt="" /><span>Este Computador</span></button>
+      <button type="button" class="fx-tree is-child" data-explorer-view="computer">${fxIc("chevron-right")}<img src="${winIcon("drive-c", 16)}" alt="" /><span>Disco Local (C:)</span></button>
+    </aside>`;
+  }
+
+  function commandButton(icon, label, attrs, enabled = true) {
+    return `<button type="button" class="fx-icbtn" ${attrs} aria-label="${label}" title="${label}" ${enabled ? "" : "disabled"}>${fxIc(icon)}</button>`;
+  }
+  function dropdown(record, key, icon, label, enabled = true) {
+    return `<button type="button" class="fx-ddbtn${record.fxMenu === key ? " is-open" : ""}" data-fx-menu="${key}" ${enabled ? "" : "disabled"}>${fxIc(icon)}<span>${label}</span>${fxIc("chevron-down")}</button>`;
+  }
+  function fxMenu(record) {
+    if (!record.fxMenu) return "";
+    const view = record.fxView?.[record.currentFolderId] || defaultView(record.currentFolderId);
+    const sort = record.fxSort || { key: "name", dir: "asc" };
+    const check = (on) => on ? fxIc("fx-checkmark") : "<b></b>";
+    const menus = {
+      new: `<button type="button" data-file-action="new-folder"><img src="${winIcon("folder", 16)}" alt="" />Pasta</button><button type="button" data-file-action="new-text"><img src="${winIcon("text", 16)}" alt="" />Documento de Texto</button>`,
+      sort: `${[["name", "Nome"], ["date", "Data de modificação"], ["type", "Tipo"], ["size", "Tamanho"]].map(([key, text]) => `<button type="button" data-fx-sort="${key}">${check(sort.key === key)}${text}</button>`).join("")}<i></i><button type="button" data-fx-dir="asc">${check(sort.dir === "asc")}Crescente</button><button type="button" data-fx-dir="desc">${check(sort.dir === "desc")}Decrescente</button>`,
+      view: [["large", "Ícones grandes", "fx-grid"], ["medium", "Ícones médios", "fx-apps_list"], ["list", "Lista", "fx-list"], ["details", "Detalhes", "fx-text_bullet_list_square"]].map(([key, text, icon]) => `<button type="button" data-fx-view="${key}">${check(view === key)}${fxIc(icon)}${text}</button>`).join(""),
+      more: `<button type="button" data-file-action="properties" ${record.explorerSelection ? "" : "disabled"}>${fxIc("settings")}Propriedades</button><button type="button" data-fx="details">${fxIc("fx-panel_right")}Painel de detalhes</button>`,
+    };
+    return `<div class="fx-menu is-${record.fxMenu}" role="menu">${menus[record.fxMenu] || ""}</div>`;
+  }
+  function defaultView(folderId) { return [OSLab.fileSystem.roots.desktop, OSLab.fileSystem.roots.pictures].includes(folderId) ? "large" : "details"; }
+
+  function detailsPane(record) {
+    const item = OSLab.fileSystem.get(record.explorerSelection);
+    if (!item) return `<aside class="fx-details" data-fx-details><p>Selecione um item para ver os detalhes.</p></aside>`;
+    return `<aside class="fx-details" data-fx-details><img src="${fileIcon(item, 256)}" alt="" /><strong>${escapeHtml(item.name)}</strong><small>${fileType(item)}</small><dl><dt>Tamanho</dt><dd>${OSLab.systemTools.formatBytes(OSLab.fileSystem.bytesForItem(item.id))}</dd><dt>Local</dt><dd>${escapeHtml(OSLab.fileSystem.pathLabel(item.parentId))}</dd><dt>Data de modificação</dt><dd>${fxDate(item.updatedAt || item.createdAt)}</dd></dl></aside>`;
+  }
+  function updateFxSelection(record) {
+    const count = $$("[data-file-item].is-selected", record.content).length;
+    const status = $("[data-fx-selected]", record.content);
+    if (status) status.textContent = count ? `${count} item selecionado` : "";
+    const pane = $("[data-fx-details]", record.content);
+    if (pane) pane.outerHTML = detailsPane(record);
+  }
+
+  function explorerFrame(record, o) {
+    explorerTab(record, o.title, o.icon);
+    const view = o.view || "details";
+    return `<section class="fx" data-fx-key="${escapeHtml(record.fxCurrent || "")}">
+      <div class="fx-nav">
+        <button type="button" data-fx="back" aria-label="Voltar" ${record.fxBack?.length ? "" : "disabled"}>${fxIc("fx-arrow_left")}</button>
+        <button type="button" data-fx="forward" aria-label="Avançar" ${record.fxFwd?.length ? "" : "disabled"}>${fxIc("fx-arrow_right")}</button>
+        <button type="button" data-fx="up" aria-label="Acima" ${o.up ? "" : "disabled"}>${fxIc("fx-arrow_up")}</button>
+        <button type="button" data-fx="refresh" aria-label="Atualizar">${fxIc("restart")}</button>
+        <nav class="fx-address" aria-label="Endereço"><img src="${o.crumbIcon || o.icon}" alt="" />${o.crumbs.map(([label, key]) => `${fxIc("chevron-right")}<button type="button" data-fx-go="${escapeHtml(key)}">${escapeHtml(label)}</button>`).join("")}</nav>
+        <label class="fx-search"><input type="search" ${o.searchable ? "data-explorer-search" : "data-fx-search"} placeholder="Pesquisar em ${escapeHtml(o.title)}" aria-label="Pesquisar em ${escapeHtml(o.title)}" />${fxIc("search")}</label>
+      </div>
+      <div class="fx-cmd">${o.commands}<span class="fx-fill"></span><button type="button" class="fx-ddbtn${record.fxDetails ? " is-open" : ""}" data-fx="details">${fxIc("fx-panel_right")}<span>Detalhes</span></button>${fxMenu(record)}</div>
+      <div class="fx-body${record.fxDetails ? " has-details" : ""}">${sidebarMarkup(o.active)}<main class="fx-main">${o.body}</main>${record.fxDetails ? detailsPane(record) : ""}</div>
+      <footer class="fx-status"><span>${o.count} ${o.count === 1 ? "item" : "itens"}</span><span data-fx-selected></span><span class="fx-fill"></span>${o.views ? `<button type="button" class="${view === "details" ? "is-on" : ""}" data-fx-view="details" aria-label="Detalhes">${fxIc("fx-text_bullet_list_square")}</button><button type="button" class="${view === "large" ? "is-on" : ""}" data-fx-view="large" aria-label="Ícones grandes">${fxIc("fx-grid")}</button>` : ""}</footer>
+    </section>`;
+  }
+  const lockedCommands = (record) => `${dropdown(record, "new", "fx-add_circle", "Novo", false)}<i class="fx-sep"></i>${["fx-cut", "fx-copy", "fx-clipboard_paste", "fx-rename", "fx-share", "fx-delete"].map((icon) => commandButton(icon, "", "", false)).join("")}<i class="fx-sep"></i>${dropdown(record, "sort", "fx-arrow_sort", "Classificar", false)}${dropdown(record, "view", "fx-apps_list", "Visualizar", false)}<i class="fx-sep"></i>${commandButton("more", "Ver mais", 'data-fx-menu="more"')}`;
 
   function renderComputer(record) {
+    fxTrack(record, "computer");
     const disk = OSLab.systemState.getStorage();
     const diskPercent = Math.round(disk.usedBytes / disk.totalBytes * 100);
     const currentUser = OSLab.users.getCurrent() || OSLab.users.getSelected();
     record.previousExplorerView = "computer";
-    record.address.textContent = "Este Computador";
-    record.content.innerHTML = `
-      <div class="explorer-layout">
-        ${sidebarMarkup("computer")}
-        <section class="explorer-main">
-          <h2>Pastas</h2>
-          <div class="folder-grid">${folderTilesMarkup()}</div>
-          <div class="drive-section">
-            <h2>Dispositivos e unidades</h2>
-            <div class="drive-tile">
-              <img src="assets/icons/win/disk.png" alt="" />
-              <div class="drive-copy">
-                <strong>Disco Local (C:)</strong>
-                <div class="drive-bar" aria-label="${diskPercent}% do disco utilizado"><span style="width:${diskPercent}%"></span></div>
-                <small>${OSLab.systemTools.formatBytes(disk.freeBytes)} livres de ${OSLab.systemTools.formatBytes(disk.totalBytes)}</small>
-              </div>
-            </div>
-          </div>
-          <div class="drive-section">
-            <h2>Usuários (C:\\Users)</h2>
-            <div class="user-homes">${OSLab.users.list().map((account) => `<button type="button" class="user-home-tile" data-user-home="${escapeHtml(account.id)}"><img src="assets/icons/win/folder.png" alt="" /><span><strong>${escapeHtml(account.username)}</strong><small>${account.id === currentUser.id ? "Seu perfil" : "Pasta pessoal protegida"}</small></span></button>`).join("")}</div>
-          </div>
-        </section>
-      </div>`;
+    record.currentFolderId = null;
+    const homes = OSLab.users.list();
+    record.content.innerHTML = explorerFrame(record, {
+      title: "Este Computador", icon: winIcon("this-pc", 16), crumbs: [["Este Computador", "computer"]], active: "computer", count: 1 + homes.length, commands: lockedCommands(record),
+      body: `<section class="fx-section"><h3>${fxIc("chevron-down")}Dispositivos e unidades</h3><div class="fx-drives"><button type="button" class="fx-drive" data-folder="${OSLab.fileSystem.roots.desktop}"><img src="${winIcon("drive-c", 48)}" alt="" /><span><strong>Disco Local (C:)</strong><span class="fx-bar${diskPercent >= 90 ? " is-full" : ""}" aria-label="${diskPercent}% do disco utilizado"><i style="width:${diskPercent}%"></i></span><small>${OSLab.systemTools.formatBytes(disk.freeBytes)} livres de ${OSLab.systemTools.formatBytes(disk.totalBytes)}</small></span></button></div></section>
+        <section class="fx-section"><h3>${fxIc("chevron-down")}Usuários (C:\\Usuários)</h3><div class="fx-drives">${homes.map((account) => `<button type="button" class="fx-drive" data-user-home="${escapeHtml(account.id)}"><img src="${winIcon("users-folder", 48)}" alt="" /><span><strong>${escapeHtml(account.username)}</strong><small>${account.id === currentUser.id ? "Seu perfil" : "Pasta pessoal protegida"}</small></span></button>`).join("")}</div></section>`,
+    });
   }
 
+  function recentFiles() {
+    return OSLab.fileSystem.search("", null).sort((a, b) => (b.updatedAt || b.createdAt || 0) - (a.updatedAt || a.createdAt || 0)).slice(0, 20);
+  }
   function renderExplorerHome(record) {
+    fxTrack(record, "home");
     record.previousExplorerView = "home";
-    record.address.textContent = "Início";
-    record.content.innerHTML = `
-      <div class="explorer-layout">
-        ${sidebarMarkup("home")}
-        <section class="explorer-main">
-          <h2>Acesso rápido</h2>
-          <div class="folder-grid">${folderTilesMarkup()}</div>
-        </section>
-      </div>`;
+    record.currentFolderId = null;
+    const recent = recentFiles();
+    record.content.innerHTML = explorerFrame(record, {
+      title: "Início", icon: winIcon("home", 16), crumbs: [["Início", "home"]], active: "home", count: folders.length + recent.length, commands: lockedCommands(record),
+      body: `<section class="fx-section"><h3>${fxIc("chevron-down")}Acesso rápido</h3><div class="fx-quick">${folders.map((folder) => `<button type="button" class="fx-qtile" data-folder="${folder.id}"><img src="${winIcon(folder.big, 48)}" alt="" /><span><strong>${folder.name}</strong><small>Este Computador</small></span>${fxIc("fx-pin")}</button>`).join("")}</div></section>
+        <section class="fx-section"><h3>${fxIc("chevron-down")}Recentes</h3><div class="fx-recent" role="list">${recent.map((item) => `<button type="button" class="fx-row is-recent ${record.explorerSelection === item.id ? "is-selected" : ""}" data-file-item="${item.id}" role="listitem"><span class="fx-name"><img src="${fileIcon(item, 48)}" alt="" /><span><strong>${escapeHtml(item.name)}</strong><small>${escapeHtml(OSLab.fileSystem.pathLabel(item.parentId))}</small></span></span><span>${fxDate(item.updatedAt || item.createdAt)}</span></button>`).join("") || '<p class="fx-empty">Os arquivos que você abrir ou criar aparecem aqui.</p>'}</div></section>`,
+    });
+  }
+
+  function itemsMarkup(record, items, view) {
+    if (!items.length) return `<div class="fx-list-empty"><p class="fx-empty">Esta pasta está vazia.</p></div>`;
+    const sort = record.fxSort || { key: "name", dir: "asc" };
+    const head = (key, text) => `<button type="button" data-fx-sort="${key}">${text}${sort.key === key ? fxIc(sort.dir === "asc" ? "chevron-up" : "chevron-down") : ""}</button>`;
+    if (view === "details") return `<div class="fx-table"><div class="fx-thead">${head("name", "Nome")}${head("date", "Data de modificação")}${head("type", "Tipo")}${head("size", "Tamanho")}</div><div class="fx-rows" role="list">${items.map((item) => `<button type="button" class="fx-row ${record.explorerSelection === item.id ? "is-selected" : ""}" data-file-item="${item.id}" role="listitem"><span class="fx-name"><img src="${fileIcon(item, 48)}" alt="" /><strong>${escapeHtml(item.name)}</strong></span><span>${fxDate(item.updatedAt || item.createdAt)}</span><span>${fileType(item)}</span><span class="fx-size">${item.kind === "folder" ? "" : OSLab.systemTools.formatBytes(OSLab.fileSystem.bytesForItem(item.id))}</span></button>`).join("")}</div></div>`;
+    return `<div class="fx-grid is-${view}" role="list">${items.map((item) => `<button type="button" class="fx-tile ${record.explorerSelection === item.id ? "is-selected" : ""}" data-file-item="${item.id}" role="listitem" title="${escapeHtml(item.name)}"><img src="${fileIcon(item, view === "list" ? 48 : 256)}" alt="" /><strong>${escapeHtml(item.name)}</strong></button>`).join("")}</div>`;
+  }
+  function sortItems(record, items) {
+    const sort = record.fxSort || { key: "name", dir: "asc" };
+    const value = (item) => sort.key === "date" ? item.updatedAt || item.createdAt || 0 : sort.key === "size" ? OSLab.fileSystem.bytesForItem(item.id) : sort.key === "type" ? fileType(item) : item.name;
+    return items.sort((a, b) => {
+      if (a.kind !== b.kind) return a.kind === "folder" ? -1 : 1;
+      const av = value(a), bv = value(b), result = typeof av === "string" ? av.localeCompare(bv, "pt-BR") : av - bv;
+      return sort.dir === "asc" ? result : -result;
+    });
   }
 
   function renderFolder(record, folderId) {
     const folder = folders.find((entry) => entry.id === folderId) || OSLab.fileSystem.get(folderId);
     if (!folder) return;
+    fxTrack(record, `folder:${folderId}`);
     record.currentFolderId = folderId;
     record.explorerSelection = OSLab.fileSystem.get(record.explorerSelection)?.parentId === folderId ? record.explorerSelection : null;
     record.explorerQuery = "";
-    const items = OSLab.fileSystem.list(folderId).sort((a, b) => a.kind === b.kind ? a.name.localeCompare(b.name, "pt-BR") : a.kind === "folder" ? -1 : 1);
-    record.address.textContent = `${OSLab.fileSystem.pathLabel(folderId) || folder.name}`;
-    record.previousExplorerView = folder.id;
-    record.content.innerHTML = `
-      <div class="explorer-layout">
-        ${sidebarMarkup(folder.id)}
-        <section class="file-browser" data-current-folder="${folderId}">
-          <div class="explorer-file-toolbar">
-            <button type="button" data-file-action="new-folder"><img src="assets/icons/context/new.png" alt="" /><span>Novo</span></button>
-            <button type="button" data-file-action="new-text"><img src="assets/icons/notepad.png" alt="" /><span>Documento</span></button>
-            <button type="button" data-file-action="cut" ${record.explorerSelection ? "" : "disabled"}><img src="assets/icons/context/cut.png" alt="" /><span>Recortar</span></button>
-            <button type="button" data-file-action="copy" ${record.explorerSelection ? "" : "disabled"}><img src="assets/icons/context/copy.png" alt="" /><span>Copiar</span></button>
-            <button type="button" data-file-action="paste" ${fileClipboard ? "" : "disabled"}><img src="assets/icons/context/restore-item.png" alt="" /><span>Colar</span></button>
-            <button type="button" data-file-action="rename" ${record.explorerSelection ? "" : "disabled"}><img src="assets/icons/context/rename.png" alt="" /><span>Renomear</span></button>
-            <button type="button" data-file-action="delete" ${record.explorerSelection ? "" : "disabled"}><img src="assets/icons/context/delete.png" alt="" /><span>Excluir</span></button>
-            <button type="button" data-file-action="properties" ${record.explorerSelection ? "" : "disabled"}><img src="assets/icons/settings.png" alt="" /><span>Propriedades</span></button>
-            <label><img src="assets/icons/search.png" alt="" /><input type="search" data-explorer-search placeholder="Pesquisar em ${escapeHtml(folder.name)}" aria-label="Pesquisar arquivos" /></label>
-          </div>
-          <div class="file-list-head"><span>Nome</span><span>Tipo</span><span>Tamanho</span></div>
-          <div class="file-list" role="list">${items.map((item) => `
-            <button type="button" class="file-list-row ${record.explorerSelection === item.id ? "is-selected" : ""}" data-file-item="${item.id}" role="listitem">
-              <span><img src="${OSLab.icons.file(item)}" alt="" /><strong>${escapeHtml(item.name)}</strong></span><span>${item.kind === "folder" ? "Pasta de arquivos" : (item.mime || "Arquivo")}</span><span>${OSLab.systemTools.formatBytes(OSLab.fileSystem.bytesForItem(item.id))}</span>
-            </button>`).join("") || `<div class="file-list-empty"><img src="${folder.icon || "assets/icons/win/folder.png"}" alt="" /><span>Esta pasta está vazia.</span></div>`}</div>
-        </section>
-      </div>`;
+    record.previousExplorerView = folderId;
+    const items = sortItems(record, OSLab.fileSystem.list(folderId));
+    const view = record.fxView?.[folderId] || defaultView(folderId);
+    const chain = []; let cursor = OSLab.fileSystem.get(folderId) || folder;
+    while (cursor) { chain.unshift(cursor); cursor = cursor.parentId ? OSLab.fileSystem.get(cursor.parentId) : null; }
+    const root = folders.find((entry) => entry.id === chain[0]?.id);
+    const name = folder.name;
+    const sel = Boolean(record.explorerSelection);
+    record.content.innerHTML = explorerFrame(record, {
+      title: name, icon: winIcon(root?.small || "folder", 16), crumbs: chain.map((entry) => [entry.name, `folder:${entry.id}`]), active: root?.id || folderId, up: true, searchable: true, count: items.length, view, views: true,
+      commands: `<div class="fx-dd">${dropdown(record, "new", "fx-add_circle", "Novo")}</div><i class="fx-sep"></i>${commandButton("fx-cut", "Recortar", 'data-file-action="cut"', sel)}${commandButton("fx-copy", "Copiar", 'data-file-action="copy"', sel)}${commandButton("fx-clipboard_paste", "Colar", 'data-file-action="paste"', Boolean(fileClipboard))}${commandButton("fx-rename", "Renomear", 'data-file-action="rename"', sel)}${commandButton("fx-share", "Compartilhar", 'data-fx="share" data-file-action="properties"', sel)}${commandButton("fx-delete", "Excluir", 'data-file-action="delete"', sel)}<i class="fx-sep"></i>${dropdown(record, "sort", "fx-arrow_sort", "Classificar")}${dropdown(record, "view", "fx-apps_list", "Visualizar")}<i class="fx-sep"></i>${commandButton("more", "Ver mais", 'data-fx-menu="more"')}`,
+      body: `<section class="fx-files" data-current-folder="${folderId}">${itemsMarkup(record, items, view)}</section>`,
+    });
   }
 
   function beginExplorerRename(record, itemId) {
@@ -818,85 +930,79 @@
   }
 
   function renderExplorerSearch(record, query) {
-    const list = $(".file-list", record.content);
-    if (!list) return;
+    const holder = $(".fx-files", record.content);
+    if (!holder) return;
     const results = OSLab.fileSystem.search(query, record.currentFolderId);
-    list.innerHTML = results.map((item) => `<button type="button" class="file-list-row is-search-result" data-file-item="${item.id}" role="listitem"><span><img src="${OSLab.icons.file(item)}" alt="" /><strong>${escapeHtml(item.name)}</strong></span><span>${item.mime || "Arquivo"}</span><span>${escapeHtml(OSLab.fileSystem.pathLabel(item.parentId))}</span></button>`).join("") || `<div class="file-list-empty"><img src="assets/icons/search.png" alt="" /><span>Nenhum resultado encontrado.</span></div>`;
+    holder.innerHTML = query.trim() ? `<div class="fx-table"><div class="fx-thead"><span>Nome</span><span>Data de modificação</span><span>Tipo</span><span>Local</span></div><div class="fx-rows" role="list">${results.map((item) => `<button type="button" class="fx-row is-search-result" data-file-item="${item.id}" role="listitem"><span class="fx-name"><img src="${fileIcon(item, 48)}" alt="" /><strong>${escapeHtml(item.name)}</strong></span><span>${fxDate(item.updatedAt || item.createdAt)}</span><span>${fileType(item)}</span><span>${escapeHtml(OSLab.fileSystem.pathLabel(item.parentId))}</span></button>`).join("") || `<p class="fx-empty">Nenhum item corresponde à sua pesquisa.</p>`}</div></div>` : itemsMarkup(record, sortItems(record, OSLab.fileSystem.list(record.currentFolderId)), record.fxView?.[record.currentFolderId] || defaultView(record.currentFolderId));
     OSLab.events.emit("file:searched", { query, parentFolderId: record.currentFolderId, resultIds: results.map((item) => item.id) }, "explorer");
   }
 
   function renderTextFile(record, fileId) {
     const file = OSLab.fileSystem.get(fileId);
     if (!file) return;
+    fxTrack(record, `file:${file.id}`);
     record.fileViewId = file.id;
     record.previousExplorerView = file.parentId;
-    record.address.textContent = `${OSLab.fileSystem.pathLabel(file.parentId)}  ›  ${file.name}`;
     const editable = file.mime === "text/plain" || file.name.toLocaleLowerCase("pt-BR").endsWith(".txt");
     const canModifyFile = OSLab.fileSystem.canModify(file);
-    record.content.innerHTML = editable ? `
-      <section class="text-file-view">
-        <header><img src="assets/icons/notepad.png" alt="" /><strong>${escapeHtml(file.name)}</strong><span>${canModifyFile ? "Salvo automaticamente" : "Somente leitura"}</span></header>
-        <textarea data-text-file="${file.id}" aria-label="Conteúdo de ${escapeHtml(file.name)}" placeholder="Comece a digitar..." ${canModifyFile ? "" : "readonly"}>${escapeHtml(file.content || "")}</textarea>
-      </section>` : `<section class="generic-file-view"><img src="${OSLab.icons.file(file)}" alt="" /><h2>${escapeHtml(file.name)}</h2><p>${escapeHtml(file.mime || "Arquivo")}</p><span>Visualização educacional do OSLab</span></section>`;
+    const parent = OSLab.fileSystem.get(file.parentId);
+    record.content.innerHTML = explorerFrame(record, {
+      title: file.name, icon: fileIcon(file, 16), crumbs: [[parent?.name || "Pasta", `folder:${file.parentId}`], [file.name, `file:${file.id}`]], active: file.parentId, up: true, count: 1, commands: lockedCommands(record),
+      body: editable ? `<section class="text-file-view"><header><img src="assets/icons/notepad.png" alt="" /><strong>${escapeHtml(file.name)}</strong><span>${canModifyFile ? "Salvo automaticamente" : "Somente leitura"}</span></header><textarea data-text-file="${file.id}" aria-label="Conteúdo de ${escapeHtml(file.name)}" placeholder="Comece a digitar..." ${canModifyFile ? "" : "readonly"}>${escapeHtml(file.content || "")}</textarea></section>`
+        : `<section class="generic-file-view"><img src="${fileIcon(file, 256)}" alt="" /><h2>${escapeHtml(file.name)}</h2><p>${fileType(file)}</p><span>Visualização educacional do OSLab</span></section>`,
+    });
   }
 
   function renderRecycleBin(record) {
+    fxTrack(record, "recycle");
     record.previousExplorerView = "recycle";
-    record.address.textContent = "Lixeira";
+    record.currentFolderId = null;
     const recycleItems = OSLab.fileSystem.recycleItems();
-    const selectedId = record.recycleSelection && recycleItems.some((item) => item.id === record.recycleSelection)
-      ? record.recycleSelection
-      : null;
+    const selectedId = record.recycleSelection && recycleItems.some((item) => item.id === record.recycleSelection) ? record.recycleSelection : null;
     record.recycleSelection = selectedId;
+    const rows = recycleItems.map((item) => `<button type="button" class="fx-row ${selectedId === item.id ? "is-selected" : ""}" data-recycle-item="${item.id}"><span class="fx-name"><img src="${fileIcon(item, 48)}" alt="" /><strong>${escapeHtml(item.name)}</strong></span><span>${escapeHtml(OSLab.fileSystem.pathLabel(item.originalParentId))}</span><span>${fxDate(item.trashedAt)}</span><span class="fx-size">${OSLab.systemTools.formatBytes(OSLab.fileSystem.bytesForItem(item.id))}</span></button>`).join("");
+    const button = (action, icon, text, enabled) => `<button type="button" class="fx-ddbtn" data-recycle-action="${action}" ${enabled ? "" : "disabled"}>${icon}<span>${text}</span></button>`;
+    record.content.innerHTML = explorerFrame(record, {
+      title: "Lixeira", icon: recycleIcon(16), crumbs: [["Lixeira", "recycle"]], active: "recycle", count: recycleItems.length,
+      commands: `${button("empty", `<img src="${winIcon("recycle-empty", 16)}" alt="" />`, "Esvaziar Lixeira", recycleItems.length > 0)}${button("restore-all", fxIc("fx-arrow_undo"), "Restaurar todos os itens", recycleItems.length > 0)}${button("restore", fxIc("fx-arrow_undo"), "Restaurar os itens selecionados", Boolean(selectedId))}<i class="fx-sep"></i>${commandButton("fx-delete", "Excluir permanentemente", 'data-recycle-action="delete"', Boolean(selectedId))}`,
+      body: recycleItems.length ? `<div class="fx-table" role="table" aria-label="Itens da Lixeira"><div class="fx-thead" role="row"><span>Nome</span><span>Local original</span><span>Data da exclusão</span><span>Tamanho</span></div><div class="fx-rows">${rows}</div></div>` : `<div class="fx-empty-state"><img src="${winIcon("recycle-empty", 256)}" alt="" /><p>A Lixeira está vazia.</p></div>`,
+    });
+  }
 
-    if (!recycleItems.length) {
-      record.content.innerHTML = `
-        <div class="explorer-layout">
-          ${sidebarMarkup("recycle")}
-          <section class="empty-folder">
-            <div>
-              <img src="assets/icons/recycle-bin.png" alt="" />
-              <span>A Lixeira está vazia.</span>
-            </div>
-          </section>
-        </div>`;
-      return;
+  /** cliques da moldura do Explorador: navegação, menus, modos de exibição e painel de detalhes */
+  function handleExplorerChrome(record, event) {
+    const t = event.target;
+    const nav = t.closest("[data-fx]")?.dataset.fx;
+    const go = t.closest("[data-fx-go]")?.dataset.fxGo;
+    const menu = t.closest("[data-fx-menu]")?.dataset.fxMenu;
+    const view = t.closest("[data-fx-view]")?.dataset.fxView;
+    const sort = t.closest("[data-fx-sort]")?.dataset.fxSort;
+    const dir = t.closest("[data-fx-dir]")?.dataset.fxDir;
+    const insideMenu = t.closest(".fx-menu");
+    if (menu) { record.fxMenu = record.fxMenu === menu ? null : menu; renderApp(record); return true; }
+    if (nav === "back" || nav === "forward") { fxStep(record, nav); return true; }
+    if (nav === "up") {
+      const current = record.fxCurrent || "";
+      const id = current.startsWith("folder:") ? current.slice(7) : current.startsWith("file:") ? OSLab.fileSystem.get(current.slice(5))?.parentId : null;
+      const parent = id && OSLab.fileSystem.get(id)?.parentId;
+      fxGo(record, current.startsWith("file:") ? `folder:${id}` : parent ? `folder:${parent}` : "computer");
+      return true;
     }
-
-    const rows = recycleItems
-      .map((item) => {
-        const deletedAt = new Date(item.trashedAt).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" });
-        return `
-          <button type="button" class="recycle-row ${selectedId === item.id ? "is-selected" : ""}" data-recycle-item="${item.id}">
-            <span class="recycle-name"><img src="${OSLab.icons.file(item)}" alt="" /><strong>${escapeHtml(item.name)}</strong></span>
-            <span>${escapeHtml(OSLab.fileSystem.pathLabel(item.originalParentId))}</span>
-            <span>${deletedAt}</span>
-            <span>${OSLab.systemTools.formatBytes(OSLab.fileSystem.bytesForItem(item.id))}</span>
-          </button>`;
-      })
-      .join("");
-
-    record.content.innerHTML = `
-      <div class="explorer-layout">
-        ${sidebarMarkup("recycle")}
-        <section class="recycle-main">
-          <div class="recycle-actions" aria-label="Ações da Lixeira">
-            <button type="button" data-recycle-action="restore" ${selectedId ? "" : "disabled"}>
-              <img src="assets/icons/context/restore-item.png" alt="" /><span>Restaurar</span>
-            </button>
-            <button type="button" data-recycle-action="delete" ${selectedId ? "" : "disabled"}>
-              <img src="assets/icons/context/delete.png" alt="" /><span>Excluir permanentemente</span>
-            </button>
-            <button type="button" data-recycle-action="empty">
-              <img src="assets/icons/recycle-bin.png" alt="" /><span>Esvaziar Lixeira</span>
-            </button>
-          </div>
-          <div class="recycle-table" role="table" aria-label="Itens da Lixeira">
-            <div class="recycle-head" role="row"><span>Nome</span><span>Local original</span><span>Data da exclusão</span><span>Tamanho</span></div>
-            <div class="recycle-rows">${rows}</div>
-          </div>
-        </section>
-      </div>`;
+    if (nav === "refresh") { record.fxMenu = null; record.fxNavigating = true; try { fxGo(record, record.fxCurrent || "home"); } finally { record.fxNavigating = false; } return true; }
+    if (nav === "details") { record.fxDetails = !record.fxDetails; record.fxMenu = null; renderApp(record); return true; }
+    if (nav === "share") return false;
+    if (go) { fxGo(record, go); return true; }
+    if (view && record.currentFolderId) { (record.fxView ||= {})[record.currentFolderId] = view; record.fxMenu = null; renderFolder(record, record.currentFolderId); return true; }
+    if (sort || dir) { record.fxSort = { key: sort || record.fxSort?.key || "name", dir: dir || (sort && record.fxSort?.key === sort && record.fxSort?.dir === "asc" ? "desc" : sort ? "asc" : record.fxSort?.dir || "asc") }; record.fxMenu = null; renderFolder(record, record.currentFolderId); return true; }
+    if (record.fxMenu && !insideMenu) { record.fxMenu = null; $(".fx-menu", record.content)?.remove(); $$(".fx-ddbtn.is-open", record.content).forEach((b) => b.classList.remove("is-open")); }
+    if (record.fxMenu && insideMenu && t.closest("[data-file-action]")) record.fxMenu = null;
+    return false;
+  }
+  function renderExplorerApp(record) {
+    if (record.fxCurrent) { record.fxNavigating = true; try { fxGo(record, record.fxCurrent, true); } finally { record.fxNavigating = false; } return; }
+    if (record.appId === "computer") renderComputer(record);
+    else if (record.appId === "recycle") renderRecycleBin(record);
+    else renderExplorerHome(record);
   }
 
   function renderTaskManager(record, query = record.taskQuery || "") {
@@ -1202,6 +1308,7 @@
         <div class="personalization-preview"><img data-current-wallpaper src="${current.src}" alt="${current.name}" /><span></span></div>
         <div class="personalization-themes"><strong>Selecionar um plano de fundo</strong><div class="wallpaper-grid is-overview">${wallpaperOptionsMarkup(true)}</div></div>
       </section>
+      <article class="settings-card os-theme-settings"><h2>Escolha o seu modo</h2>${themeCardsMarkup()}</article>
       <article class="settings-card detailed-settings-card">${settingsRowsMarkup(rows)}</article>`;
   }
 
@@ -1352,7 +1459,7 @@
     saveState();
 
     let mainContent = settingsHomeMarkup();
-    if (isColors) mainContent = `<header class="settings-page-heading with-back"><button type="button" data-settings-back="personalization" aria-label="Voltar para Personalização"><img src="assets/icons/ui/left.png" alt="" /></button><div><small>Personalização</small><h1>Cores</h1></div></header><article class="settings-card"><h2>Cor de destaque</h2><p>Azul do Windows</p><span class="settings-accent-preview" aria-label="Azul do Windows"></span></article>`;
+    if (isColors) mainContent = `<header class="settings-page-heading with-back"><button type="button" data-settings-back="personalization" aria-label="Voltar para Personalização"><img src="assets/icons/ui/left.png" alt="" /></button><div><small>Personalização</small><h1>Cores</h1></div></header><article class="settings-card"><h2>Escolha o seu modo</h2><p>Altere as cores que aparecem no Windows e nos aplicativos.</p>${themeCardsMarkup()}</article><article class="settings-card"><h2>Cor de destaque</h2><p>Azul do Windows</p><span class="settings-accent-preview" aria-label="Azul do Windows"></span></article>`;
     else if (isBackground) mainContent = settingsBackgroundMarkup();
     else if (isStorage) mainContent = OSLab.systemTools.storageMarkup();
     else if (section.id === "system") mainContent = settingsSystemMarkup();
@@ -1371,9 +1478,7 @@
   }
 
   function renderApp(record) {
-    if (record.appId === "computer") renderComputer(record);
-    if (record.appId === "explorer") renderExplorerHome(record);
-    if (record.appId === "recycle") renderRecycleBin(record);
+    if (isExplorerApp(record)) renderExplorerApp(record);
     if (["google", "edge", "firefox", "brave", "opera"].includes(record.appId)) renderGoogle(record);
     if (record.appId === "settings") renderSettings(record);
     if (record.appId === "terminal") renderTerminal(record);
@@ -1753,6 +1858,7 @@
     });
 
     content.addEventListener("click", async (event) => {
+      if (isExplorerApp(record) && handleExplorerChrome(record, event)) return;
       const settingsPage = event.target.closest("[data-settings-page]");
       const settingsBack = event.target.closest("[data-settings-back]");
       const wallpaperButton = event.target.closest("[data-wallpaper]");
@@ -1812,7 +1918,7 @@
       if (explorerView?.dataset.explorerView === "home") renderExplorerHome(record);
       if (explorerView?.dataset.explorerView === "computer") renderComputer(record);
       if (explorerView?.dataset.explorerView === "recycle") renderRecycleBin(record);
-      if (userHome && ["computer", "explorer"].includes(record.appId)) {
+      if (userHome && isExplorerApp(record)) {
         const target = OSLab.users.list().find((account) => account.id === userHome);
         const current = OSLab.users.getCurrent();
         OSLab.events.emit("file:other-home-opened", { targetUserId: userHome, actorUserId: current?.id || null }, "explorer");
@@ -1833,19 +1939,25 @@
         record.recycleSelection = null;
         renderRecycleBin(record);
       }
+      if (recycleAction === "restore-all") {
+        OSLab.fileSystem.recycleItems().forEach((item) => restoreRecycleItem(item.id));
+        record.recycleSelection = null;
+        renderRecycleBin(record);
+      }
       if (recycleAction === "empty") {
         if (await OSLab.ui.confirm({ title: "Esvaziar a Lixeira?", message: "Os itens serão apagados permanentemente.", confirmLabel: "Esvaziar" })) {
           OSLab.fileSystem.emptyRecycleBin(); record.recycleSelection = null; renderRecycleBin(record);
         }
       }
-      if (fileItem && record.appId === "explorer") {
+      if (fileItem && isExplorerApp(record)) {
         record.explorerSelection = fileItem.dataset.fileItem;
         $$('[data-file-item]', record.content).forEach((row) => row.classList.toggle("is-selected", row === fileItem));
         $$('[data-file-action="cut"], [data-file-action="copy"], [data-file-action="rename"], [data-file-action="delete"], [data-file-action="properties"]', record.content).forEach((button) => { button.disabled = false; });
         const selectedFile = OSLab.fileSystem.get(record.explorerSelection);
         OSLab.events.emit("file:selected", { fileId: selectedFile?.id, name: selectedFile?.name, parentFolderId: selectedFile?.parentId }, "explorer");
+        updateFxSelection(record);
       }
-      if (fileAction && record.appId === "explorer") {
+      if (fileAction && isExplorerApp(record)) {
         const selectedFile = OSLab.fileSystem.get(record.explorerSelection);
         if (fileAction === "new-folder") {
           const folder = OSLab.fileSystem.create({ parentId: record.currentFolderId, kind: "folder", name: "Nova pasta" });
@@ -1917,7 +2029,7 @@
       }
 
       const explorerSearch = event.target.closest("[data-explorer-search]");
-      if (explorerSearch && record.appId === "explorer") {
+      if (explorerSearch && isExplorerApp(record)) {
         record.explorerQuery = explorerSearch.value;
         renderExplorerSearch(record, explorerSearch.value);
       }
@@ -1925,7 +2037,7 @@
 
     content.addEventListener("dblclick", (event) => {
       const row = event.target.closest("[data-file-item]");
-      if (!row || record.appId !== "explorer") return;
+      if (!row || !isExplorerApp(record)) return;
       const selected = OSLab.fileSystem.get(row.dataset.fileItem);
       if (selected?.kind === "folder") renderFolder(record, selected.id);
       else if (selected) renderTextFile(record, selected.id);
@@ -2497,7 +2609,8 @@
   }
 
   ["file:created", "file:deleted", "recycle:restored", "recycle:deleted", "recycle:emptied"].forEach((type) => OSLab.events.subscribe(type, () => {
-    const computer = windows.get("computer"); if (computer) renderComputer(computer);
+    const computer = windows.get("computer"); if (computer) renderApp(computer);
+    $$('[data-app="recycle"] img').forEach((image) => { image.src = recycleIcon(48); });
     const settings = windows.get("settings"); if (settings?.settingsView === "storage") renderSettings(settings, "storage");
   }));
 
@@ -2517,7 +2630,7 @@
     if (detail?.appId !== "taskmanager" || OSLab.processManager.isExplorerRunning()) return;
     window.setTimeout(() => { if (OSLab.processManager.startExplorer("safety").ok) OSLab.ui.notify("Windows Explorer reiniciado", "A barra de tarefas voltou. Para trazê-la de volta sozinho, use Executar nova tarefa › explorer.exe.", "info", 6000); }, 1500);
   });
-  applyLightAppearance();
+  applyAppearance();
   window.OSLabBootAt = Date.now();
   bootScreen();
   OSLab.wifiLab.initialize();

@@ -40,27 +40,54 @@
   if (location.protocol !== "https:" && location.hostname !== "localhost" && location.hostname !== "127.0.0.1") return;
   navigator.serviceWorker.addEventListener("controllerchange", () => { if (reloadingForUpdate) window.location.reload(); });
 
-  window.addEventListener("load", async () => {
+  // Ao ligar o OSLab: baixa tudo na primeira vez e procura uma versão nova antes de liberar o login.
+  // onProgress recebe { phase: "install" | "update", done, total }. A promessa termina com o status final.
+  const progressListeners = new Set();
+  navigator.serviceWorker.addEventListener("message", (event) => { if (event.data?.type === "precache-progress") progressListeners.forEach((fn) => fn(event.data)); });
+  navigator.serviceWorker.startMessages?.(); // sem isto as mensagens de progresso ficam presas na fila até o fim do carregamento
+  const wait = (ms) => new Promise((resolve) => window.setTimeout(resolve, ms));
+  function settled(worker, limit) {
+    return new Promise((resolve) => {
+      if (!worker || ["installed", "activated", "redundant"].includes(worker.state)) { resolve(worker?.state); return; }
+      const timer = window.setTimeout(() => resolve("timeout"), limit);
+      worker.addEventListener("statechange", () => { if (["installed", "activated", "redundant"].includes(worker.state)) { window.clearTimeout(timer); resolve(worker.state); } });
+    });
+  }
+  function markReady() {
+    document.documentElement.dataset.offlineReady = "true";
+    window.dispatchEvent(new CustomEvent("oslab:offline-ready"));
+  }
+  let pending = null;
+  async function run(onProgress) {
+    const hadController = Boolean(navigator.serviceWorker.controller);
+    let registration;
     try {
-      const registration = await navigator.serviceWorker.register("./service-worker.js");
-      await navigator.serviceWorker.ready;
-      document.documentElement.dataset.offlineReady = "true";
-      window.dispatchEvent(new CustomEvent("oslab:offline-ready"));
-
-      registration.addEventListener("updatefound", () => {
-        const worker = registration.installing; if (!worker) return;
-        worker.addEventListener("statechange", async () => {
-          if (worker.state !== "installed" || !navigator.serviceWorker.controller) return;
-          document.documentElement.dataset.updateReady = "true";
-          const accept = await window.OSLab.ui.confirm({ title: "Nova versão pronta", message: "Atualize agora para usar os recursos mais recentes do OSLab.", confirmLabel: "Atualizar" });
-          if (accept) { reloadingForUpdate = true; worker.postMessage("SKIP_WAITING"); }
-        });
-      });
-      // A versão já instalada continua válida quando não há rede para procurar uma atualização.
-      void registration.update().catch(() => {});
+      registration = await navigator.serviceWorker.register("./service-worker.js", { updateViaCache: "none" });
     } catch (error) {
       console.error("Não foi possível preparar o OSLab para uso offline.", error);
       message("Modo offline indisponível", "Recarregue a página quando houver conexão para preparar os arquivos locais.", "warning");
+      return { status: "unavailable" };
     }
-  });
+    // a versão instalada continua valendo quando não há rede para procurar outra
+    try { await Promise.race([registration.update(), wait(8000)]); } catch (_) { markReady(); return { status: "offline" }; }
+    const worker = registration.installing || registration.waiting;
+    if (!worker) { await navigator.serviceWorker.ready; markReady(); return { status: "latest" }; }
+    const phase = hadController ? "update" : "install";
+    onProgress?.({ phase, done: 0, total: 0 });
+    const state = await settled(worker, 90000);
+    if (state === "redundant" || state === "timeout") { markReady(); return { status: "failed" }; }
+    if (!hadController) { await navigator.serviceWorker.ready; markReady(); return { status: "installed" }; }
+    // nova versão baixada: ativa e recarrega já na versão mais recente
+    document.documentElement.dataset.updateReady = "true";
+    reloadingForUpdate = true;
+    worker.postMessage("SKIP_WAITING");
+    return { status: "updating" };
+  }
+  window.OSLabPWA = {
+    check(onProgress) {
+      if (onProgress) progressListeners.add((data) => onProgress({ phase: navigator.serviceWorker.controller ? "update" : "install", ...data }));
+      return (pending ||= run(onProgress));
+    },
+  };
+  window.addEventListener("load", () => window.OSLabPWA.check());
 })();

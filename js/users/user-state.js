@@ -4,7 +4,7 @@
   const OSLab = global.OSLab = global.OSLab || {};
   const STORAGE_KEY = "oslab.users.state.v1";
   const listeners = new Set();
-  const PROFILE_KEYS = ["theme", "wallpaperId", "desktopFolders", "desktopFiles", "recycleBin", "fileSystem", "lastSettingsPage", "desktopView", "desktopSort", "lastRename"];
+  const PROFILE_KEYS = ["theme", "themeChosen", "wallpaperId", "desktopFolders", "desktopFiles", "recycleBin", "fileSystem", "lastSettingsPage", "desktopView", "desktopSort", "lastRename"];
   let systemState = null;
   let stateApplied = () => {};
   let currentUserId = null;
@@ -46,8 +46,9 @@
       base.profiles = {};
       base.accounts.forEach((account) => {
         const profile = base.profiles[account.id] = { ...blankProfile(), ...(parsed.profiles?.[account.id] || {}) };
-        profile.preferences = { ...blankProfile().preferences, ...profile.preferences, theme: "light" };
-        if (profile.systemState) profile.systemState.theme = "light";
+        // cada usuário guarda o próprio modo (claro ou escuro)
+        profile.preferences = { ...blankProfile().preferences, ...profile.preferences, theme: profile.preferences?.theme === "dark" ? "dark" : "light" };
+        if (profile.systemState) profile.systemState.theme = profile.systemState.theme === "dark" ? "dark" : "light";
       });
       base.device = { publicItems: Array.isArray(parsed.device?.publicItems) ? parsed.device.publicItems : [] };
       base.lastSelectedUserId = base.accounts.some((account) => account.id === parsed.lastSelectedUserId) ? parsed.lastSelectedUserId : base.accounts[0].id;
@@ -80,7 +81,7 @@
   }
   function captureSystemState(target = systemState, userId = currentUserId || state.lastSelectedUserId, persist = true) {
     if (!target || !accountById(userId)) return false;
-    target.theme = "light";
+    target.theme = target.theme === "dark" ? "dark" : "light";
     const profile = state.profiles[userId] = state.profiles[userId] || blankProfile();
     const items = Array.isArray(target.fileSystem?.items) ? clone(target.fileSystem.items) : [];
     const sharedIds = publicItemIds(items);
@@ -89,7 +90,7 @@
     profile.systemState = {};
     PROFILE_KEYS.filter((key) => key !== "fileSystem").forEach((key) => { profile.systemState[key] = clone(target[key]); });
     profile.preferences = {
-      theme: "light",
+      theme: target.theme,
       wallpaperId: target.wallpaperId || "1", desktopView: target.desktopView || "medium", desktopSort: target.desktopSort || "manual", lastSettingsPage: target.lastSettingsPage || "home",
     };
     if (persist) save();
@@ -99,7 +100,7 @@
     const profile = state.profiles[userId] || (state.profiles[userId] = blankProfile());
     if (!systemState) return;
     const saved = profile.systemState || {};
-    systemState.theme = "light";
+    systemState.themeChosen = false;
     PROFILE_KEYS.filter((key) => key !== "fileSystem").forEach((key) => {
       if (saved[key] !== undefined) systemState[key] = clone(saved[key]);
     });
@@ -107,7 +108,7 @@
     systemState.desktopView = profile.preferences?.desktopView || saved.desktopView || "medium";
     systemState.desktopSort = profile.preferences?.desktopSort || saved.desktopSort || "manual";
     systemState.lastSettingsPage = profile.preferences?.lastSettingsPage || saved.lastSettingsPage || "home";
-    systemState.theme = "light";
+    systemState.theme = (profile.preferences?.theme || saved.theme) === "dark" ? "dark" : "light";
     systemState.fileSystem = { version: 2, items: [...clone(profile.privateFileSystem?.items || []), ...clone(state.device.publicItems || [])] };
     systemState.desktopFolders = [];
     systemState.desktopFiles = [];

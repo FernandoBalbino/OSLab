@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'oslab-offline-v53';
+const CACHE_VERSION = 'oslab-offline-v54';
 const CACHE_PREFIX = 'oslab-offline-';
 
 const CORE_FILES = [
@@ -21,11 +21,32 @@ async function getPrecacheUrls() {
   return [...new Set([...CORE_FILES, ...projectFiles])].map(scopedUrl);
 }
 
+// Baixa cada arquivo direto do servidor (cache: 'reload'), para nenhuma cópia antiga do navegador entrar na versão nova,
+// e avisa a página do progresso para a tela de inicialização mostrar a porcentagem.
+async function precache() {
+  const urls = await getPrecacheUrls();
+  const cache = await caches.open(CACHE_VERSION);
+  let done = 0;
+  const report = async () => {
+    const clients = await self.clients.matchAll({ includeUncontrolled: true, type: 'window' });
+    clients.forEach((client) => client.postMessage({ type: 'precache-progress', done, total: urls.length }));
+  };
+  const queue = [...urls];
+  async function worker() {
+    while (queue.length) {
+      const url = queue.shift();
+      const response = await fetch(new Request(url, { cache: 'reload' }));
+      if (!response.ok) throw new Error(`Falha ao baixar ${url}: ${response.status}`);
+      await cache.put(url, response);
+      done += 1;
+      if (done % 8 === 0 || done === urls.length) await report();
+    }
+  }
+  await Promise.all(Array.from({ length: 6 }, worker));
+}
+
 self.addEventListener('install', (event) => {
-  event.waitUntil(
-    getPrecacheUrls()
-      .then((urls) => caches.open(CACHE_VERSION).then((cache) => cache.addAll(urls)))
-  );
+  event.waitUntil(precache());
 });
 
 self.addEventListener('activate', (event) => {
