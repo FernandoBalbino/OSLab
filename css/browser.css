@@ -43,11 +43,11 @@
 .sim-browser-window[data-browser="opera"] .vpn-browser-toolbar form { background: #f4f3f8; }
 .opera-menu-mark { display: grid; width: 29px; height: 29px; align-self: center; place-items: center; }
 .opera-menu-mark img { width: 23px; height: 23px; object-fit: contain; }
-.browser-newtab-page { min-height: 100%; font: 14px "Segoe UI", sans-serif; }
+.browser-newtab-page { min-height: 100%; color: #202124; font: 14px "Segoe UI", sans-serif; }
 .browser-newtab-page main { width: min(680px, 90%); margin: auto; padding: 80px 0; text-align: center; }
 .browser-newtab-page h1 { margin: 0 0 26px; font-size: 34px; }
 .browser-newtab-page form { display: flex; align-items: center; width: 100%; min-height: 52px; border-radius: 26px; padding: 5px 10px 5px 20px; background: #fff; box-shadow: 0 4px 20px rgba(20, 35, 58, .15); }
-.browser-newtab-page form input { min-width: 0; flex: 1; border: 0; outline: none; background: transparent; font: 15px "Segoe UI", sans-serif; }
+.browser-newtab-page form input { min-width: 0; flex: 1; border: 0; outline: none; background: transparent; color: #202124; font: 15px "Segoe UI", sans-serif; }
 .browser-newtab-page form button { min-height: 36px; border: 0; border-radius: 19px; padding: 0 13px; background: #eef2f7; color: #25364b; cursor: pointer; }
 .browser-quick-links { display: flex; flex-wrap: wrap; justify-content: center; gap: 16px; margin: 28px auto; }
 .browser-quick-links button { display: grid; width: 104px; height: 82px; place-items: center; border: 1px solid #dbe2ed; border-radius: 12px; background: rgba(255,255,255,.85); color: #29415f; font: 600 13px "Segoe UI", sans-serif; cursor: pointer; }
