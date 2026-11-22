@@ -207,7 +207,8 @@
       if (a.closed.length >= FIVE.length) mark("all");
     }
     if (order === 4) {
-      if (type === "taskmanager:search" && String(detail.query).includes(String(PID))) mark("search");
+      // vale com os 3 primeiros dígitos (734 só bate com o PID certo; o falso é 7430)
+      if (type === "taskmanager:search" && ((String(detail.query).trim().length >= 3 && String(PID).startsWith(String(detail.query).trim())) || String(detail.query).includes(String(PID)))) mark("search");
       if (type === "taskmanager:nav" && detail.page === "details") mark("details");
       if (type === "process:ended" && detail.pid === PID) { mark("search"); mark("details"); mark("end"); }
       if (type === "process:ended" && detail.pid === DECOY) {

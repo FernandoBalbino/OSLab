@@ -92,6 +92,26 @@ test("Reiniciar missão volta a loja ao começo da missão (desinstala o que foi
   void lab;
 });
 
+test("pesquisa vale com as 3 primeiras letras do nome", () => {
+  const f = fixture();
+  f.lab.start("store-1"); f.lab.finish?.("return");
+  const done = {}; for (let i = 1; i <= 3; i++) done[`store-${i}`] = { score: 10 };
+  f.saved.set("oslab.store.missions.v1", JSON.stringify({ version: 1, completed: done, active: null, totalScore: 30 }));
+  const g = fixture(f.saved);
+  g.lab.start("store-4");
+  g.emit("store:search", { query: "sp" });
+  assert.equal(g.lab.getProgress().active.checklist.search, undefined, "2 letras não bastam");
+  g.emit("store:search", { query: "spotif" });
+  assert.equal(g.lab.getProgress().active.checklist.search, true, "spotif vale");
+  const h = fixture(); h.lab.start("store-1"); h.lab.finish?.("return");
+  const d1 = {}; d1["store-1"] = { score: 10 };
+  h.saved.set("oslab.store.missions.v1", JSON.stringify({ version: 1, completed: d1, active: null, totalScore: 10 }));
+  const k = fixture(h.saved);
+  k.lab.start("store-2");
+  k.emit("store:search", { query: "Chá" });
+  assert.equal(k.lab.getProgress().active.checklist.search, true, "cha (com acento e maiúscula) vale para ChatGPT");
+});
+
 test("senha errada no login vira aviso com a senha certa", () => {
   const f = fixture();
   const done = {}; for (let i = 1; i <= 4; i++) done[`store-${i}`] = { score: 10 };

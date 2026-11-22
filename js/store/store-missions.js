@@ -14,7 +14,7 @@
       q("Por que baixar aplicativos pela Microsoft Store?", ["Porque os aplicativos são conferidos e instalam e atualizam sozinhos.", "Porque todos os aplicativos são pagos.", "Porque a loja deixa o computador mais rápido."], 0, ["Correto! É a fonte oficial: sem sites falsos e sem instaladores com vírus escondido.", "A maioria é gratuita; a loja mostra o preço antes.", "A loja só instala; ela não deixa o computador mais rápido."])],
     ["Pesquise antes de baixar", "Antes de instalar, um bom técnico confere quem fez o aplicativo (o editor), o preço e a nota dos usuários.", "Pesquise ChatGPT, abra a página do aplicativo e registre editor, preço e nota.", "folder_search",
       "A caixa de pesquisa fica no topo da loja. Na página do aplicativo aparecem o editor (em azul), a nota com estrela e o botão com o preço ou Instalar.",
-      [["search", "Na caixa do topo, pesquise: ChatGPT (aperte Enter)."], ["page", "Clique no ChatGPT para abrir a página dele."], ["recorded", "No robô, registre editor, preço e nota e clique em Conferir."]],
+      [["search", "Na caixa do topo, pesquise ChatGPT e aperte Enter (basta começar: cha)."], ["page", "Clique no ChatGPT para abrir a página dele."], ["recorded", "No robô, registre editor, preço e nota e clique em Conferir."]],
       q("Para que serve conferir o editor de um aplicativo?", ["Para ter certeza de que é o aplicativo oficial e não uma cópia falsa.", "Para descobrir o tamanho da tela.", "Para trocar o idioma do Windows."], 0, ["Correto! O ChatGPT verdadeiro é da OpenAI. Um 'ChatGPT' de outro editor pode ser golpe.", "O tamanho da tela não depende do aplicativo.", "Idioma se troca em Configurações."])],
     ["Instalar e abrir", "Com o aplicativo certo encontrado, é hora de instalar. A loja baixa, instala e coloca o atalho no menu Iniciar.", "Instale o ChatGPT, abra pelo botão Abrir e faça uma pergunta.", "play",
       "Instalar → a loja mostra Baixando e a porcentagem → quando termina, o botão vira Abrir.",
@@ -22,7 +22,7 @@
       q("Depois de instalado, onde mais você encontra o aplicativo?", ["No menu Iniciar.", "Só dentro da loja, para sempre.", "Na Lixeira."], 0, ["Correto! Todo aplicativo instalado aparece no menu Iniciar.", "Você não precisa abrir a loja toda vez: use o Iniciar.", "A Lixeira guarda arquivos apagados, não aplicativos."]), "chatgpt"],
     ["Spotify: instale e entre", "Muitos aplicativos pedem uma conta. Depois de instalar, é preciso entrar com e-mail e senha.", "Instale o Spotify, entre com a conta que o robô mostra e toque uma música.", "speaker_2",
       "Digite o e-mail e a senha exatamente como estão no robô. Letras maiúsculas e minúsculas fazem diferença na senha.",
-      [["install", "Pesquise Spotify na loja e clique em Instalar."], ["login", "Abra o Spotify e entre com o e-mail e a senha do robô."], ["play", "Clique em uma música da playlist para tocar."]],
+      [["search", "Na caixa do topo da loja, pesquise Spotify e aperte Enter (basta começar: spo)."], ["install", "Abra o Spotify e clique em Instalar."], ["login", "Abra o Spotify e entre com o e-mail e a senha do robô."], ["play", "Clique em uma música da playlist para tocar."]],
       q("O que fazer com a senha de uma conta?", ["Guardar só para mim e não contar para ninguém.", "Mandar no grupo da turma para não esquecer.", "Escrever na tela de bloqueio."], 0, ["Correto! Senha é pessoal. Quem sabe a senha entra na conta como se fosse você.", "Nunca compartilhe senha em grupos.", "Senha à vista deixa qualquer um entrar."]), "spotify"],
     ["Netflix: instale e assista", "O aplicativo da Netflix também pede login. Depois, cada pessoa escolhe o próprio perfil.", "Instale a Netflix, entre com a conta do robô, escolha o perfil Aluno e assista a um título.", "play",
       "Depois de entrar, a Netflix pergunta: Quem está assistindo? Escolha o seu perfil.",
@@ -120,6 +120,9 @@
   function unmark(id) { const a = progress.active; if (a) delete a.checklist[id]; }
   function notice(text) { const a = progress.active; if (a) { a.notice = text; O.assistantRobot?.expand?.(); } }
   const PASS = { spotify: "Musica2026", netflix: "Filmes2026", discord: "Conversa2026" };
+  // pesquisa vale com as 3 primeiras letras do nome ("spo", "spotif"), sem acento, espaço ou maiúscula
+  const norm = (s) => String(s || "").normalize("NFD").replace(/[̀-ͯ\s]/g, "").toLowerCase();
+  const typed = (query, name) => { const q = norm(query); return q.length >= 3 && norm(name).startsWith(q); };
 
   O.events.subscribe("oslab:event", ({ type, detail = {} }) => {
     const a = progress.active, m = missionOf(), order = m?.order;
@@ -135,7 +138,7 @@
       if (type === "store:nav" && detail.page === "games" && c.open) mark("games");
     }
     if (order === 2) {
-      if (type === "store:search" && /chat\s*gpt/i.test(detail.query)) mark("search");
+      if (type === "store:search" && typed(detail.query, "ChatGPT")) mark("search");
       if (type === "store:product" && detail.id === "chatgpt") { mark("search"); mark("page"); }
     }
     const installed = (id) => type === "store:installed" && detail.id === id && !detail.silent;
@@ -147,8 +150,9 @@
     }
     if ([4, 5, 6].includes(order)) {
       const app = m.app;
-      if (installed(app)) mark("install");
-      if (type === "storeapp:login" && detail.app === app && detail.ok) { mark("install"); mark("login"); }
+      if (order === 4 && ((type === "store:search" && typed(detail.query, "Spotify")) || (type === "store:product" && detail.id === app))) mark("search");
+      if (installed(app)) { mark("search"); mark("install"); }
+      if (type === "storeapp:login" && detail.app === app && detail.ok) { mark("search"); mark("install"); mark("login"); }
       if (order === 4 && type === "spotify:play" && c.login) mark("play");
       if (order === 5 && type === "netflix:profile" && c.login) mark("profile");
       if (order === 5 && type === "netflix:play" && c.profile) mark("play");
