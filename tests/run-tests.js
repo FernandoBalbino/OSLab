@@ -53,6 +53,11 @@ test("trilha do Gerenciador de Tarefas tem 12 missões, reinício e programas de
   assert.equal(focused.status, 0, focused.stderr || focused.stdout);
 });
 
+test("trilha da Microsoft Store tem 12 missões, downloads, reinício de missão e login", () => {
+  const focused = spawnSync(process.execPath, ["--test", path.join(root, "tests/store-lab.test.mjs")], { encoding: "utf8" });
+  assert.equal(focused.status, 0, focused.stderr || focused.stdout);
+});
+
 test("trilha WhatsApp libera 20 contatos, confere as tarefas e ensina com os golpes", () => {
   const focused = spawnSync(process.execPath, ["--test", path.join(root, "tests/zap-trail.test.mjs")], { encoding: "utf8" });
   assert.equal(focused.status, 0, focused.stderr || focused.stdout);

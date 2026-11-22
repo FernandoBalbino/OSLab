@@ -67,6 +67,13 @@ O OSLab não é afiliado à Microsoft. A interface é uma simulação educaciona
 - São propriedade da Microsoft e aparecem aqui só para simular fielmente o Windows 11 em uma atividade educacional sem fins lucrativos, como os ícones do Gerenciador de Dispositivos.
 - Os botões da barra de comandos do Explorador (`assets/icons/taskmanager/fluent/fx-*.svg`) vêm do pacote Fluent UI System Icons (MIT), listado acima.
 
+## Microsoft Store do OSLab
+
+- `assets/store/*-icon.webp`, `*-poster.webp`, `*-hero.webp` e `*-shot*.webp`: ícones, pôsteres, imagens de destaque e capturas de tela dos produtos, baixados do catálogo público da Microsoft Store para o Brasil (`displaycatalog.mp.microsoft.com` e `storeedgefd.dsx.mp.microsoft.com`) em 22/11/2026 e convertidos para WebP menores. Título, editor, categoria, nota e preço também vêm desse catálogo (`js/store/store-catalog.js`).
+- Os nomes, logotipos e imagens são marcas e materiais de divulgação de seus donos (Microsoft, OpenAI, Spotify, Netflix, Discord, ibis, Brave, Opera, Mozilla, Meta, Roblox, Epic Games e outros). Aparecem só para simular a loja em uma atividade educacional sem fins lucrativos; o OSLab não é afiliado a nenhum deles.
+- Só ChatGPT, Spotify, Netflix, Discord, ibis Paint, Brave, Opera, Firefox, Calculadora, Microsoft To Do, Relógio e Notas Autoadesivas funcionam no OSLab, com telas próprias e simplificadas (as músicas e os filmes são fictícios). Os outros mostram o aviso de que ainda não existem.
+- `assets/icons/win11/store-*.png`: ícone da Microsoft Store do mesmo catálogo. `assets/store/trail-icon.svg`: desenho original do OSLab.
+
 ## Trilha de Som
 
 - `assets/drivers/devmgr/camera-*.png`: ícone da classe Câmeras extraído de `ddores.dll,-2555` do Windows 11.

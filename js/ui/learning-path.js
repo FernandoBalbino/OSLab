@@ -3,7 +3,6 @@
 
   const OSLab = global.OSLab = global.OSLab || {};
   const ICON_ROOT = "assets/learning/icons";
-  const lanes = [0, 1, 2, 1];
 
   function safe(value) { return OSLab.ui.escapeHtml(value); }
   function icon(name) { return `${ICON_ROOT}/${name}.svg`; }
@@ -16,44 +15,29 @@
   function statusIcon(status) {
     return icon(status === "completed" ? "checkmark_circle" : status === "locked" ? "lock_closed" : status === "active" ? "play" : "target_arrow");
   }
-  function connectorDirection(from, to) {
-    if (to > from) return "is-down-right";
-    if (to < from) return "is-down-left";
-    return "is-down";
-  }
-  function nodeMarkup(item, index, selectedId, kind, hasNext) {
-    const lane = lanes[index % lanes.length];
-    const nextLane = lanes[(index + 1) % lanes.length];
-    const isMission = kind === "mission" || kind === "vpn-mission" || kind === "install-mission" || kind === "browser-mission" || kind === "digital-mission" || kind === "users-mission" || kind === "wifi-mission" || kind === "drivers-mission" || kind === "audio-mission";
-    const feminine = isMission;
-    const selectAttr = kind === "mission"
-      ? "data-mission-select"
-      : kind === "vpn-mission"
-        ? "data-vpn-mission-select"
-        : kind === "install-mission"
-          ? "data-install-mission-select"
-          : kind === "browser-mission"
-            ? "data-browser-mission-select"
-        : kind === "digital-mission" ? "data-digital-mission-select" : kind === "users-mission" ? "data-users-mission-select" : kind === "wifi-mission" ? "data-wifi-mission-select" : kind === "drivers-mission" ? "data-drivers-mission-select" : kind === "audio-mission" ? "data-audio-mission-select" : kind === "task-mission" ? "data-task-mission-select" : "data-exercise-select";
-    const connector = !hasNext ? "" : `<img class="learning-connector lane-${lane} ${connectorDirection(lane, nextLane)}" src="${icon("arrow_right")}" alt="" aria-hidden="true" />`;
-    return `<div class="learning-step lane-${lane}">
-      <button type="button" class="learning-node is-${item.status} ${item.id === selectedId ? "is-selected" : ""}" ${selectAttr}="${safe(item.id)}" ${item.status === "locked" ? "disabled" : ""} ${item.status === "active" ? 'aria-current="step"' : ""} aria-label="${safe(`${isMission ? "Missão" : "Exercício"} ${item.order}: ${item.title}. ${statusLabel(item.status, feminine)}`)}">
-        <span class="learning-node-face"><img src="${safe(item.icon)}" alt="" /></span>
-        <span class="learning-node-state"><img src="${statusIcon(item.status)}" alt="" /></span>
-        <span class="learning-node-number">${String(item.order).padStart(2, "0")}</span>
-      </button>
-      <span class="learning-node-label"><strong>${safe(item.title)}</strong><small>${statusLabel(item.status, feminine)}</small></span>
-    </div>${connector}`;
+  // atributo de seleção de cada trilha (os aplicativos escutam cliques por ele)
+  const SELECT_ATTR = { mission: "data-mission-select", "vpn-mission": "data-vpn-mission-select", "install-mission": "data-install-mission-select", "browser-mission": "data-browser-mission-select", "digital-mission": "data-digital-mission-select", "users-mission": "data-users-mission-select", "wifi-mission": "data-wifi-mission-select", "drivers-mission": "data-drivers-mission-select", "audio-mission": "data-audio-mission-select", "task-mission": "data-task-mission-select", "store-mission": "data-store-mission-select" };
+  /** cada missão vira uma "fase": número grande, ícone, nome e situação; todas cabem na tela sem rolar */
+  function nodeMarkup(item, index, selectedId, kind) {
+    const isMission = kind !== "exercise";
+    const selectAttr = SELECT_ATTR[kind] || "data-exercise-select";
+    return `<button type="button" class="phase-tile is-${item.status}${item.id === selectedId ? " is-selected" : ""}" ${selectAttr}="${safe(item.id)}" ${item.status === "locked" ? "disabled" : ""} ${item.status === "active" ? 'aria-current="step"' : ""} aria-label="${safe(`Fase ${item.order}: ${item.title}. ${statusLabel(item.status, isMission)}`)}">
+      <span class="phase-num">${String(item.order).padStart(2, "0")}</span>
+      <img class="phase-state" src="${statusIcon(item.status)}" alt="" />
+      <img class="phase-icon" src="${safe(item.icon)}" alt="" />
+      <strong>${safe(item.title)}</strong>
+    </button>`;
   }
 
   function renderSections(items, sections, selectedId, kind) {
-    return sections.map((section) => {
+    return `<div class="phase-board">${sections.map((section) => {
       const sectionItems = items.filter((item) => section.orders.includes(item.order));
-      return `<section class="learning-unit" aria-labelledby="${kind}-unit-${section.slug}">
-        <header><span><img src="${icon(section.icon || "ribbon")}" alt="" /></span><div><small>${safe(section.kicker)}</small><h2 id="${kind}-unit-${section.slug}">${safe(section.title)}</h2><p>${safe(section.description)}</p></div></header>
-        <div class="learning-path" role="list">${sectionItems.map((item, index) => nodeMarkup(item, index, selectedId, kind, index < sectionItems.length - 1)).join("")}</div>
+      const done = sectionItems.filter((item) => item.status === "completed").length;
+      return `<section class="phase-unit" aria-labelledby="${kind}-unit-${section.slug}">
+        <h2 id="${kind}-unit-${section.slug}"><span>${safe(String(section.kicker || "").split("·")[0].trim())}</span>${safe(section.title)}<em>${done}/${sectionItems.length}</em></h2>
+        <div class="phase-row">${sectionItems.map((item, index) => nodeMarkup(item, index, selectedId, kind)).join("")}</div>
       </section>`;
-    }).join("");
+    }).join("")}</div>`;
   }
 
   function renderHint(hint, label = "Dica passo a passo") {

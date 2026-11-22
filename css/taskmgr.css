@@ -1,9 +1,9 @@
 /* Trilha Gerenciador de Tarefas: robô, animação "como abrir", destaque da barra e Discord */
-.learning-assistant.is-task-lab { right: 14px; left: auto; width: 354px; max-width: calc(100vw - 28px); max-height: calc(100dvh - var(--taskbar-height) - 26px); z-index: 120; }
-.learning-assistant.is-task-lab.is-collapsed { width: 94px; }
-.learning-assistant.is-task-lab .assistant-body { max-height: min(540px, calc(100dvh - var(--taskbar-height) - 135px)); overflow: auto; }
-.learning-assistant.is-task-lab .learning-instructions { margin: 0; }
-.learning-assistant.is-task-lab .learning-instructions li { font-size: 12px; }
+.learning-assistant:is(.is-task-lab, .is-store-lab) { right: 14px; left: auto; width: 354px; max-width: calc(100vw - 28px); max-height: calc(100dvh - var(--taskbar-height) - 26px); z-index: 120; }
+.learning-assistant:is(.is-task-lab, .is-store-lab).is-collapsed { width: 94px; }
+.learning-assistant:is(.is-task-lab, .is-store-lab) .assistant-body { max-height: min(540px, calc(100dvh - var(--taskbar-height) - 135px)); overflow: auto; }
+.learning-assistant:is(.is-task-lab, .is-store-lab) .learning-instructions { margin: 0; }
+.learning-assistant:is(.is-task-lab, .is-store-lab) .learning-instructions li { font-size: 12px; }
 body:has(.learning-assistant.is-task-lab:not(.is-collapsed)) .taskmanager-window.is-maximized { right: 368px !important; width: auto !important; }
 
 /* ---------- animação: cursor → espaço vazio → zoom → 2 dedos → menu → Gerenciador ---------- */

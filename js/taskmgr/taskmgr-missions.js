@@ -109,7 +109,7 @@
     if (order === 6) { scenarioProcess({ appId: "taskmgr-cpu", name: "Conversor de Vídeo", exe: "VideoConverter.exe", icon: "assets/icons/settings-rows/video.png", cpu: 94, memory: 212, disk: 3.1 }); O.systemState?.configure?.({ slowMode: true }); }
     if (order === 7) { S?.closeApp?.("google"); scenarioProcess({ appId: "taskmgr-mem", name: "Editor de Fotos Pro", exe: "PhotoEditorPro.exe", icon: "assets/icons/win/pictures.png", cpu: 1.2, memory: 2900 }); O.systemState?.configure?.({ blockedAppId: "google", requiredAppMemoryMb: 700 }); }
     if (order === 8) scenarioProcess({ appId: "taskmgr-eff", name: "Atualizador de Jogos", exe: "GameUpdater.exe", icon: "assets/settings/Gaming.webp", cpu: 38, memory: 164, disk: 4.2, network: 6.5 });
-    if (order === 10) { S?.closeApp?.("discord"); PM()?.setStartupEnabled?.("discord", true); }
+    if (order === 10) { S?.closeApp?.("discord"); O.store?.install?.("discord", { instant: true }); PM()?.setStartupEnabled?.("discord", true); }
     if (order === 11) [...HIGH, "media-helper"].forEach((id) => PM()?.setStartupEnabled?.(id, true));
     if (order === 12) {
       S?.openTextEditor?.({ missionId: TAG, frozen: true, title: "Notas da Secretaria" });

@@ -33,6 +33,8 @@
     <link rel="stylesheet" href="css/taskmgr.css">
     <link rel="stylesheet" href="css/explorer.css">
     <link rel="stylesheet" href="css/theme-dark.css">
+    <link rel="stylesheet" href="css/store.css">
+    <link rel="stylesheet" href="css/phases.css">
   </head>
   <body>
     <main id="oslab" class="oslab" data-state="login">
@@ -123,6 +125,7 @@
           <button class="desktop-shortcut" type="button" data-app="printer"><img src="assets/drivers/printer-icon.png" alt=""><span>Impressora</span></button>
           <button class="desktop-shortcut" type="button" data-app="audiolab"><img src="assets/audio/trail-icon.svg" alt=""><span>Som: sem áudio na aula</span></button>
           <button class="desktop-shortcut" type="button" data-app="tasklab"><img src="assets/taskmgr/trail-icon.svg" alt=""><span>Trilha: Gerenciador de Tarefas</span></button>
+          <button class="desktop-shortcut" type="button" data-app="storelab"><img src="assets/store/trail-icon.svg" alt=""><span>Trilha: Microsoft Store</span></button>
           <button class="desktop-shortcut" type="button" data-app="aulaonline"><img src="assets/audio/aula-icon.svg" alt=""><span>Aula On-line</span></button>
           <button class="desktop-shortcut" type="button" data-app="browsertrail">
             <img src="assets/icons/trails/browsertrail.svg" alt="" />
@@ -236,6 +239,8 @@
             <button type="button" data-app="sysinfo"><img src="assets/drivers/system-info.svg" alt=""><span>Informações do Sistema</span></button>
             <button type="button" data-app="audiolab"><img src="assets/audio/trail-icon.svg" alt=""><span>Som</span></button>
             <button type="button" data-app="tasklab"><img src="assets/taskmgr/trail-icon.svg" alt=""><span>Trilha do Gerenciador</span></button>
+            <button type="button" data-app="msstore"><img src="assets/icons/win11/store-48.png" alt=""><span>Microsoft Store</span></button>
+            <button type="button" data-app="storelab"><img src="assets/store/trail-icon.svg" alt=""><span>Trilha da Loja</span></button>
             <button type="button" data-app="aulaonline"><img src="assets/audio/aula-icon.svg" alt=""><span>Aula On-line</span></button>
             <button type="button" data-app="browsertrail">
               <img src="assets/icons/trails/browsertrail.svg" alt="" />
@@ -452,6 +457,9 @@
             <button class="taskbar-button task-app" type="button" data-app="google" aria-label="Google Chrome">
               <img src="assets/browser/chrome.svg" alt="" />
             </button>
+            <button class="taskbar-button task-app" type="button" data-app="msstore" aria-label="Microsoft Store">
+              <img src="assets/icons/win11/store-48.png" alt="" />
+            </button>
             <button class="taskbar-button task-app" type="button" data-app="settings" aria-label="Configurações">
               <img src="assets/icons/settings.png" alt="" />
             </button>
@@ -502,6 +510,9 @@
     <script defer src="js/audio/audio-state.js"></script>
     <script defer src="js/audio/audio-missions.js"></script>
     <script defer src="js/taskmgr/taskmgr-missions.js"></script>
+    <script defer src="js/store/store-catalog.js"></script>
+    <script defer src="js/store/store-state.js"></script>
+    <script defer src="js/store/store-missions.js"></script>
     <script defer src="js/missions/mission-catalog.js"></script>
     <script defer src="js/missions/mission-storage.js"></script>
     <script defer src="js/missions/mission-engine.js"></script>
@@ -550,6 +561,9 @@
     <script defer src="js/apps/audio-app.js"></script>
     <script defer src="js/apps/zap-app.js"></script>
     <script defer src="js/apps/taskmgr-app.js"></script>
+    <script defer src="js/apps/store-app.js"></script>
+    <script defer src="js/apps/store-apps.js"></script>
+    <script defer src="js/apps/store-trail-app.js"></script>
     <script defer src="script.js"></script>
     <script defer src="js/pwa.js"></script>
   </body>

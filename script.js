@@ -421,6 +421,16 @@
       button.addEventListener("click", () => openApp(program.id));
       container.appendChild(button);
     });
+    // apps baixados na Microsoft Store aparecem no Iniciar (os que já têm atalho fixo não repetem)
+    (OSLab.store?.installedApps?.() || []).filter((app) => !$(`#start-apps [data-app="${app.id}"]:not(.installed-start-app)`)).forEach((app) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "installed-start-app";
+      button.dataset.app = app.id;
+      button.innerHTML = `<img src="${escapeHtml(app.icon)}" alt="" /><span>${escapeHtml(app.name)}</span>`;
+      button.addEventListener("click", () => { OSLab.events.emit("start:app-opened", { appId: app.id }, "startMenu"); openApp(app.id); });
+      container.appendChild(button);
+    });
     const query = $("#start-search-input")?.value.trim().toLocaleLowerCase("pt-BR") || "";
     $$("#start-apps [data-app]").forEach((button) => button.classList.toggle("is-hidden", !button.textContent.trim().toLocaleLowerCase("pt-BR").includes(query)));
   }
@@ -1315,7 +1325,7 @@
 
   function settingsAppsMarkup() {
     const rows = [
-      { name: "Aplicativos instalados", description: "Desinstalar e gerenciar aplicativos no computador", icon: "assets/settings/Apps.webp" },
+      { name: "Aplicativos instalados", description: "Desinstalar e gerenciar aplicativos no computador", icon: "assets/settings/Apps.webp", page: "installed-apps" },
       { name: "Configurações avançadas dos aplicativos", description: "Escolha onde obter aplicativos, arquivar aplicativos, desinstalar atualizações", icon: "assets/icons/settings.png" },
       { name: "Aplicativos padrão", description: "Padrões para tipos de arquivos e de links, outros padrões", icon: "assets/icons/chrome.png" },
       { name: "Ações", description: "O Windows pode recomendar ações desses aplicativos.", icon: "assets/icons/context/new.png" },
@@ -1447,14 +1457,16 @@
     const isColors = pageId === "colors";
     const isStorage = pageId === "storage";
     const isOtherUsers = pageId === "other-users";
+    const isInstalledApps = pageId === "installed-apps";
     const section = isBackground || isColors
       ? settingsSections.find((item) => item.id === "personalization")
       : isStorage ? settingsSections.find((item) => item.id === "system")
       : isOtherUsers ? settingsSections.find((item) => item.id === "accounts")
+      : isInstalledApps ? settingsSections.find((item) => item.id === "apps")
       : pageId === "network-advanced" ? settingsSections.find((item) => item.id === "network")
       : settingsSections.find((item) => item.id === pageId) || settingsSections[0];
     record.settingsView = isBackground ? "background" : isColors ? "colors" : isStorage ? "storage" : isOtherUsers ? "other-users" : section.id;
-    if (pageId === "network-advanced") record.settingsView = pageId;
+    if (pageId === "network-advanced" || isInstalledApps) record.settingsView = pageId;
     record.address.textContent = isBackground ? "Plano de fundo" : isStorage ? "Armazenamento" : isOtherUsers ? "Outros usuários" : section.name;
     state.lastSettingsPage = record.settingsView;
     saveState();
@@ -1463,6 +1475,7 @@
     if (isColors) mainContent = `<header class="settings-page-heading with-back"><button type="button" data-settings-back="personalization" aria-label="Voltar para Personalização"><img src="assets/icons/ui/left.png" alt="" /></button><div><small>Personalização</small><h1>Cores</h1></div></header><article class="settings-card"><h2>Escolha o seu modo</h2><p>Altere as cores que aparecem no Windows e nos aplicativos.</p>${themeCardsMarkup()}</article><article class="settings-card"><h2>Cor de destaque</h2><p>Azul do Windows</p><span class="settings-accent-preview" aria-label="Azul do Windows"></span></article>`;
     else if (isBackground) mainContent = settingsBackgroundMarkup();
     else if (isStorage) mainContent = OSLab.systemTools.storageMarkup();
+    else if (isInstalledApps) { mainContent = OSLab.storeApp.installedAppsMarkup(); OSLab.events.emit("settings:installed-apps-opened", {}, "settings"); }
     else if (section.id === "system") mainContent = settingsSystemMarkup();
     else if (section.id === "bluetooth") mainContent = settingsBluetoothMarkup();
     else if (section.id === "network") mainContent = settingsNetworkMarkup();
@@ -1495,6 +1508,8 @@
     if (OSLab.driversApps?.ids.has(record.appId)) OSLab.driversApps.render(record);
     if (OSLab.audioApps?.ids.has(record.appId)) OSLab.audioApps.render(record);
     if (OSLab.taskLabApps?.ids.has(record.appId)) OSLab.taskLabApps.render(record);
+    if (OSLab.storeApps?.ids.has(record.appId)) OSLab.storeApps.render(record);
+    if (record.appId === "storelab") OSLab.storeTrailApp.render(record);
     if (record.appId === "browsertrail") OSLab.browserTrailsApp.renderTrail(record);
     if (record.appId === "browsermuseum") OSLab.browserTrailsApp.renderMuseum(record);
     if (record.appId === "whatsapp") OSLab.zapApp.render(record);
@@ -1573,7 +1588,7 @@
     record.address.textContent = definition.address;
     record.toolbar.classList.toggle("browser-toolbar", ["google", "edge", "firefox", "brave", "opera"].includes(appId));
     element.classList.toggle("settings-window", appId === "settings");
-    record.toolbar.classList.toggle("is-hidden", ["settings", "taskmanager", "missions", "exercises", "vpn", "vpnlab", "installlab", "browsertrail", "digitallife", "userspermissions", "wifilab", "driverslab", "printer", "devicemanager", "sysinfo", "driverinstaller", "audiolab", "aulaonline", "audioinstaller", "tasklab", "discord", "browsermuseum", "controlpanel", "installer", "appjavafx", "word", "excel", "slides", "texteditor", "whatsapp"].includes(appId));
+    record.toolbar.classList.toggle("is-hidden", ["settings", "taskmanager", "missions", "exercises", "vpn", "vpnlab", "installlab", "browsertrail", "digitallife", "userspermissions", "wifilab", "driverslab", "printer", "devicemanager", "sysinfo", "driverinstaller", "audiolab", "aulaonline", "audioinstaller", "tasklab", "discord", "msstore", "storelab", "chatgpt", "spotify", "netflix", "ibispaint", "calculator", "todo", "clock", "stickynotes", "browsermuseum", "controlpanel", "installer", "appjavafx", "word", "excel", "slides", "texteditor", "whatsapp"].includes(appId));
     record.settingsSearch.classList.toggle("is-hidden", appId !== "settings" && appId !== "taskmanager");
     element.classList.toggle("taskmanager-window", appId === "taskmanager");
     element.classList.toggle("missions-window", appId === "missions");
@@ -1585,8 +1600,10 @@
     element.classList.toggle("userspermissions-window", appId === "userspermissions");
     element.classList.toggle("wifilab-window", appId === "wifilab");
     element.classList.toggle("drivers-window", Boolean(OSLab.driversApps?.ids.has(appId) || OSLab.audioApps?.ids.has(appId)));
-    element.classList.toggle("driverslab-window", appId === "driverslab" || appId === "audiolab" || appId === "tasklab");
+    element.classList.toggle("driverslab-window", appId === "driverslab" || appId === "audiolab" || appId === "tasklab" || appId === "storelab");
     element.classList.toggle("discord-window", appId === "discord");
+    element.classList.toggle("store-app-window", Boolean(OSLab.storeApps?.ids.has(appId)) && appId !== "msstore");
+    element.classList.toggle("store-app-" + appId, Boolean(OSLab.storeApps?.ids.has(appId)));
     element.classList.toggle("browser-museum-window", appId === "browsermuseum");
     element.classList.toggle("zap-window", appId === "whatsapp");
     element.classList.toggle("software-window", OSLab.softwareApps?.appIds?.has(appId));
@@ -1607,7 +1624,7 @@
     positionWindow(record);
     wireWindow(record);
     renderApp(record);
-    if (["settings", "taskmanager", "missions", "exercises", "vpnlab", "installlab", "browsertrail", "digitallife", "userspermissions", "wifilab", "driverslab", "audiolab", "tasklab", "browsermuseum", "whatsapp"].includes(appId)) {
+    if (["settings", "taskmanager", "missions", "exercises", "vpnlab", "installlab", "browsertrail", "digitallife", "userspermissions", "wifilab", "driverslab", "audiolab", "tasklab", "storelab", "msstore", "browsermuseum", "whatsapp"].includes(appId)) {
       element.classList.add("is-maximized");
       record.maximizeIcon.src = "assets/icons/ui/restore.png";
       record.maximizeIcon.closest("button").setAttribute("aria-label", "Restaurar");
@@ -1632,7 +1649,7 @@
 
   function openApp(appId, options = {}) {
     const requestedDefinition = appDefinitions[appId];
-    if (requestedDefinition?.installedOnly && !OSLab.software?.isInstalled?.(appId)) {
+    if (requestedDefinition?.installedOnly && !OSLab.software?.isInstalled?.(appId) && !OSLab.store?.isInstalled?.(appId)) {
       OSLab.ui.notify("Programa não instalado", `${requestedDefinition.title} precisa ser instalado antes de ser aberto.`, "warning");
       OSLab.events.emit("app:launch-blocked", { appId, reason: "not-installed" }, "windowManager");
       return null;
@@ -2406,7 +2423,7 @@
   $("#global-search-input").addEventListener("input", (event) => {
     const query = event.target.value.trim().toLocaleLowerCase("pt-BR");
     const matches = OSLab.apps.list()
-      .filter((item) => item.id !== "installer" && (!item.installedOnly || OSLab.software?.isInstalled?.(item.id)))
+      .filter((item) => item.id !== "installer" && (!item.installedOnly || OSLab.software?.isInstalled?.(item.id) || OSLab.store?.isInstalled?.(item.id)))
       .map((item) => ({ id: item.id, name: item.title, icon: item.icon }))
       .filter((item) => item.name.toLocaleLowerCase("pt-BR").includes(query));
 

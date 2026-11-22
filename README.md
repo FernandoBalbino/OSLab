@@ -112,6 +112,20 @@ A Nova guia segue o Chrome atual: logotipo oficial do Google, caixa de pesquisa 
 - **Modo claro ou escuro**: no primeiro acesso de cada usuário, o OSLab pergunta “Escolha o seu modo” com miniaturas do papel de parede atual. O modo vale para tudo junto (barra de tarefas, Iniciar, Configurações rápidas, menus, janelas, Configurações, Explorador e Gerenciador de Tarefas) e fica salvo no perfil. Para trocar: Configurações › Personalização › Cores. O Gerenciador de Tarefas segue o sistema (ou Claro/Escuro nas configurações dele).
 - **Explorador de Arquivos** no padrão do Windows 11: guia na barra de título, Voltar/Avançar/Acima/Atualizar, endereço em partes clicáveis, pesquisa, barra de comandos (Novo, Recortar, Copiar, Colar, Renomear, Compartilhar, Excluir, Classificar, Visualizar), painel Detalhes, barra lateral com Início, Galeria, pastas fixadas, Lixeira e Este Computador, Início com Acesso rápido e Recentes, exibição em ícones grandes, médios, lista ou detalhes e barra de status. Os ícones foram extraídos do próprio Windows 11 (veja os créditos).
 
+## Microsoft Store
+
+A trilha **Microsoft Store** ensina a baixar aplicativos pela loja oficial do Windows, em 12 missões: conhecer a loja; pesquisar e conferir editor, preço e nota; instalar e abrir (ChatGPT); instalar e entrar na conta (Spotify, Netflix e Discord, com o e-mail e a senha que o robô mostra); instalar dois navegadores e abrir pelo Iniciar (Brave e Opera); desenhar e salvar no ibis Paint; procurar por categoria (Microsoft To Do); diferenciar grátis, pago e classificação indicativa (Forza Horizon 5 e Minecraft Launcher); atualizar pela Biblioteca; e desinstalar em Configurações › Aplicativos › Aplicativos instalados.
+
+A loja segue o visual da Microsoft Store do Windows 11 (claro e escuro): Página Inicial com destaques, Aplicativos com categorias, Jogos, pesquisa, página do produto com capturas de tela, Downloads e Biblioteca com "Obter atualizações". São 42 produtos com ícones e imagens do catálogo oficial. Os 12 aplicativos funcionais (ChatGPT, Spotify, Netflix, Discord, ibis Paint, Brave, Opera, Firefox, Calculadora, To Do, Relógio e Notas Autoadesivas) baixam com porcentagem, aparecem no Iniciar e abrem com as ações básicas. Os outros mostram o aviso de que ainda não existem no OSLab; os pagos lembram de pedir autorização a um responsável.
+
+Contas de demonstração: `aluno.oslab@gmail.com` com as senhas `Musica2026` (Spotify), `Filmes2026` (Netflix) e `Conversa2026` (Discord).
+
+**Reiniciar missão**: nas trilhas Gerenciador de Tarefas e Microsoft Store, o robô e a página da trilha têm o botão Reiniciar missão. Ele volta tudo ao começo da missão (desinstala ou instala os aplicativos, sai da conta, recria os programas travados), para o aluno nunca ficar parado. Código: `js/store/`, `js/apps/store-app.js`, `js/apps/store-apps.js`, `js/apps/store-trail-app.js` e `css/store.css`; testes em `tests/store-lab.test.mjs`. Rota direta: `index.html?app=storelab`.
+
+## Trilhas em fases
+
+Todas as trilhas mostram as missões como fases (número, ícone e nome), agrupadas por unidade e visíveis de uma vez em 1366 × 768, sem rolar. O painel da direita mostra só o objetivo e o botão; o passo a passo fica no robô durante a missão.
+
 ## Segurança Digital no WhatsApp
 
 A trilha começa quando o aluno abre o **WhatsApp** na área de trabalho. Na primeira vez ele digita o **nome** que vai aparecer para a turma, recebe um **número aleatório de Maceió** (+55 82 9XXXX-XXXX) e escolhe o tema (claro ou escuro), com uma miniatura de cada. A interface segue o padrão do WhatsApp Web.
@@ -261,7 +275,7 @@ O OSLab é uma PWA instalável. Após o primeiro acesso completo, o Service Work
 
 No Chrome ou Chromebook, use o menu do navegador → **Instalar OSLab** (ou **Criar atalho**). O progresso das missões, dos exercícios e as preferências continuam salvos no `localStorage` do dispositivo. O navegador, o Terminal e todas as funções internas usam dados simulados locais e continuam disponíveis sem internet.
 
-O cache atual é `oslab-offline-v52`. Ao alterar recursos, incremente `CACHE_VERSION` em `service-worker.js`; versões antigas são excluídas automaticamente e o site oferece a atualização quando a nova versão está pronta.
+O cache atual é `oslab-offline-v57`. Ao alterar recursos, incremente `CACHE_VERSION` em `service-worker.js`; versões antigas são excluídas automaticamente e o site oferece a atualização quando a nova versão está pronta.
 
 ## Créditos
 

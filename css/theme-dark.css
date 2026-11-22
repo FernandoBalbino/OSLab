@@ -23,7 +23,6 @@
 :root[data-theme="dark"] .settings-window :is(h1, h2, h3, strong, label, span) { color: inherit; }
 :root[data-theme="dark"] .settings-window :is(small, p) { color: var(--win-muted); }
 :root[data-theme="dark"] .settings-window :is(select, input:not([type=range]):not([type=checkbox]):not([type=radio])) { color: var(--win-text); background: #2d2d2d; border-color: rgba(255, 255, 255, .12); }
-:root[data-theme="dark"] .settings-window .settings-nav-item img, :root[data-theme="dark"] .settings-window .settings-row > img:first-child:not([src*=".webp"]) { filter: var(--win-icon-filter); }
 :root[data-theme="dark"] .settings-symbol { color: #fff; }
 :root[data-theme="dark"] .settings-switch { border-color: #d0d0d0; background: transparent; }
 :root[data-theme="dark"] :is(.snd-row, .snd-choice, .snd-link, .snd-empty) { color: var(--win-text); background: var(--win-surface); border-color: var(--win-border); }
@@ -35,7 +34,6 @@
 /* menus, avisos e caixas de diálogo */
 :root[data-theme="dark"] :is(.context-menu, .context-submenu, .item-context-menu, .taskbar-context-menu, .calendar-panel, .power-menu, .profile-menu) { color: #fff; background: rgba(44, 44, 44, .96); border-color: rgba(255, 255, 255, .08); }
 :root[data-theme="dark"] :is(.context-menu, .context-submenu, .item-context-menu, .taskbar-context-menu, .power-menu) button { color: #fff; }
-:root[data-theme="dark"] :is(.context-menu, .context-submenu, .item-context-menu) img:not([src*="win11"]) { filter: var(--win-icon-filter); }
 :root[data-theme="dark"] .oslab-toast { color: #fff; background: #2c2c2c; border-color: rgba(255, 255, 255, .1); }
 :root[data-theme="dark"] .oslab-toast small { color: #c5c5c5; }
 :root[data-theme="dark"] :is(.oslab-dialog, .uac-dialog) { color: #fff; background: #2b2b2b; }
@@ -90,3 +88,26 @@
 @keyframes os-pop { from { opacity: 0; transform: translateY(10px) scale(.98); } }
 @media (prefers-reduced-motion: reduce) { .os-theme-backdrop, .os-theme, .os-theme-card { animation: none; transition: none; } }
 @media (max-width: 520px) { .os-theme-options { grid-template-columns: 1fr; } }
+
+/* só os ícones pretos de uma cor ficam brancos no escuro; os coloridos mantêm as cores, como no modo claro */
+:root[data-theme="dark"] img[src$="context/delete.png"], :root[data-theme="dark"] img[src$="context/refresh.png"], :root[data-theme="dark"] img[src$="settings-rows/colors.png"], :root[data-theme="dark"] img[src$="settings-rows/devices.png"], :root[data-theme="dark"] img[src$="settings-rows/ethernet.png"], :root[data-theme="dark"] img[src$="settings-rows/focus.png"], :root[data-theme="dark"] img[src$="settings-rows/keyboard.png"], :root[data-theme="dark"] img[src$="settings-rows/location.png"], :root[data-theme="dark"] img[src$="settings-rows/lock.png"], :root[data-theme="dark"] img[src$="settings-rows/mobile.png"], :root[data-theme="dark"] img[src$="settings-rows/multitasking.png"], :root[data-theme="dark"] img[src$="settings-rows/nearshare.png"], :root[data-theme="dark"] img[src$="settings-rows/sound.png"], :root[data-theme="dark"] img[src$="settings-rows/usb.png"], :root[data-theme="dark"] img[src$="settings-rows/vpn.png"], :root[data-theme="dark"] img[src$="ui/airplane.png"], :root[data-theme="dark"] img[src$="ui/audio.png"], :root[data-theme="dark"] img[src$="ui/battery.png"], :root[data-theme="dark"] img[src$="ui/bluetooth.png"], :root[data-theme="dark"] img[src$="ui/brightness.png"], :root[data-theme="dark"] img[src$="ui/close.png"], :root[data-theme="dark"] img[src$="ui/left.png"], :root[data-theme="dark"] img[src$="ui/maximize.png"], :root[data-theme="dark"] img[src$="ui/minimize.png"], :root[data-theme="dark"] img[src$="ui/moon.png"], :root[data-theme="dark"] img[src$="ui/nightlight.png"], :root[data-theme="dark"] img[src$="ui/refresh.png"], :root[data-theme="dark"] img[src$="ui/restore.png"], :root[data-theme="dark"] img[src$="ui/right.png"], :root[data-theme="dark"] img[src$="ui/wifi.png"] { filter: brightness(0) invert(1); }
+
+/* Wi-Fi (Configurações › Rede e Internet e a lista de redes) no escuro */
+:root[data-theme="dark"] :is(.wifi-settings-row, .wifi-properties) { color: #fff; background: #2b2b2b; border-color: rgba(255, 255, 255, .08); }
+:root[data-theme="dark"] button.wifi-settings-row:hover { background: #323232; }
+:root[data-theme="dark"] :is(.wifi-settings-heading h1, .wifi-row-link, .wifi-properties > summary, .wifi-network-overview h2) { color: #fff; }
+:root[data-theme="dark"] :is(.wifi-settings-row small, .wifi-property-line > span + span, .wifi-technical-details dd, .wifi-network-overview p, .wifi-settings-heading > button, .wifi-profile small, .wifi-metered-property small) { color: #c5c5c5; }
+:root[data-theme="dark"] :is(.wifi-property-line, .wifi-profile, .wifi-metered-property, .wifi-technical-details) { border-top-color: rgba(255, 255, 255, .08); }
+:root[data-theme="dark"] :is(.wifi-settings-row, .wifi-properties, .wifi-row-link, .wifi-settings-heading, .wifi-network-overview, .wifi-network, .wifi-flyout-footer) img:not([src*="win11"]) { filter: brightness(0) invert(1); }
+:root[data-theme="dark"] .wifi-text-link { color: #4cc2ff; }
+:root[data-theme="dark"] .wifi-password-dialog { color: #fff; background: #2b2b2b; border-color: #444; }
+:root[data-theme="dark"] .wifi-password-dialog :is(p, dt, small) { color: #c5c5c5; }
+:root[data-theme="dark"] .wifi-password-dialog footer { background: #202020; }
+:root[data-theme="dark"] .wifi-network { color: #fff; }
+:root[data-theme="dark"] :is(.wifi-network:hover, .wifi-network.is-expanded) { background: #383838; }
+:root[data-theme="dark"] .wifi-flyout-footer { color: #fff; background: #202020; border-top-color: rgba(255, 255, 255, .08); }
+:root[data-theme="dark"] .wifi-network-actions input[name="password"] { color: #fff; background: #2d2d2d; border-color: #666; }
+:root[data-theme="dark"] .wifi-signal-icon > img + img { background: #2c2c2c; }
+:root[data-theme="dark"] .settings-title-search { border-color: rgba(255, 255, 255, .1); border-bottom-color: #4cc2ff; background: #2d2d2d; }
+:root[data-theme="dark"] .settings-title-search input { color: #fff; }
+:root[data-theme="dark"] .settings-title-search img { filter: brightness(0) invert(1); }

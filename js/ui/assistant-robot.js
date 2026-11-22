@@ -11,6 +11,7 @@
   let previousDriversMission = null;
   let previousAudioMission = null;
   let previousTaskMission = null;
+  let previousStoreMission = null;
 
   function safe(value) { return OSLab.ui.escapeHtml(value); }
   function icon(name) { return OSLab.learningPath.icon(name); }
@@ -24,6 +25,7 @@
     root.addEventListener("submit", event => {
       if (event.target.matches("[data-audio-record-form]")) { event.preventDefault(); OSLab.audioLab.verifyRecord(Object.fromEntries(new FormData(event.target))); return; }
       if (event.target.matches("[data-task-record-form]")) { event.preventDefault(); OSLab.taskLab.verifyRecord(Object.fromEntries(new FormData(event.target))); return; }
+      if (event.target.matches("[data-store-record-form]")) { event.preventDefault(); OSLab.storeLab.verifyRecord(Object.fromEntries(new FormData(event.target))); return; }
       if (event.target.matches("[data-drivers-record-form]")) { event.preventDefault(); OSLab.driversLab.verifyRecord(Object.fromEntries(new FormData(event.target))); return; }
       if (!event.target.matches("[data-wifi-record-form]")) return;
       event.preventDefault();
@@ -34,7 +36,7 @@
     return root;
   }
   function place() {
-    const focusedLayout = root.classList.contains("is-users-permissions") || root.classList.contains("is-wifi-lab") || root.classList.contains("is-drivers-lab") || root.classList.contains("is-audio-lab") || root.classList.contains("is-task-lab") ? null : document.querySelector(".missions-window.is-focused .learning-layout, .exercises-window.is-focused .learning-layout, .vpn-lab-window.is-focused .learning-layout, .install-lab-window.is-focused .learning-layout, .browser-trail-window.is-focused .learning-layout");
+    const focusedLayout = root.classList.contains("is-users-permissions") || root.classList.contains("is-wifi-lab") || root.classList.contains("is-drivers-lab") || root.classList.contains("is-audio-lab") || root.classList.contains("is-task-lab") || root.classList.contains("is-store-lab") ? null : document.querySelector(".missions-window.is-focused .learning-layout, .exercises-window.is-focused .learning-layout, .vpn-lab-window.is-focused .learning-layout, .install-lab-window.is-focused .learning-layout, .browser-trail-window.is-focused .learning-layout");
     const host = focusedLayout || document.querySelector("#desktop");
     if (host && root.parentElement !== host) host.appendChild(root);
     root.classList.toggle("is-docked", Boolean(focusedLayout));
@@ -164,7 +166,7 @@
     const installLabProgress = OSLab.installLab?.getProgress?.();
     const browserTrailProgress = OSLab.browserTrail?.getProgress?.();
     const usersProgress = OSLab.userMissions?.getProgress?.();
-    const view = OSLab.wifiLabApp?.assistantView() || OSLab.driversLabApp?.assistantView() || OSLab.audioLabApp?.assistantView() || OSLab.taskLabApp?.assistantView() || OSLab.digitalLifeApp?.assistantView() || (usersProgress?.active && !usersProgress.active.suspended ? renderUsersPermissions(usersProgress) : browserTrailProgress?.active ? renderBrowserTrail(browserTrailProgress) : installLabProgress?.active ? renderInstallLab(installLabProgress) : vpnLabProgress?.active ? renderVpnLab(vpnLabProgress) : exerciseSession ? renderExercise(exerciseSession) : missionProgress?.active ? renderMission(missionProgress) : null);
+    const view = OSLab.wifiLabApp?.assistantView() || OSLab.driversLabApp?.assistantView() || OSLab.audioLabApp?.assistantView() || OSLab.taskLabApp?.assistantView() || OSLab.storeTrailApp?.assistantView() || OSLab.digitalLifeApp?.assistantView() || (usersProgress?.active && !usersProgress.active.suspended ? renderUsersPermissions(usersProgress) : browserTrailProgress?.active ? renderBrowserTrail(browserTrailProgress) : installLabProgress?.active ? renderInstallLab(installLabProgress) : vpnLabProgress?.active ? renderVpnLab(vpnLabProgress) : exerciseSession ? renderExercise(exerciseSession) : missionProgress?.active ? renderMission(missionProgress) : null);
     if (view?.kind === "browser-trail" && (document.querySelector(".browser-museum-window.is-focused:not(.is-minimized)") || OSLab.browserMuseum?.getSelected?.())) {
       document.body.classList.remove("has-learning-assistant");
       root.className = "learning-assistant is-hidden";
@@ -190,6 +192,9 @@
     const taskMission = view?.kind === "task-lab" ? OSLab.taskLab.getProgress().active?.id : null;
     if (taskMission && taskMission !== previousTaskMission) collapsed = false;
     previousTaskMission = taskMission;
+    const storeMission = view?.kind === "store-lab" ? OSLab.storeLab.getProgress().active?.id : null;
+    if (storeMission && storeMission !== previousStoreMission) collapsed = false;
+    previousStoreMission = storeMission;
     previousKind = view?.kind || null;
     document.body.classList.toggle("has-learning-assistant", Boolean(view));
     if (!view) { root.className = "learning-assistant is-hidden"; root.innerHTML = ""; place(); return; }
@@ -207,6 +212,8 @@
     if (wifiAnswer) { OSLab.wifiLab.answer(Number(wifiAnswer.dataset.wifiAnswer)); return; }
     const driversAnswer = event.target.closest("[data-drivers-answer]");
     if (driversAnswer) { OSLab.driversLab.answer(Number(driversAnswer.dataset.driversAnswer)); return; }
+    const storeAnswer = event.target.closest("[data-store-answer]");
+    if (storeAnswer) { OSLab.storeLab.answer(Number(storeAnswer.dataset.storeAnswer)); return; }
     const taskAnswer = event.target.closest("[data-task-answer]");
     if (taskAnswer) { OSLab.taskLab.answer(Number(taskAnswer.dataset.taskAnswer)); return; }
     const audioAnswer = event.target.closest("[data-audio-answer]");
@@ -234,10 +241,11 @@
     if (action === "audio-repeat") OSLab.audioLab.finish("repeat");
     if (action === "audio-next") OSLab.audioLab.finish("next");
     if (action === "audio-pause") { OSLab.audioLab.stop(); OSLab.shell.openApp("audiolab"); }
+    if (action.startsWith("store-")) { await OSLab.storeTrailApp.action(action, event); return; }
     if (action === "task-open") OSLab.shell.openApp("tasklab");
     if (action === "task-tool") { event.stopPropagation(); OSLab.taskLabApp.openTool(); }
     if (action === "task-hint") OSLab.taskLab.useHint();
-    if (action === "task-restart" && await OSLab.ui.confirm({ title: "Recomeçar a missão?", message: "Os passos desta missão começam de novo e o problema é preparado outra vez.", confirmLabel: "Recomeçar" })) OSLab.taskLab.restart();
+    if (action === "task-restart" && await OSLab.ui.confirm({ title: "Reiniciar a missão?", message: "Tudo volta ao começo desta missão: os passos são zerados e o problema é preparado de novo. Use quando algo deu errado e você não consegue continuar.", confirmLabel: "Reiniciar missão" })) OSLab.taskLab.restart();
     if (action === "task-repeat") OSLab.taskLab.finish("repeat");
     if (action === "task-next") OSLab.taskLab.finish("next");
     if (action === "task-pause") { OSLab.taskLab.stop(); OSLab.shell.openApp("tasklab"); }

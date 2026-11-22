@@ -192,7 +192,7 @@ window.OSLab.ui.escapeHtml = value => String(value);
 load("js/ui/learning-path.js");
 const markup = OSLab.learningPath.renderSections(OSLab.userMissionCatalog.map(m => ({ ...m, status: "available" })), [{ slug: "users", orders: [1], title: "Contas", kicker: "Unidade 1", description: "" }], "users-1", "users-mission");
 assert.match(markup, /data-users-mission-select/);
-assert.match(markup, /aria-label="Missão 1/);
+assert.match(markup, /aria-label="Fase 1/);
 assert.doesNotMatch(markup, /data-exercise-select/);
 const summary = OSLab.learningPath.renderSteps(OSLab.userMissionCatalog[0], { checklist: { "opened-accounts": true } });
 assert.match(summary, /Passo a passo/);
