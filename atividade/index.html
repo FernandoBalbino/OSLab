@@ -1,0 +1,571 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Atividade: Gerenciador de Tarefas — OSLab</title>
+<meta name="description" content="Cinco questões sobre o Gerenciador de Tarefas: para que serve e como usar no dia a dia." />
+<meta name="robots" content="noindex" />
+<link rel="icon" href="../assets/taskmgr/trail-icon.svg" />
+<style>
+  @font-face { font-family: "Nunito Sans"; src: url("../assets/fonts/NunitoSans-Variable.ttf") format("truetype"); font-weight: 200 1000; font-display: swap; }
+  :root {
+    --ink: #13213a; --muted: #4b5a73; --line: #e1e7f0; --soft: #f3f6fb; --paper: #ffffff; --page: #eef2f8;
+    --blue: #0a5bd3; --navy: #0a3d91; --green: #11804a; --green-soft: #e6f6ed; --red: #c2341b; --red-soft: #fdecea;
+    --amber: #b45309; --font: "Nunito Sans", "Segoe UI", system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; min-height: 100%; }
+  body { background: var(--page); color: var(--ink); font-family: var(--font); font-size: 16px; display: grid; grid-template-rows: 56px minmax(0, 1fr); height: 100vh; height: 100dvh; overflow: hidden; }
+  button, input, textarea, select { font: inherit; color: inherit; }
+  button { cursor: pointer; }
+  :focus-visible { outline: 3px solid var(--blue); outline-offset: 2px; }
+
+  /* topo */
+  .top { display: flex; align-items: center; gap: 14px; padding: 0 24px; background: var(--paper); border-bottom: 1px solid var(--line); }
+  .top > img { width: 28px; height: 28px; }
+  .top .brand { font-weight: 800; font-size: 15px; white-space: nowrap; }
+  .top .brand span { color: var(--muted); font-weight: 600; }
+  .steps { display: flex; gap: 6px; margin: 0 auto; padding: 0; list-style: none; }
+  .steps li { display: flex; align-items: center; gap: 6px; padding: 5px 10px 5px 6px; border-radius: 99px; font-size: 13px; font-weight: 700; color: var(--muted); background: var(--soft); }
+  .steps li b { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: #dfe6f1; font-size: 12px; }
+  .steps li.is-now { background: #e3edff; color: var(--navy); }
+  .steps li.is-now b { background: var(--blue); color: #fff; }
+  .steps li.is-ok b { background: var(--green); color: #fff; }
+  .steps li.is-wrong b { background: var(--red); color: #fff; }
+  .steps li.is-done b { background: var(--navy); color: #fff; }
+  .top .who { font-size: 14px; font-weight: 700; color: var(--muted); white-space: nowrap; }
+
+  main { display: grid; padding: 12px 20px 14px; min-height: 0; }
+  .card { width: min(1240px, 100%); height: 100%; margin: 0 auto; background: var(--paper); border: 1px solid var(--line); border-radius: 18px; box-shadow: 0 10px 30px rgba(19, 33, 58, .07); display: grid; grid-template-rows: auto minmax(0, 1fr) auto; min-height: 0; overflow: hidden; }
+  .card.single { display: block; overflow: auto; }
+  .q-head { padding: 14px 26px 8px; }
+  .kicker { display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--blue); }
+  .kicker .type { padding: 3px 9px; border-radius: 99px; background: #e3edff; letter-spacing: .02em; text-transform: none; font-size: 13px; }
+  .q-head h1 { margin: 4px 0 2px; font-size: 22px; line-height: 1.2; }
+  .q-head p { margin: 0; color: var(--muted); font-size: 16px; line-height: 1.45; max-width: 980px; }
+  .q-head p b { color: var(--ink); }
+  .q-body { padding: 6px 26px 14px; min-height: 0; overflow: auto; }
+  .q-foot { display: flex; align-items: center; gap: 16px; padding: 12px 26px; border-top: 1px solid var(--line); background: #fafbfd; min-height: 68px; }
+  .q-foot .feedback { flex: 1; font-size: 15px; line-height: 1.4; }
+  .q-foot .feedback.ok { color: var(--green); }
+  .q-foot .feedback.wrong { color: var(--red); }
+  .q-foot .feedback strong { display: block; font-size: 16px; }
+  .q-foot .feedback span { color: var(--ink); }
+  .btn { border: 0; border-radius: 10px; padding: 11px 20px; font-weight: 800; font-size: 16px; background: var(--blue); color: #fff; white-space: nowrap; }
+  .btn:hover:not(:disabled) { background: var(--navy); }
+  .btn:disabled { background: #b8c4d8; cursor: not-allowed; }
+  .btn.ghost { background: transparent; color: var(--navy); border: 1px solid #c9d5e8; }
+  .btn.ghost:hover:not(:disabled) { background: var(--soft); }
+  .btn.green { background: var(--green); }
+
+  /* início */
+  .start { display: grid; grid-template-columns: 1.2fr .8fr; align-items: center; gap: 40px; padding: 34px 44px; }
+  .start h1 { margin: 6px 0 10px; font-size: 34px; line-height: 1.15; }
+  .start p { margin: 0 0 18px; color: var(--muted); font-size: 17px; line-height: 1.5; }
+  .start ol { margin: 0 0 22px; padding: 0; list-style: none; display: grid; gap: 7px; }
+  .start ol li { display: flex; align-items: center; gap: 10px; font-weight: 700; }
+  .start ol li b { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: #e3edff; color: var(--navy); font-size: 13px; }
+  .start ol li span { color: var(--muted); font-weight: 600; }
+  .start label { display: block; font-weight: 800; margin-bottom: 6px; }
+  .start .row { display: flex; gap: 10px; }
+  .start input { flex: 1; min-width: 0; padding: 11px 14px; border: 1px solid #c9d5e8; border-radius: 10px; font-size: 17px; }
+  .start .art { display: grid; place-items: center; }
+  .start .art img { width: min(300px, 100%); filter: drop-shadow(0 16px 24px rgba(29, 78, 216, .25)); }
+
+  /* questão 1: múltipla escolha */
+  .options { display: grid; gap: 10px; max-width: 980px; }
+  .option { display: flex; align-items: center; gap: 14px; width: 100%; padding: 13px 16px; text-align: left; background: var(--paper); border: 2px solid var(--line); border-radius: 12px; font-size: 17px; line-height: 1.35; }
+  .option b { flex: none; display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: var(--soft); font-size: 15px; }
+  .option:hover:not(:disabled) { border-color: #9db8e6; }
+  .option.is-picked { border-color: var(--blue); background: #f2f7ff; }
+  .option.is-picked b { background: var(--blue); color: #fff; }
+  .option.is-right { border-color: var(--green); background: var(--green-soft); }
+  .option.is-right b { background: var(--green); color: #fff; }
+  .option.is-wrong { border-color: var(--red); background: var(--red-soft); }
+  .option.is-wrong b { background: var(--red); color: #fff; }
+  .option:disabled { cursor: default; }
+  .option small { display: block; margin-top: 4px; color: var(--muted); font-size: 14px; }
+
+  /* questão 2: ordenar */
+  .order { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; align-items: start; }
+  .order h2 { margin: 0 0 8px; font-size: 14px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+  .pile, .seq { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+  .step { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 48px; padding: 7px 14px; text-align: left; background: var(--paper); border: 2px solid var(--line); border-radius: 12px; font-size: 16px; line-height: 1.3; }
+  .step:hover:not(:disabled) { border-color: #9db8e6; }
+  .step b { flex: none; display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: var(--blue); color: #fff; font-size: 15px; }
+  .step.is-used { opacity: .35; }
+  .step.is-right { border-color: var(--green); background: var(--green-soft); }
+  .step.is-right b { background: var(--green); }
+  .step.is-wrong { border-color: var(--red); background: var(--red-soft); }
+  .step.is-wrong b { background: var(--red); }
+  .step:disabled { cursor: default; }
+  .slot { display: flex; align-items: center; gap: 12px; min-height: 48px; padding: 7px 14px; border: 2px dashed #c9d5e8; border-radius: 12px; color: #8a97ad; font-size: 15px; }
+  .slot b { flex: none; display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: #e7ecf4; color: var(--muted); font-size: 15px; }
+  .seq-note { margin: 8px 0 0; font-size: 14px; color: var(--muted); }
+
+  /* questão 3: Gerenciador simulado */
+  .lab { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 20px; align-items: start; }
+  .tm { position: relative; background: #202020; color: #fff; border: 1px solid #3a3a3a; border-radius: 8px; overflow: hidden; font-family: "Segoe UI", var(--font); font-size: 13px; box-shadow: 0 10px 24px rgba(0, 0, 0, .25); }
+  .tm-title { display: flex; align-items: center; gap: 10px; height: 32px; padding: 0 0 0 12px; background: #1c1c1c; }
+  .tm-title img { width: 16px; height: 16px; }
+  .tm-title .search { margin: 0 auto; width: 46%; padding: 3px 10px; border-radius: 4px; background: #2d2d2d; color: #9a9a9a; font-size: 12px; border-bottom: 1px solid #8a8a8a; }
+  .tm-title .wb { display: flex; }
+  .tm-title .wb i { width: 40px; height: 32px; display: grid; place-items: center; font-style: normal; color: #d0d0d0; font-size: 13px; }
+  .tm-main { display: grid; grid-template-columns: 46px 1fr; }
+  .tm-nav { display: grid; align-content: start; gap: 3px; padding: 5px; }
+  .tm-nav i { position: relative; display: grid; place-items: center; height: 30px; border-radius: 5px; }
+  .tm-nav i.is-on { background: #2d2d2d; }
+  .tm-nav i.is-on::before { content: ""; position: absolute; left: 0; top: 10px; bottom: 10px; width: 3px; border-radius: 2px; background: #4cc2ff; }
+  .ic { display: inline-block; width: 16px; height: 16px; background: currentColor; -webkit-mask: var(--m) center / contain no-repeat; mask: var(--m) center / contain no-repeat; }
+  .tm-content { min-width: 0; background: #272727; border-top-left-radius: 8px; }
+  .tm-bar { display: flex; align-items: center; gap: 4px; height: 40px; padding: 0 10px 0 16px; }
+  .tm-bar h3 { margin: 0 auto 0 0; font-size: 15px; font-weight: 600; }
+  .tm-bar button { display: flex; align-items: center; gap: 7px; height: 32px; padding: 0 10px; border: 0; border-radius: 5px; background: transparent; color: #fff; font-family: inherit; font-size: 13px; }
+  .tm-bar button:hover:not(:disabled) { background: #333; }
+  .tm-bar button:disabled { color: #6f6f6f; cursor: default; }
+  .tm-bar button.primary:not(:disabled) { background: #3a3a3a; outline: 1px solid #4cc2ff; }
+  .tm-bar .sep { width: 1px; height: 20px; background: #444; margin: 0 4px; }
+  .tm-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+  .tm-table th { height: 40px; padding: 0 10px 2px; font-weight: 400; color: #cfcfcf; text-align: right; vertical-align: bottom; border-bottom: 1px solid #3a3a3a; }
+  .tm-table th:first-child { text-align: left; padding-left: 16px; }
+  .tm-table th b { display: block; font-size: 15px; font-weight: 600; color: #fff; }
+  .tm-table th.hot b { color: #ff9b73; }
+  .tm-table col.c-name { width: auto; } .tm-table col.c-status { width: 112px; } .tm-table col.c-cpu { width: 78px; } .tm-table col.c-mem { width: 104px; }
+  .tm-table td { height: 26px; padding: 0 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: right; }
+  .tm-table td:first-child { text-align: left; padding-left: 16px; }
+  .tm-group td { height: 25px; color: #4cc2ff; font-weight: 600; }
+  .tm-row { cursor: default; }
+  .tm-row:hover td { background-color: #2f2f2f; }
+  .tm-row.is-selected td { background-color: #36414f; }
+  .tm-row .name { display: flex; align-items: center; gap: 9px; }
+  .tm-row .name img, .tm-row .name .ic { flex: none; width: 16px; height: 16px; border-radius: 3px; }
+  .tm-row .name small { color: #a9a9a9; font-size: 12px; }
+  .tm-row td.status { color: #a9a9a9; text-align: left; }
+  .tm-row td.status.busy { color: #4cc2ff; }
+  .tm-toast { position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%); width: max-content; max-width: 90%; padding: 9px 14px; border-radius: 8px; background: #2b2b2b; color: #fff; border: 1px solid #4a4a4a; font-size: 13px; box-shadow: 0 8px 20px rgba(0, 0, 0, .4); }
+  .tm-dialog { position: absolute; inset: 0; display: grid; place-items: center; background: rgba(0, 0, 0, .45); }
+  .tm-dialog > div { width: 340px; padding: 18px 20px 16px; border-radius: 8px; background: #2b2b2b; border: 1px solid #4a4a4a; color: #fff; font-family: "Segoe UI", var(--font); }
+  .tm-dialog strong { display: block; margin-bottom: 6px; font-size: 15px; }
+  .tm-dialog p { margin: 0 0 14px; color: #d4d4d4; font-size: 13px; line-height: 1.45; }
+  .tm-dialog button { float: right; padding: 6px 22px; border: 0; border-radius: 5px; background: #4cc2ff; color: #000; font-weight: 600; }
+  .side { display: grid; gap: 10px; }
+  .mission { padding: 12px 14px; border-radius: 12px; background: #e3edff; color: var(--navy); font-size: 15px; line-height: 1.45; }
+  .mission strong { display: block; font-size: 13px; letter-spacing: .06em; text-transform: uppercase; }
+  .meter { padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--soft); }
+  .meter .label { display: flex; justify-content: space-between; font-weight: 800; }
+  .meter .label span { font-size: 22px; }
+  .meter .bar { height: 14px; margin: 8px 0 6px; border-radius: 99px; background: #dde4ef; overflow: hidden; }
+  .meter .bar i { display: block; height: 100%; border-radius: 99px; transition: width .5s, background .5s; }
+  .meter small { color: var(--muted); font-size: 13px; }
+  .howto { margin: 0; padding: 12px 14px 12px 32px; border-radius: 12px; background: #fff8e8; border: 1px solid #f3dfae; font-size: 14px; line-height: 1.45; }
+  .howto li + li { margin-top: 4px; }
+  .linkish { justify-self: start; border: 0; background: none; padding: 0; color: var(--navy); font-weight: 800; text-decoration: underline; font-size: 14px; }
+
+  /* questão 4: ligar */
+  .match { display: grid; gap: 10px; max-width: 1100px; }
+  .pair { display: grid; grid-template-columns: 44px minmax(0, 1fr) 340px; align-items: center; gap: 14px; padding: 12px 14px; border: 2px solid var(--line); border-radius: 12px; }
+  .pair .who { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; background: #e3edff; color: var(--navy); font-weight: 900; font-size: 17px; }
+  .pair p { margin: 0; font-size: 16px; line-height: 1.4; }
+  .pair p b { color: var(--navy); }
+  .pair select { width: 100%; padding: 10px 12px; border: 1px solid #c9d5e8; border-radius: 10px; background: var(--paper); font-size: 15px; }
+  .pair.is-right { border-color: var(--green); background: var(--green-soft); }
+  .pair.is-wrong { border-color: var(--red); background: var(--red-soft); }
+  .pair .why { grid-column: 2 / 4; margin: 0; font-size: 14px; color: var(--ink); }
+
+  /* questão 5: escrita */
+  .write { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 20px; }
+  .write textarea { width: 100%; min-height: 230px; padding: 14px 16px; border: 2px solid #c9d5e8; border-radius: 12px; font-size: 17px; line-height: 1.5; resize: vertical; }
+  .write textarea:focus { border-color: var(--blue); outline: none; }
+  .write .count { margin-top: 6px; font-size: 14px; color: var(--muted); }
+  .write .count.ok { color: var(--green); font-weight: 700; }
+  .tips { padding: 14px 16px; border-radius: 12px; background: var(--soft); border: 1px solid var(--line); font-size: 15px; line-height: 1.45; }
+  .tips strong { display: block; margin-bottom: 6px; }
+  .tips ul { margin: 0; padding-left: 20px; }
+  .tips li + li { margin-top: 5px; }
+  .tips.after { background: var(--green-soft); border-color: #b7e2c8; }
+
+  /* resultado */
+  .result { display: grid; grid-template-columns: 330px minmax(0, 1fr); gap: 28px; padding: 26px 32px; }
+  .score { display: grid; align-content: start; justify-items: center; gap: 6px; padding: 22px; border-radius: 16px; background: linear-gradient(160deg, #0a3d91, #2b78ff); color: #fff; text-align: center; }
+  .score .num { font-size: 64px; font-weight: 900; line-height: 1; }
+  .score .num small { font-size: 28px; opacity: .8; }
+  .score .name { font-size: 22px; font-weight: 800; }
+  .score .when { font-size: 14px; opacity: .85; }
+  .score .show { margin-top: 10px; padding: 8px 12px; border-radius: 10px; background: rgba(255, 255, 255, .15); font-size: 14px; font-weight: 700; }
+  .review { display: grid; gap: 8px; margin: 0 0 14px; padding: 0; list-style: none; }
+  .review li { display: flex; align-items: center; gap: 12px; padding: 9px 12px; border-radius: 10px; background: var(--soft); font-size: 15px; }
+  .review li b { flex: none; display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; color: #fff; font-size: 14px; }
+  .review li.ok b { background: var(--green); }
+  .review li.wrong b { background: var(--red); }
+  .review li.text b { background: var(--navy); }
+  .review li span { color: var(--muted); margin-left: auto; font-size: 13px; font-weight: 700; }
+  .answer { margin: 0 0 16px; padding: 12px 14px; border-left: 4px solid var(--navy); border-radius: 6px; background: var(--soft); font-size: 15px; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; max-height: 150px; overflow: auto; }
+  .actions { display: flex; flex-wrap: wrap; gap: 10px; }
+  .actions a.btn { text-decoration: none; display: inline-flex; align-items: center; }
+
+  @media (max-width: 980px) {
+    .steps li span { display: none; }
+    .start, .lab, .write, .result, .order { grid-template-columns: 1fr; }
+    .start .art { display: none; }
+    .pair { grid-template-columns: 44px 1fr; }
+    .pair select { grid-column: 1 / 3; }
+    .pair .why { grid-column: 1 / 3; }
+  }
+</style>
+</head>
+<body>
+  <header class="top">
+    <img src="../assets/taskmgr/trail-icon.svg" alt="" />
+    <div class="brand">OSLab <span>· Atividade: Gerenciador de Tarefas</span></div>
+    <ol class="steps" id="steps" aria-label="Questões"></ol>
+    <div class="who" id="who"></div>
+  </header>
+  <main id="app"></main>
+
+<script>
+(function () {
+  "use strict";
+
+  const KEY = "oslab.atividade.gerenciador.v1";
+  const TIPOS = ["Múltipla escolha", "Ordenar", "Prática", "Ligar", "Escrita"];
+  const MIN_ESCRITA = 80;
+  const app = document.getElementById("app");
+  const icone = (caminho) => `<i class="ic" style="--m:url('../assets/${caminho}')"></i>`;
+
+  // ---------- Questões ----------
+  const Q1 = {
+    opcoes: [
+      ["Para baixar e instalar programas novos no computador.", "Instalar programas é pela Microsoft Store ou pelo instalador do próprio programa."],
+      ["Para ver tudo o que está aberto e funcionando no computador, quanto cada programa gasta e fechar o que travou.", "Ele mostra tudo o que está rodando agora (programas, processos em segundo plano e do Windows) e quanto cada um usa de CPU, memória, disco e rede."],
+      ["Para aumentar a memória RAM e deixar o computador mais potente.", "Nenhum programa aumenta a RAM: ela é uma peça do computador. O Gerenciador só mostra quanto dela está em uso."],
+      ["Para procurar e apagar vírus.", "Quem procura vírus é o antivírus (Segurança do Windows). O Gerenciador mostra os processos, mas não faz varredura."],
+    ],
+    certa: 1,
+  };
+
+  const PASSOS = {
+    a: "Clique com o botão direito em um espaço vazio da barra de tarefas.",
+    b: "No menu que abriu, clique em Gerenciador de Tarefas.",
+    c: "Na página Processos, procure o Roblox na lista: ele aparece como Não respondendo.",
+    d: "Clique no Roblox para selecionar.",
+    e: "Clique em Finalizar tarefa.",
+  };
+  const ORDEM_CERTA = ["a", "b", "c", "d", "e"];
+  const EMBARALHADO = ["d", "a", "e", "c", "b"];
+
+  const PROCESSOS = [
+    { id: "chrome", nome: "Google Chrome", extra: "Prova on-line", grupo: "apps", img: "browser/chrome.svg", cpu: 3.1, mem: 410 },
+    { id: "netflix", nome: "Netflix", grupo: "apps", img: "store/netflix-icon.webp", cpu: 6.4, mem: 980 },
+    { id: "minecraft", nome: "Minecraft", grupo: "apps", img: "store/minecraft-icon.webp", cpu: 17.8, mem: 1120 },
+    { id: "discord", nome: "Discord", grupo: "apps", img: "store/discord-icon.webp", cpu: 2.2, mem: 540 },
+    { id: "spotify", nome: "Spotify", grupo: "apps", img: "store/spotify-icon.webp", cpu: 1.3, mem: 360 },
+    { id: "defender", nome: "Antimalware Service Executable", grupo: "bg", mask: "learning/icons/shield_checkmark.svg", cpu: 0.8, mem: 160, protegido: true },
+    { id: "explorer", nome: "Windows Explorer", grupo: "win", img: "icons/win11/file-explorer-48.png", cpu: 0.4, mem: 90, reinicia: true },
+  ];
+  const GRUPOS = [["apps", "Aplicativos"], ["bg", "Processos em segundo plano"], ["win", "Processos do Windows"]];
+  const LAZER = ["netflix", "minecraft", "discord", "spotify"];
+  const MEM_TOTAL = 4096, MEM_BASE = 160, CPU_BASE = 1.9;
+
+  const LUGARES = [
+    ["startup", "Página Aplicativos de inicialização"],
+    ["perf", "Página Desempenho"],
+    ["pid", "Página Detalhes (coluna PID)"],
+    ["eff", "Botão Modo de eficiência"],
+  ];
+  const PESSOAS = [
+    { id: "lara", letra: "L", texto: "<b>Lara:</b> toda vez que liga o notebook, o Discord abre sozinho e o computador demora para ficar pronto.", certo: "startup", porque: "Em Aplicativos de inicialização ela clica no Discord e em Desabilitar. Ele continua instalado, só não abre mais sozinho." },
+    { id: "caio", letra: "C", texto: "<b>Caio:</b> quer mostrar ao cliente qual é o processador e quanta memória RAM o computador tem, sem abrir o gabinete.", certo: "perf", porque: "Desempenho mostra o nome do processador, o total de memória e os gráficos de uso em tempo real." },
+    { id: "bia", letra: "B", texto: "<b>Bia:</b> o técnico pediu pelo telefone para ela finalizar o processo de número 7340, mas tem dois com o mesmo nome.", certo: "pid", porque: "O PID é o número que identifica cada processo. Em Detalhes ela acha o 7340 e finaliza o certo." },
+    { id: "davi", letra: "D", texto: "<b>Davi:</b> o jogo está baixando uma atualização grande e deixando tudo lento, mas o download não pode ser cancelado.", certo: "eff", porque: "O Modo de eficiência deixa o programa mais leve sem fechar: o download continua." },
+  ];
+
+  // ---------- Estado (fica salvo só neste navegador) ----------
+  const novo = () => ({ v: 1, nome: "", passo: 0, q1: null, q2: [], q3: { fechados: [], chromeFechou: false }, q4: {}, q5: "", conferida: {}, certa: {}, fim: null });
+  let estado = carregar();
+  function carregar() {
+    try { const salvo = JSON.parse(localStorage.getItem(KEY)); if (salvo && salvo.v === 1) return Object.assign(novo(), salvo); } catch (erro) { /* sem armazenamento */ }
+    return novo();
+  }
+  function salvar() { try { localStorage.setItem(KEY, JSON.stringify(estado)); } catch (erro) { /* sem armazenamento */ } }
+  function ir(passo) { estado.passo = passo; salvar(); desenhar(); window.scrollTo(0, 0); }
+
+  // ---------- Moldura de cada questão ----------
+  function moldura(n, titulo, enunciado, corpo) {
+    return `<section class="card">
+      <div class="q-head"><div class="kicker">Questão ${n} de 5 <span class="type">${TIPOS[n - 1]}</span></div><h1>${titulo}</h1><p>${enunciado}</p></div>
+      <div class="q-body">${corpo}</div>
+      <div class="q-foot"><div class="feedback" id="feedback" aria-live="polite"></div><button class="btn" id="acao" type="button"></button></div>
+    </section>`;
+  }
+  function rodape({ texto, desabilitado, aoClicar, retorno }) {
+    const botao = document.getElementById("acao");
+    botao.textContent = texto; botao.disabled = Boolean(desabilitado); botao.onclick = aoClicar;
+    const fb = document.getElementById("feedback");
+    fb.className = "feedback" + (retorno ? (retorno.ok ? " ok" : " wrong") : "");
+    fb.innerHTML = retorno ? `<strong>${retorno.titulo}</strong><span>${retorno.texto}</span>` : "";
+  }
+  function conferir(n, acertou) { estado.conferida["q" + n] = true; estado.certa["q" + n] = acertou; salvar(); desenhar(); }
+  const proxima = (n) => ({ texto: n === 5 ? "Ver resultado" : "Próxima questão →", aoClicar: () => ir(n + 1) });
+
+  // ---------- Telas ----------
+  function telaInicio() {
+    app.innerHTML = `<section class="card single"><div class="start">
+      <div>
+        <div class="kicker">Antes das trilhas</div>
+        <h1>Para que serve o Gerenciador de Tarefas?</h1>
+        <p>São 5 questões, cada uma de um jeito. Depois de responder, clique em <b>Conferir</b>: você vê se acertou e por quê. Cada questão só pode ser conferida uma vez.</p>
+        <ol>${TIPOS.map((t, i) => `<li><b>${i + 1}</b>${t} <span>· ${["para que ele serve", "o jogo travou", "computador lento antes da prova", "cada problema no seu lugar", "com suas palavras"][i]}</span></li>`).join("")}</ol>
+        <label for="nome">Seu nome completo</label>
+        <div class="row"><input id="nome" autocomplete="off" maxlength="60" placeholder="Digite seu nome" /><button class="btn" id="comecar" type="button" disabled>Começar</button></div>
+      </div>
+      <div class="art"><img src="../assets/taskmgr/trail-icon.svg" alt="" /></div>
+    </div></section>`;
+    const campo = document.getElementById("nome"), botao = document.getElementById("comecar");
+    campo.value = estado.nome;
+    const validar = () => { botao.disabled = campo.value.trim().length < 3; };
+    campo.addEventListener("input", validar);
+    campo.addEventListener("keydown", (e) => { if (e.key === "Enter" && !botao.disabled) botao.click(); });
+    botao.addEventListener("click", () => { estado.nome = campo.value.trim().replace(/\s+/g, " "); ir(1); });
+    validar(); campo.focus();
+  }
+
+  function telaQ1() {
+    const feita = estado.conferida.q1;
+    app.innerHTML = moldura(1, "Para que serve?", "Seu primo ouviu falar do Gerenciador de Tarefas e perguntou para que ele serve. <b>Qual é a resposta certa?</b>",
+      `<div class="options">${Q1.opcoes.map(([texto, porque], i) => {
+        let classe = "";
+        if (feita) classe = i === Q1.certa ? " is-right" : i === estado.q1 ? " is-wrong" : "";
+        else if (i === estado.q1) classe = " is-picked";
+        const nota = feita && (i === Q1.certa || i === estado.q1) ? `<small>${porque}</small>` : "";
+        return `<button class="option${classe}" type="button" data-i="${i}" ${feita ? "disabled" : ""}><b>${"ABCD"[i]}</b><span>${texto}${nota}</span></button>`;
+      }).join("")}</div>`);
+    app.querySelectorAll(".option").forEach((b) => b.addEventListener("click", () => { estado.q1 = Number(b.dataset.i); salvar(); telaQ1(); }));
+    if (feita) {
+      const ok = estado.certa.q1;
+      rodape({ ...proxima(1), retorno: { ok, titulo: ok ? "Acertou!" : "Não foi dessa vez.", texto: ok ? "O Gerenciador é onde você vê e controla o que está rodando no computador." : `A certa é a letra B. ${Q1.opcoes[Q1.certa][1]}` } });
+    } else {
+      rodape({ texto: "Conferir", desabilitado: estado.q1 === null, aoClicar: () => conferir(1, estado.q1 === Q1.certa) });
+    }
+  }
+
+  function telaQ2() {
+    const feita = estado.conferida.q2, seq = estado.q2;
+    const pilha = EMBARALHADO.map((id) => {
+      const usado = seq.includes(id);
+      return `<li><button class="step${usado ? " is-used" : ""}" type="button" data-id="${id}" ${usado || feita ? "disabled" : ""}><span>${PASSOS[id]}</span></button></li>`;
+    }).join("");
+    const ordem = ORDEM_CERTA.map((_, i) => {
+      const id = seq[i];
+      if (!id) return `<li class="slot"><b>${i + 1}</b>Toque no próximo passo</li>`;
+      const classe = feita ? (id === ORDEM_CERTA[i] ? " is-right" : " is-wrong") : "";
+      return `<li><button class="step${classe}" type="button" data-tirar="${i}" ${feita ? "disabled" : ""} title="Tocar para tirar"><b>${i + 1}</b><span>${PASSOS[id]}</span></button></li>`;
+    }).join("");
+    app.innerHTML = moldura(2, "O jogo travou!", "Você está jogando Roblox e a tela congelou. Clicar no X não fecha. <b>Toque nos passos na ordem certa</b> para fechar só o jogo pelo Gerenciador de Tarefas.",
+      `<div class="order">
+        <div><h2>Passos embaralhados</h2><ul class="pile">${pilha}</ul></div>
+        <div><h2>Sua ordem</h2><ol class="seq">${ordem}</ol>${feita ? "" : `<p class="seq-note">Errou um passo? Toque nele na sua ordem para tirar. ${seq.length ? '<button class="linkish" type="button" id="limpar">Limpar tudo</button>' : ""}</p>`}</div>
+      </div>`);
+    app.querySelectorAll(".pile .step").forEach((b) => b.addEventListener("click", () => { estado.q2 = [...seq, b.dataset.id]; salvar(); telaQ2(); }));
+    app.querySelectorAll("[data-tirar]").forEach((b) => b.addEventListener("click", () => { estado.q2 = seq.filter((_, i) => i !== Number(b.dataset.tirar)); salvar(); telaQ2(); }));
+    document.getElementById("limpar")?.addEventListener("click", () => { estado.q2 = []; salvar(); telaQ2(); });
+    if (feita) {
+      const ok = estado.certa.q2;
+      const certos = seq.filter((id, i) => id === ORDEM_CERTA[i]).length;
+      rodape({ ...proxima(2), retorno: { ok, titulo: ok ? "Acertou a ordem!" : `${certos} de 5 passos no lugar certo.`, texto: ok ? "Assim você fecha só o jogo e o resto continua funcionando. No Windows de verdade, Ctrl + Shift + Esc também abre o Gerenciador direto." : "A ordem é: botão direito na barra de tarefas → Gerenciador de Tarefas → achar o Roblox em Processos → selecionar → Finalizar tarefa. Primeiro abre, depois acha, seleciona e só então finaliza." } });
+    } else {
+      rodape({ texto: "Conferir", desabilitado: seq.length < 5, aoClicar: () => conferir(2, seq.every((id, i) => id === ORDEM_CERTA[i])) });
+    }
+  }
+
+  // Questão 3: o Gerenciador simulado guarda a seleção e os avisos fora do estado salvo.
+  let selecionado = null, aviso = null, dialogo = null, avisoTimer = null, reiniciando = false;
+  function usoAtual() {
+    const vivos = PROCESSOS.filter((p) => !estado.q3.fechados.includes(p.id));
+    const mem = vivos.reduce((s, p) => s + p.mem, MEM_BASE), cpu = vivos.reduce((s, p) => s + p.cpu, CPU_BASE);
+    return { vivos, memPct: Math.round((mem / MEM_TOTAL) * 100), cpuPct: Math.round(cpu) };
+  }
+  const fmt = (n, casas) => n.toLocaleString("pt-BR", { minimumFractionDigits: casas, maximumFractionDigits: casas });
+  const calor = (valor, maximo) => `rgba(255, 140, 60, ${Math.min(.55, .08 + (valor / maximo) * .5).toFixed(2)})`;
+
+  function telaQ3() {
+    const feita = estado.conferida.q3, uso = usoAtual();
+    if (selecionado && estado.q3.fechados.includes(selecionado)) selecionado = null;
+    const sel = PROCESSOS.find((p) => p.id === selecionado);
+    const linhas = GRUPOS.map(([g, nome]) => {
+      const lista = uso.vivos.filter((p) => p.grupo === g);
+      if (!lista.length) return "";
+      return `<tr class="tm-group"><td colspan="4">${nome} (${lista.length})</td></tr>` + lista.map((p) => `
+        <tr class="tm-row${p.id === selecionado ? " is-selected" : ""}" data-id="${p.id}">
+          <td><span class="name">${p.img ? `<img src="../assets/${p.img}" alt="">` : icone(p.mask)}<span>${p.nome}${p.extra ? ` <small>· ${p.extra}</small>` : ""}</span></span></td>
+          <td class="status${p.reinicia && reiniciando ? " busy" : ""}">${p.reinicia && reiniciando ? "Reiniciando…" : ""}</td>
+          <td style="background:${calor(p.cpu, 20)}">${fmt(p.cpu, 1)}%</td>
+          <td style="background:${calor(p.mem, 1200)}">${fmt(p.mem, 1)} MB</td>
+        </tr>`).join("");
+    }).join("");
+    const cor =uso.memPct >= 85 ? "#d64527" : uso.memPct >= 60 ? "#d98a00" : "#11804a";
+    const botaoFim = sel && sel.reinicia ? "Reiniciar tarefa" : "Finalizar tarefa";
+
+    app.innerHTML = moldura(3, "Computador lento antes da prova", "A prova on-line já está aberta no <b>Google Chrome</b>, mas o computador está quase parando e o Gerenciador de Tarefas já está aberto.",
+      `<div class="lab">
+          <div class="tm" role="application" aria-label="Gerenciador de Tarefas simulado">
+            <div class="tm-title"><img src="../assets/icons/win11/task-manager-16.png" alt=""><span>Gerenciador de Tarefas</span><span class="search">Digite um nome, editor ou PID para pesquisar</span><span class="wb"><i>—</i><i>▢</i><i>✕</i></span></div>
+            <div class="tm-main">
+              <nav class="tm-nav" aria-hidden="true">${["menu", "processes", "performance", "history", "startup", "users", "details", "services"].map((n) => `<i class="${n === "processes" ? "is-on" : ""}">${icone(`icons/taskmanager/fluent/${n}.svg`)}</i>`).join("")}</nav>
+              <div class="tm-content">
+                <div class="tm-bar"><h3>Processos</h3>
+                  <button type="button" disabled>${icone("icons/taskmanager/fluent/run.svg")}Executar nova tarefa</button><span class="sep"></span>
+                  <button type="button" class="primary" id="finalizar" ${!sel || feita ? "disabled" : ""}>${icone(`icons/taskmanager/fluent/${sel && sel.reinicia ? "restart" : "end"}.svg`)}${botaoFim}</button>
+                  <button type="button" disabled>${icone("icons/taskmanager/fluent/efficiency.svg")}Modo de eficiência</button>
+                </div>
+                <table class="tm-table"><colgroup><col class="c-name"><col class="c-status"><col class="c-cpu"><col class="c-mem"></colgroup>
+                  <thead><tr><th>Nome</th><th style="text-align:left">Status</th><th><b>${uso.cpuPct}%</b>CPU</th><th class="${uso.memPct >= 85 ? "hot" : ""}"><b>${uso.memPct}%</b>Memória</th></tr></thead>
+                  <tbody>${linhas}</tbody></table>
+              </div>
+            </div>
+            ${aviso ? `<div class="tm-toast">${aviso}</div>` : ""}
+            ${dialogo ? `<div class="tm-dialog"><div><strong>${dialogo.titulo}</strong><p>${dialogo.texto}</p><button type="button" id="ok">OK</button></div></div>` : ""}
+          </div>
+        <aside class="side">
+          <div class="mission"><strong>Sua missão</strong>Feche os programas que você <b>não precisa</b> para fazer a prova. Cuidado para não fechar o que a prova ou o Windows precisam.</div>
+          <div class="meter"><div class="label">Memória em uso <span style="color:${cor}">${uso.memPct}%</span></div><div class="bar"><i style="width:${uso.memPct}%;background:${cor}"></i></div><small>Este computador tem 4 GB de memória RAM.</small></div>
+          <ol class="howto"><li>Clique em um programa da lista.</li><li>Clique em <b>Finalizar tarefa</b>, lá em cima.</li><li>Terminou? Clique em <b>Conferir</b>.</li></ol>
+          ${feita ? "" : `<button class="linkish" type="button" id="recomecar">Recomeçar esta questão</button>`}
+        </aside>
+      </div>`);
+
+    if (!feita) {
+      app.querySelectorAll(".tm-row").forEach((tr) => tr.addEventListener("click", () => { selecionado = tr.dataset.id; telaQ3(); }));
+      document.getElementById("finalizar").addEventListener("click", finalizarSelecionado);
+      document.getElementById("recomecar").addEventListener("click", () => { estado.q3 = { fechados: [], chromeFechou: false }; selecionado = null; aviso = null; dialogo = null; salvar(); telaQ3(); });
+    }
+    document.getElementById("ok")?.addEventListener("click", () => { dialogo = null; telaQ3(); });
+
+    if (feita) {
+      const ok = estado.certa.q3, fechados = estado.q3.fechados;
+      const faltou = LAZER.filter((id) => !fechados.includes(id)).map((id) => PROCESSOS.find((p) => p.id === id).nome);
+      let texto;
+      if (ok) texto = `A memória caiu de 93% para ${uso.memPct}% e a prova continua aberta. Netflix, Minecraft, Discord e Spotify não ajudam na prova e eram os que mais pesavam.`;
+      else if (estado.q3.chromeFechou) texto = "Você fechou o Google Chrome, e a prova estava nele! Feche só o que não é necessário: Netflix, Minecraft, Discord e Spotify.";
+      else texto = `Ainda ficou aberto: ${faltou.join(", ")}. Tudo o que não é a prova pode fechar; só o Chrome, o antivírus e o Windows Explorer ficam.`;
+      rodape({ ...proxima(3), retorno: { ok, titulo: ok ? "Computador leve para a prova!" : "Quase.", texto } });
+    } else {
+      rodape({ texto: "Conferir", aoClicar: () => conferir(3, !estado.q3.chromeFechou && LAZER.every((id) => estado.q3.fechados.includes(id))) });
+    }
+  }
+
+  function mostrarAviso(texto) {
+    aviso = texto; clearTimeout(avisoTimer);
+    avisoTimer = setTimeout(() => { aviso = null; if (estado.passo === 3) telaQ3(); }, 3600);
+  }
+  function finalizarSelecionado() {
+    const p = PROCESSOS.find((x) => x.id === selecionado);
+    if (!p) return;
+    if (p.protegido) { dialogo = { titulo: "Acesso negado", texto: "O Windows não deixou finalizar o Antimalware Service Executable. Ele é o antivírus que protege o computador e não pode ser fechado." }; telaQ3(); return; }
+    if (p.reinicia) {
+      reiniciando = true;
+      mostrarAviso("Windows Explorer reiniciado: a barra de tarefas some e volta. Ele quase não pesa.");
+      telaQ3();
+      setTimeout(() => { reiniciando = false; if (estado.passo === 3) telaQ3(); }, 1400);
+      return;
+    }
+    estado.q3.fechados = [...estado.q3.fechados, p.id];
+    if (p.id === "chrome") { estado.q3.chromeFechou = true; mostrarAviso("A janela da prova on-line fechou!"); }
+    else mostrarAviso(`${p.nome} foi finalizado.`);
+    selecionado = null; salvar(); telaQ3();
+  }
+  document.addEventListener("keydown", (e) => { if (estado.passo === 3 && e.key === "Delete" && selecionado && !estado.conferida.q3 && !dialogo) finalizarSelecionado(); });
+
+  function telaQ4() {
+    const feita = estado.conferida.q4;
+    app.innerHTML = moldura(4, "Cada problema no seu lugar", "Quatro pessoas têm um problema no computador. <b>Escolha onde, no Gerenciador de Tarefas, cada uma resolve.</b> Cada opção é usada uma vez.",
+      `<div class="match">${PESSOAS.map((p) => {
+        const escolha = estado.q4[p.id] || "";
+        const classe = feita ? (escolha === p.certo ? " is-right" : " is-wrong") : "";
+        const certoNome = LUGARES.find(([id]) => id === p.certo)[1];
+        return `<div class="pair${classe}"><span class="who">${p.letra}</span><p>${p.texto}</p>
+          <select data-id="${p.id}" ${feita ? "disabled" : ""} aria-label="Onde resolve"><option value="">Escolha onde resolve…</option>${LUGARES.map(([id, nome]) => `<option value="${id}" ${escolha === id ? "selected" : ""}>${nome}</option>`).join("")}</select>
+          ${feita ? `<p class="why">${escolha === p.certo ? "" : `<b>Certo: ${certoNome}.</b> `}${p.porque}</p>` : ""}</div>`;
+      }).join("")}</div>`);
+    app.querySelectorAll("select").forEach((s) => s.addEventListener("change", () => { estado.q4[s.dataset.id] = s.value; salvar(); telaQ4(); }));
+    if (feita) {
+      const certos = PESSOAS.filter((p) => estado.q4[p.id] === p.certo).length;
+      rodape({ ...proxima(4), retorno: { ok: certos === 4, titulo: certos === 4 ? "Todas no lugar certo!" : `${certos} de 4 certas.`, texto: "Leia o porquê de cada uma acima." } });
+    } else {
+      rodape({ texto: "Conferir", desabilitado: PESSOAS.some((p) => !estado.q4[p.id]), aoClicar: () => conferir(4, PESSOAS.every((p) => estado.q4[p.id] === p.certo)) });
+    }
+  }
+
+  function telaQ5() {
+    const feita = estado.conferida.q5;
+    app.innerHTML = moldura(5, "Com suas palavras", "Explique <b>para que serve o Gerenciador de Tarefas</b> e conte <b>uma situação do dia a dia</b> (em casa, na escola ou num trabalho de suporte) em que ele ajudaria você. Diga o que você faria nele.",
+      `<div class="write">
+        <div><textarea id="texto" maxlength="1500" placeholder="Escreva aqui..." ${feita ? "readonly" : ""}></textarea><div class="count" id="contador"></div></div>
+        ${feita
+          ? `<div class="tips after"><strong>Confira se a sua resposta tem:</strong><ul><li>Para que serve: ver o que está rodando, quanto cada programa gasta, e controlar.</li><li>Uma situação real: programa travado, computador lento, algo que abre sozinho.</li><li>O que fazer: Finalizar tarefa, olhar a Memória ou a CPU, Desabilitar na inicialização…</li></ul></div>`
+          : `<div class="tips"><strong>Ideias para começar</strong><ul><li>"O Gerenciador de Tarefas serve para…"</li><li>"Um dia, quando…"</li><li>"Eu abriria o Gerenciador e…"</li></ul></div>`}
+      </div>`);
+    const campo = document.getElementById("texto"), contador = document.getElementById("contador");
+    campo.value = estado.q5;
+    const atualizar = () => {
+      const n = campo.value.trim().length;
+      contador.className = "count" + (n >= MIN_ESCRITA ? " ok" : "");
+      contador.textContent = feita ? "Resposta enviada. O professor vai corrigir." : n >= MIN_ESCRITA ? `${n} caracteres. Pode enviar!` : `${n} de pelo menos ${MIN_ESCRITA} caracteres.`;
+      if (!feita) document.getElementById("acao").disabled = n < MIN_ESCRITA;
+    };
+    if (feita) {
+      rodape({ ...proxima(5), retorno: { ok: true, titulo: "Resposta enviada.", texto: "Esta questão o professor corrige." } });
+    } else {
+      rodape({ texto: "Enviar resposta", desabilitado: true, aoClicar: () => { estado.q5 = campo.value.trim(); estado.conferida.q5 = true; salvar(); telaQ5(); } });
+      campo.addEventListener("input", () => { estado.q5 = campo.value; salvar(); atualizar(); });
+      campo.focus();
+    }
+    atualizar();
+  }
+
+  function telaResultado() {
+    if (!estado.fim) { estado.fim = new Date().toISOString(); salvar(); }
+    const acertos = [1, 2, 3, 4].filter((n) => estado.certa["q" + n]).length;
+    const quando = new Date(estado.fim).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
+    const nomes = ["Para que serve?", "O jogo travou!", "Computador lento antes da prova", "Cada problema no seu lugar", "Com suas palavras"];
+    app.innerHTML = `<section class="card single"><div class="result">
+      <div class="score"><div class="name" id="nomeAluno"></div><div class="num">${acertos}<small>/4</small></div><div>questões certas</div><div class="when">Terminou em ${quando}</div><div class="show">Mostre esta tela ao professor</div></div>
+      <div>
+        <ul class="review">${nomes.map((nome, i) => {
+          const n = i + 1;
+          if (n === 5) return `<li class="text"><b>5</b>${nome}<span>Escrita · o professor corrige</span></li>`;
+          const ok = estado.certa["q" + n];
+          return `<li class="${ok ? "ok" : "wrong"}"><b>${ok ? "✓" : "✗"}</b>${nome}<span>${TIPOS[i]}</span></li>`;
+        }).join("")}</ul>
+        <div class="answer" id="resposta"></div>
+        <div class="actions"><a class="btn green" href="../">Agora abra o OSLab e faça as trilhas →</a><button class="btn ghost" type="button" id="denovo">Começar de novo (outro aluno)</button></div>
+      </div>
+    </div></section>`;
+    document.getElementById("nomeAluno").textContent = estado.nome;
+    document.getElementById("resposta").textContent = estado.q5;
+    const denovo = document.getElementById("denovo");
+    denovo.addEventListener("click", () => {
+      if (denovo.dataset.certeza !== "1") { denovo.dataset.certeza = "1"; denovo.textContent = "Apaga tudo. Clique de novo para confirmar"; return; }
+      estado = novo(); selecionado = null; aviso = null; dialogo = null; salvar(); desenhar();
+    });
+  }
+
+  // ---------- Topo e navegação ----------
+  function desenharTopo() {
+    document.getElementById("steps").innerHTML = TIPOS.map((tipo, i) => {
+      const n = i + 1;
+      let classe = n === estado.passo ? "is-now" : "";
+      if (estado.conferida["q" + n] && n !== estado.passo) classe = n === 5 ? "is-done" : estado.certa["q" + n] ? "is-ok" : "is-wrong";
+      return `<li class="${classe}"><b>${n}</b><span>${tipo}</span></li>`;
+    }).join("");
+    document.getElementById("who").textContent = estado.nome;
+  }
+  function desenhar() {
+    desenharTopo();
+    [telaInicio, telaQ1, telaQ2, telaQ3, telaQ4, telaQ5, telaResultado][Math.min(Math.max(estado.passo, 0), 6)]();
+  }
+  desenhar();
+})();
+</script>
+</body>
+</html>

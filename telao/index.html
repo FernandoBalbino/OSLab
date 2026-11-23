@@ -45,6 +45,15 @@
     white-space: nowrap;
   }
   .url span { color: #0a5bd3; }
+  .num {
+    display: inline-grid; place-items: center; vertical-align: middle;
+    width: 1.5em; height: 1.5em; margin-right: .5em; border-radius: 50%;
+    background: var(--accent); color: #04122e; font-style: normal; font-weight: 900; font-size: .9em;
+  }
+  .sub { margin: -1.2vh 0 2.4vh; text-align: center; font-size: min(1.7vw, 2.8vh); color: var(--muted); }
+  .sub b { color: var(--ink); }
+  body.com-atividade .address .label { font-size: min(2.7vw, 4.8vh); color: var(--ink); }
+  body.com-atividade .url { font-size: min(3.75vw, 9vh); }
 
   .trails h2 { margin: 0 0 2.2vh; text-align: center; font-size: min(2.8vw, 4.4vh); font-weight: 800; }
   .trails h2 em { font-style: normal; color: var(--accent-strong); }
@@ -77,13 +86,14 @@
     <span class="tip">Toque na tela ou aperte F para tela cheia</span>
   </header>
 
-  <section class="address" aria-label="Endereço do OSLab">
-    <p class="label">Abra o <b>Chrome</b> no Chromebook e digite:</p>
+  <section class="address" aria-label="Endereço para digitar">
+    <p class="label" id="rotulo">Abra o <b>Chrome</b> no Chromebook e digite:</p>
     <div class="url" id="url">fernandobalbino.github.io<span>/OSLab</span></div>
   </section>
 
   <section class="trails" aria-label="Trilhas do dia">
-    <h2>Trilhas <em>novas</em> para fazer hoje</h2>
+    <h2 id="titulo-trilhas">Trilhas <em>novas</em> para fazer hoje</h2>
+    <p class="sub" id="sub" hidden></p>
     <ul class="trail-list" id="trails"></ul>
   </section>
 
@@ -92,10 +102,24 @@
   // Trilhas mostradas no telão. Para trocar sem mexer no código, use o endereço com ?trilhas=,
   // por exemplo: telao/?trilhas=wifilab,audiolab (os nomes ficam em js/core/app-registry.js).
   const TRILHAS_PADRAO = ["tasklab", "storelab"];
+  // A atividade (pasta atividade/) aparece primeiro. Para esconder: telao/?atividade=0
+  const MOSTRAR_ATIVIDADE = true;
 
+  const params = new URLSearchParams(location.search);
   const apps = window.OSLab && window.OSLab.apps;
-  const pedidas = (new URLSearchParams(location.search).get("trilhas") || "")
+  const pedidas = (params.get("trilhas") || "")
     .split(",").map((id) => id.trim()).filter(Boolean);
+
+  const comAtividade = MOSTRAR_ATIVIDADE && !["0", "nao", "não"].includes((params.get("atividade") || "").toLowerCase());
+  if (comAtividade) {
+    document.body.classList.add("com-atividade");
+    document.getElementById("rotulo").innerHTML = '<i class="num">1</i>Primeiro, a <b>atividade</b> do Gerenciador de Tarefas. Digite no Chrome:';
+    document.getElementById("url").innerHTML = "fernandobalbino.github.io<span>/OSLab/atividade</span>";
+    document.getElementById("titulo-trilhas").innerHTML = '<i class="num">2</i>Depois, as trilhas <em>novas</em> no OSLab';
+    const sub = document.getElementById("sub");
+    sub.innerHTML = "No fim da atividade, clique em <b>Agora abra o OSLab</b> (ou digite fernandobalbino.github.io/OSLab).";
+    sub.hidden = false;
+  }
   const ids = (pedidas.length ? pedidas : TRILHAS_PADRAO).filter((id) => apps && apps.get(id));
   const lista = document.getElementById("trails");
 
@@ -109,7 +133,9 @@
     item.querySelector(".name").textContent = app.title;
     lista.append(item);
   });
-  if (lista.children.length === 1) document.querySelector(".trails h2").innerHTML = "Trilha <em>nova</em> para fazer hoje";
+  if (lista.children.length === 1) {
+    document.getElementById("titulo-trilhas").innerHTML = comAtividade ? '<i class="num">2</i>Depois, a trilha <em>nova</em> no OSLab' : "Trilha <em>nova</em> para fazer hoje";
+  }
 
   // Tela cheia com um toque (ou F) e tela sempre acesa enquanto o telão estiver aberto.
   function alternarTelaCheia() {

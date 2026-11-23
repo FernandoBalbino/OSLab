@@ -7,12 +7,25 @@ Laboratório virtual estático para alunos praticarem conceitos de Sistemas Oper
 - Aplicação: <https://fernandobalbino.github.io/OSLab/>
 - Código-fonte: <https://github.com/FernandoBalbino/OSLab>
 - Telão para espelhar na TV: <https://fernandobalbino.github.io/OSLab/telao/>
+- Atividade do Gerenciador de Tarefas: <https://fernandobalbino.github.io/OSLab/atividade/>
 
 ## Telão
 
-A página [`/telao/`](https://fernandobalbino.github.io/OSLab/telao/) é para espelhar na TV da sala: mostra o endereço do OSLab bem grande e as trilhas novas com o ícone e o nome que aparecem na Área de Trabalho. Um toque na tela (ou **F**) deixa em tela cheia, e a tela não apaga enquanto ela estiver aberta. `/telão/` (com til) leva para a mesma página.
+A página [`/telao/`](https://fernandobalbino.github.io/OSLab/telao/) é para espelhar na TV da sala. Primeiro ela mostra o endereço da atividade bem grande e, em seguida, as trilhas novas com o ícone e o nome que aparecem na Área de Trabalho. Um toque na tela (ou **F**) deixa em tela cheia, e a tela não apaga enquanto ela estiver aberta. `/telão/` (com til) leva para a mesma página.
 
-Por padrão aparecem as trilhas Gerenciador de Tarefas e Microsoft Store. Para mostrar outras, use `?trilhas=` com os nomes de `js/core/app-registry.js`, por exemplo `telao/?trilhas=wifilab,audiolab`. Código: `telao/index.html`.
+Por padrão aparecem as trilhas Gerenciador de Tarefas e Microsoft Store. Para mostrar outras, use `?trilhas=` com os nomes de `js/core/app-registry.js`, por exemplo `telao/?trilhas=wifilab,audiolab`. Para tirar a atividade e mostrar só o endereço do OSLab, use `telao/?atividade=0`. Código: `telao/index.html`.
+
+## Atividade: Gerenciador de Tarefas
+
+A página [`/atividade/`](https://fernandobalbino.github.io/OSLab/atividade/) tem 5 questões, cada uma de um tipo, para o aluno entender para que serve o Gerenciador de Tarefas e como ele é usado no dia a dia:
+
+1. **Múltipla escolha:** para que serve o Gerenciador.
+2. **Ordenar:** o Roblox travou; tocar nos passos na ordem certa para finalizar só o jogo.
+3. **Prática:** o computador está lento antes da prova on-line. O aluno usa um Gerenciador de Tarefas simulado para fechar Netflix, Minecraft, Discord e Spotify sem fechar o Chrome da prova. O antivírus dá Acesso negado e o Windows Explorer só reinicia.
+4. **Ligar:** quatro problemas do dia a dia ↔ Aplicativos de inicialização, Desempenho, Detalhes (PID) e Modo de eficiência.
+5. **Escrita:** com as próprias palavras, para que serve e uma situação real. O mínimo é de 80 caracteres e quem corrige é o professor.
+
+Cada questão é conferida uma vez e mostra o porquê da resposta. No fim, uma tela mostra o nome, os acertos (de 4 objetivas), a resposta escrita e o botão para abrir o OSLab e fazer as trilhas. As respostas ficam só no navegador do aluno, então é preciso mostrar a tela ao professor. O botão "Começar de novo" limpa as respostas para o próximo aluno do mesmo Chromebook. A página fica fora do precache, por isso os Chromebooks não baixam o OSLab de novo. Código: `atividade/index.html`.
 
 ## Principais recursos
 
