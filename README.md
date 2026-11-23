@@ -6,6 +6,13 @@ Laboratório virtual estático para alunos praticarem conceitos de Sistemas Oper
 
 - Aplicação: <https://fernandobalbino.github.io/OSLab/>
 - Código-fonte: <https://github.com/FernandoBalbino/OSLab>
+- Telão para espelhar na TV: <https://fernandobalbino.github.io/OSLab/telao/>
+
+## Telão
+
+A página [`/telao/`](https://fernandobalbino.github.io/OSLab/telao/) é para espelhar na TV da sala: mostra o endereço do OSLab bem grande e as trilhas novas com o ícone e o nome que aparecem na Área de Trabalho. Um toque na tela (ou **F**) deixa em tela cheia, e a tela não apaga enquanto ela estiver aberta. `/telão/` (com til) leva para a mesma página.
+
+Por padrão aparecem as trilhas Gerenciador de Tarefas e Microsoft Store. Para mostrar outras, use `?trilhas=` com os nomes de `js/core/app-registry.js`, por exemplo `telao/?trilhas=wifilab,audiolab`. Código: `telao/index.html`.
 
 ## Principais recursos
 

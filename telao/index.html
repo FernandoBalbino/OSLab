@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>OSLab — Telão</title>
+<meta name="description" content="Tela para espelhar na TV: endereço do OSLab e as trilhas do dia." />
+<meta name="robots" content="noindex" />
+<link rel="icon" type="image/png" href="../assets/icons/pwa-192.png" />
+<style>
+  @font-face { font-family: "Nunito Sans"; src: url("../assets/fonts/NunitoSans-Variable.ttf") format("truetype"); font-weight: 200 1000; font-display: swap; }
+  :root {
+    --ink: #ffffff; --muted: #b9c7e6; --accent: #4cc2ff; --accent-strong: #7fd6ff;
+    --panel: rgba(255, 255, 255, .07); --line: rgba(255, 255, 255, .14);
+    --font: "Nunito Sans", "Segoe UI", system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    overflow: hidden; color: var(--ink); font-family: var(--font);
+    background:
+      radial-gradient(60% 70% at 85% 110%, rgba(91, 63, 216, .55), transparent 70%),
+      radial-gradient(55% 60% at 10% -10%, rgba(43, 120, 255, .55), transparent 70%),
+      #071026;
+    display: grid; grid-template-rows: auto 1fr auto; gap: 3vh;
+    padding: 4vh 5vw 5vh;
+    cursor: default; user-select: none;
+  }
+
+  header { display: flex; align-items: center; gap: 1.2vw; }
+  header img { width: 4.4vh; height: 4.4vh; }
+  header strong { font-size: 3.4vh; font-weight: 800; letter-spacing: .02em; }
+  header .tip { margin-left: auto; font-size: 1.9vh; color: var(--muted); opacity: .8; transition: opacity .6s; }
+  body.is-fullscreen header .tip { opacity: 0; }
+
+  .address { align-self: center; text-align: center; }
+  .address .label { margin: 0 0 2.4vh; font-size: min(3.4vw, 5.6vh); font-weight: 700; color: var(--muted); }
+  .address .label b { color: var(--ink); }
+  .url {
+    display: inline-block; max-width: 100%;
+    padding: 2.4vh 2.6vw; border-radius: 3vh;
+    background: rgba(255, 255, 255, .96); color: #0a1f44;
+    box-shadow: 0 2.4vh 6vh rgba(0, 0, 0, .45), 0 0 0 .6vh rgba(76, 194, 255, .35);
+    font-size: min(4.75vw, 10.5vh); font-weight: 900; line-height: 1.1; letter-spacing: .01em;
+    white-space: nowrap;
+  }
+  .url span { color: #0a5bd3; }
+
+  .trails h2 { margin: 0 0 2.2vh; text-align: center; font-size: min(2.8vw, 4.4vh); font-weight: 800; }
+  .trails h2 em { font-style: normal; color: var(--accent-strong); }
+  .trail-list { display: flex; justify-content: center; gap: 3vw; margin: 0; padding: 0; list-style: none; }
+  .trail {
+    position: relative; display: flex; align-items: center; gap: 1.8vw;
+    min-width: 0; flex: 0 1 40vw; padding: 2.2vh 2.4vw 2.2vh 1.8vw;
+    border: 1px solid var(--line); border-radius: 2.6vh; background: var(--panel);
+    animation: rise .7s both;
+  }
+  .trail:nth-child(2) { animation-delay: .12s; }
+  .trail:nth-child(3) { animation-delay: .24s; }
+  .trail img { flex: none; width: 15vh; height: 15vh; object-fit: contain; filter: drop-shadow(0 1vh 1.6vh rgba(0, 0, 0, .35)); }
+  .trail .name { font-size: min(2.6vw, 4.6vh); font-weight: 800; line-height: 1.15; }
+  .trail .where { margin-top: .9vh; font-size: min(1.5vw, 2.5vh); color: var(--muted); }
+  .trail .badge {
+    position: absolute; top: -1.6vh; left: 1.6vw;
+    padding: .5vh 1vw; border-radius: 99px; background: #16a34a; color: #fff;
+    font-size: 1.9vh; font-weight: 900; letter-spacing: .1em;
+  }
+
+  @keyframes rise { from { opacity: 0; transform: translateY(2vh); } to { opacity: 1; transform: none; } }
+  @media (prefers-reduced-motion: reduce) { .trail { animation: none; } }
+</style>
+</head>
+<body>
+  <header>
+    <img src="../assets/icons/pwa-192.png" alt="" />
+    <strong>OSLab</strong>
+    <span class="tip">Toque na tela ou aperte F para tela cheia</span>
+  </header>
+
+  <section class="address" aria-label="Endereço do OSLab">
+    <p class="label">Abra o <b>Chrome</b> no Chromebook e digite:</p>
+    <div class="url" id="url">fernandobalbino.github.io<span>/OSLab</span></div>
+  </section>
+
+  <section class="trails" aria-label="Trilhas do dia">
+    <h2>Trilhas <em>novas</em> para fazer hoje</h2>
+    <ul class="trail-list" id="trails"></ul>
+  </section>
+
+<script src="../js/core/app-registry.js"></script>
+<script>
+  // Trilhas mostradas no telão. Para trocar sem mexer no código, use o endereço com ?trilhas=,
+  // por exemplo: telao/?trilhas=wifilab,audiolab (os nomes ficam em js/core/app-registry.js).
+  const TRILHAS_PADRAO = ["tasklab", "storelab"];
+
+  const apps = window.OSLab && window.OSLab.apps;
+  const pedidas = (new URLSearchParams(location.search).get("trilhas") || "")
+    .split(",").map((id) => id.trim()).filter(Boolean);
+  const ids = (pedidas.length ? pedidas : TRILHAS_PADRAO).filter((id) => apps && apps.get(id));
+  const lista = document.getElementById("trails");
+
+  (ids.length ? ids : TRILHAS_PADRAO).forEach((id) => {
+    const app = apps && apps.get(id);
+    if (!app) return;
+    const item = document.createElement("li");
+    item.className = "trail";
+    item.innerHTML = '<span class="badge">NOVA</span><img alt=""><div><div class="name"></div><div class="where">Ícone na Área de Trabalho do OSLab</div></div>';
+    item.querySelector("img").src = "../" + app.icon;
+    item.querySelector(".name").textContent = app.title;
+    lista.append(item);
+  });
+  if (lista.children.length === 1) document.querySelector(".trails h2").innerHTML = "Trilha <em>nova</em> para fazer hoje";
+
+  // Tela cheia com um toque (ou F) e tela sempre acesa enquanto o telão estiver aberto.
+  function alternarTelaCheia() {
+    if (document.fullscreenElement) document.exitFullscreen?.();
+    else document.documentElement.requestFullscreen?.().catch(() => {});
+  }
+  document.addEventListener("click", alternarTelaCheia);
+  document.addEventListener("keydown", (event) => { if (event.key === "f" || event.key === "F") alternarTelaCheia(); });
+  document.addEventListener("fullscreenchange", () => document.body.classList.toggle("is-fullscreen", Boolean(document.fullscreenElement)));
+
+  let travaTela = null;
+  async function manterTelaAcesa() {
+    try { if ("wakeLock" in navigator && document.visibilityState === "visible") travaTela = await navigator.wakeLock.request("screen"); }
+    catch (erro) { travaTela = null; }
+  }
+  document.addEventListener("visibilitychange", manterTelaAcesa);
+  manterTelaAcesa();
+</script>
+</body>
+</html>
